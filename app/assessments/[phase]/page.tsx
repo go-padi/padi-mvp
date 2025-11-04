@@ -1,0 +1,1 @@
+export default function Assess({params}:{params:{phase:string}}){return (<div className='card'><h1 className='text-xl font-semibold mb-2'>End-of-Phase (coming soon)</h1><p className='text-sm'>Phase: {params.phase}</p></div>);}

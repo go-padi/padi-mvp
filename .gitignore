@@ -1,0 +1,17 @@
+# Node/React
+node_modules
+dist
+build
+.cache
+.vite
+.DS_Store
+
+# Env & local config
+.env
+.env.*
+!.env.example
+
+# Replit
+.replit
+.replit-nix
+*.replit

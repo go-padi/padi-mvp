@@ -1,0 +1,61 @@
+[
+  {
+    "code": "SYL-4",
+    "domain": "Phonological Awareness",
+    "section": "SYL",
+    "title": "Objects in a Basket",
+    "objective": "Reinforce syllable awareness with multisensory practice and vocabulary.",
+    "materials": [
+      "basket",
+      "assorted small objects"
+    ],
+    "steps": [
+      {
+        "step": "Model clapping syllables."
+      },
+      {
+        "step": "Students clap syllables."
+      }
+    ],
+    "summary_hint": "Note who needed prompts; plan repeats."
+  },
+  {
+    "code": "LS-11",
+    "domain": "Phonological Awareness",
+    "section": "LS",
+    "title": "Matching Game",
+    "objective": "Strengthen auditory/visual discrimination.",
+    "materials": [
+      "picture/word cards"
+    ],
+    "steps": [
+      {
+        "step": "Demonstrate matching."
+      },
+      {
+        "step": "Add distractors for challenge."
+      }
+    ],
+    "summary_hint": "Record accuracy and strategies."
+  },
+  {
+    "code": "VCF-8",
+    "domain": "Comprehension",
+    "section": "VCF",
+    "title": "Comprehension Dice Game",
+    "objective": "Practice story elements with prompts.",
+    "materials": [
+      "picture book",
+      "story-elements dice"
+    ],
+    "steps": [
+      {
+        "step": "Read a short passage."
+      },
+      {
+        "step": "Roll die and answer prompt."
+      }
+    ],
+    "summary_hint": "Which elements are independent vs supported."
+  }
+]

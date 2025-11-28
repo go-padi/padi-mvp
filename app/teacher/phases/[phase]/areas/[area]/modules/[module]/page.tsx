@@ -32,6 +32,7 @@ export default function LessonPage({ params }: { params: Promise<{ phase: string
   const [audioFile, setAudioFile] = useState<File | null>(null);
   const [saving, setSaving] = useState(false);
   const [status, setStatus] = useState<string | null>(null);
+  const [needsAuth, setNeedsAuth] = useState(false);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -54,19 +55,28 @@ export default function LessonPage({ params }: { params: Promise<{ phase: string
     setSaving(true);
     setStatus(null);
     const sb = supabaseClient();
+    const { data: userData, error: userErr } = await sb.auth.getUser();
+    const user = userData?.user;
+    if (userErr || !user) {
+      setNeedsAuth(true);
+      setSaving(false);
+      setStatus('Please sign in to upload and save notes.');
+      return;
+    }
+    setNeedsAuth(false);
     let attachment_url: string | null = null;
     let attachment_name: string | null = null;
     let attachment_type: string | null = null;
     if (audioFile) {
       try {
-        const path = `${moduleRow?.code || 'module'}/${Date.now()}_${audioFile.name}`;
+        const path = `${user.id}/${moduleRow?.code || 'module'}/${Date.now()}_${audioFile.name}`;
         const { error: uploadErr } = await sb.storage.from('lesson-attachments').upload(path, audioFile, {
           cacheControl: '3600',
           upsert: false,
         });
         if (uploadErr) throw uploadErr;
-        const { data: publicUrl } = sb.storage.from('lesson-attachments').getPublicUrl(path);
-        attachment_url = publicUrl?.publicUrl || null;
+        const { data: signed } = await sb.storage.from('lesson-attachments').createSignedUrl(path, 60 * 60 * 24 * 7);
+        attachment_url = signed?.signedUrl || null;
         attachment_name = audioFile.name;
         attachment_type = audioFile.type;
       } catch (err:any) {
@@ -77,7 +87,7 @@ export default function LessonPage({ params }: { params: Promise<{ phase: string
 
     const { error } = await sb.from('lesson_note').insert({
       module_detail_id: moduleRow?.id,
-      teacher_id: teacherId,
+      teacher_id: teacherId || user.id,
       student_id: studentId || null,
       notes,
       attachment_url,
@@ -214,6 +224,11 @@ export default function LessonPage({ params }: { params: Promise<{ phase: string
           {saving ? 'Saving...' : 'Save Notes & Continue'}
         </button>
         {status && <p className="text-sm text-gray-700">{status}</p>}
+        {needsAuth && (
+          <p className="text-sm text-red-600">
+            Sign in to save notes and uploads. (Auth flow not wired here—use a signed-in session in Supabase.)
+          </p>
+        )}
       </div>
     </div>
   );

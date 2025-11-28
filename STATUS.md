@@ -9,5 +9,8 @@
 # Next session goals
 
 1) Add more Phase 1 content (Rhyming, Words and Sentences, Syllables, Phonemic Awareness) and Phase 2/3 placeholders.
+    - add status bar for each module; test once Learning Sensorially has been populated
+    - populate all of Learning Sensorially and add ability to only unlock when signed in - building to also add a paywall to see content (not added yet)
 2) Wire auth (teacher sign-in) and align RLS/read policies to `authenticated` instead of `anon`.
 3) Optionally list saved notes/attachments per module and per student.
+4) Connect the Student progress to the tracker

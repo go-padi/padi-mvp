@@ -12,6 +12,45 @@ create table if not exists module (
   extension jsonb,
   summary_hint text
 );
+
+-- Curriculum structure
+create table if not exists phase (
+  id uuid primary key default gen_random_uuid(),
+  code text not null unique,
+  title text not null,
+  description text,
+  months text,
+  lesson_range text,
+  summary text,
+  outcomes jsonb,
+  is_locked boolean default false,
+  display_order int default 0
+);
+
+create table if not exists module_group (
+  id uuid primary key default gen_random_uuid(),
+  phase_id uuid references phase(id) on delete cascade,
+  code text not null unique,
+  title text not null,
+  description text,
+  module_count int default 0,
+  is_locked boolean default false,
+  display_order int default 0
+);
+
+create table if not exists module_detail (
+  id uuid primary key default gen_random_uuid(),
+  phase_id uuid references phase(id) on delete cascade,
+  group_id uuid references module_group(id) on delete cascade,
+  code text not null unique,
+  title text not null,
+  subtitle text,
+  summary text,
+  is_locked boolean default false,
+  display_order int default 0,
+  lesson jsonb,
+  metadata jsonb
+);
 create table if not exists student (
   id uuid primary key default gen_random_uuid(),
   class_id text not null,

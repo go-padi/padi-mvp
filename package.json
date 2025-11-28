@@ -8,6 +8,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint .",
+    "seed:curriculum": "tsx scripts/seed-curriculum.ts",
     "seed:modules": "tsx scripts/seed-modules.ts"
   },
   "dependencies": {

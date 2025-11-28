@@ -1,5 +1,135 @@
 [
   {
+    "code": "K_P1_OVERVIEW",
+    "domain": "k_reading_phase_1",
+    "section": "Phase 1 Overview",
+    "title": "Phonological Awareness",
+    "objective": "Introduce the purpose, structure, and key skills developed in Phase 1.",
+    "materials": {
+      "phase_id": "K_PHASE_1",
+      "unit_id": null,
+      "sequence_index": 0,
+      "estimated_duration_minutes": 10,
+      "learning_objectives": [
+        "Understand what phonological awareness is",
+        "Recognize why it matters for reading",
+        "Become familiar with the five sections in Phase 1"
+      ],
+      "skills": [
+        "rhyming",
+        "word_awareness",
+        "syllable_awareness",
+        "phonemic_awareness"
+      ],
+      "assets": {
+        "images": [],
+        "audio": []
+      }
+    },
+    "steps": [
+      {
+        "step_id": "K_P1_OVERVIEW_S1",
+        "step_type": "decodable_text",
+        "display_order": 1,
+        "payload": {
+          "headline": "What is Phonological Awareness",
+          "sentences": [
+            {
+              "text": "Phonological awareness is the ability to hear and work with sounds in spoken language.",
+              "audio_src": null
+            },
+            {
+              "text": "Children who develop strong sound awareness learn to read and spell more easily.",
+              "audio_src": null
+            }
+          ],
+          "target_graphemes": [],
+          "teacher_prompt": "Explain that Phase 1 builds listening and sound skills."
+        }
+      },
+      {
+        "step_id": "K_P1_OVERVIEW_S2",
+        "step_type": "decodable_text",
+        "display_order": 2,
+        "payload": {
+          "headline": "Why It Matters",
+          "sentences": [
+            {
+              "text": "Before children learn letters, they must learn to hear parts of spoken language.",
+              "audio_src": null
+            },
+            {
+              "text": "This includes rhyming, counting words, clapping syllables, and hearing beginning and ending sounds.",
+              "audio_src": null
+            }
+          ],
+          "target_graphemes": [],
+          "teacher_prompt": "Give simple examples from real objects."
+        }
+      },
+      {
+        "step_id": "K_P1_OVERVIEW_S3",
+        "step_type": "decodable_text",
+        "display_order": 3,
+        "payload": {
+          "headline": "What Your Child Will Learn",
+          "sentences": [
+            {
+              "text": "Phase 1 has playful activities that build listening and sound skills.",
+              "audio_src": null
+            },
+            {
+              "text": "Children learn to hear rhymes, count words, break words into syllables, and notice individual sounds.",
+              "audio_src": null
+            }
+          ],
+          "target_graphemes": [],
+          "teacher_prompt": "Introduce this before Unit 1 so learners know the plan."
+        }
+      },
+      {
+        "step_id": "K_P1_OVERVIEW_S4",
+        "step_type": "decodable_text",
+        "display_order": 4,
+        "payload": {
+          "headline": "The Five Sections in Phase 1",
+          "sentences": [
+            {
+              "text": "Learning Sensorially builds early listening through hands on activities.",
+              "audio_src": null
+            },
+            {
+              "text": "Rhyming teaches children to match words that sound alike.",
+              "audio_src": null
+            },
+            {
+              "text": "Words and Sentences helps children count and organize words.",
+              "audio_src": null
+            },
+            {
+              "text": "Syllables teaches children to clap, break, and blend word parts.",
+              "audio_src": null
+            },
+            {
+              "text": "Phonemic Awareness helps children work with individual sounds.",
+              "audio_src": null
+            }
+          ],
+          "target_graphemes": [],
+          "teacher_prompt": "Explain what each section focuses on and how they connect."
+        }
+      }
+    ],
+    "extension": {
+      "home_practice": [
+        "Play rhyming games like cat, hat, and bat.",
+        "Clap syllables in family names.",
+        "Notice beginning sounds in objects around the home."
+      ]
+    },
+    "summary_hint": "An introduction to Phase 1 covering the purpose and the five key skill areas."
+  },
+  {
     "code": "SYL-4",
     "domain": "Phonological Awareness",
     "section": "SYL",

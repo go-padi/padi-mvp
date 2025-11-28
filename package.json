@@ -7,7 +7,7 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint",
+    "lint": "eslint .",
     "seed:modules": "tsx scripts/seed-modules.ts"
   },
   "dependencies": {
@@ -26,11 +26,15 @@
     "zustand": "^4.5.2"
   },
   "devDependencies": {
+    "@eslint/js": "^9.9.0",
+    "@next/eslint-plugin-next": "15.5.4",
+    "@typescript-eslint/parser": "^8.15.0",
     "@types/react": "19.1.16",
     "autoprefixer": "^10.4.20",
     "dotenv": "^17.2.3",
     "eslint": "^9.9.0",
     "eslint-config-next": "15.5.4",
+    "globals": "^15.14.0",
     "postcss": "^8.4.47",
     "tailwindcss": "^3.4.13",
     "tsx": "^4.16.2",

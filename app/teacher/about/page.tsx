@@ -1,13 +1,4 @@
 'use client';
-import { useEffect, useMemo, useState } from 'react';
-import { supabaseClient } from '@/lib/supabase';
-
-type Overview = {
-  title: string;
-  objective: string;
-  steps: { step_id: string; payload?: { headline?: string; sentences?: { text: string }[] } }[];
-  summary_hint?: string;
-};
 
 const coreConcepts = [
   {
@@ -98,28 +89,6 @@ const dailyUse = [
 ];
 
 export default function AboutPage(){
-  const [overview, setOverview] = useState<Overview | null>(null);
-
-  useEffect(() => {
-    const fetchOverview = async () => {
-      const sb = supabaseClient();
-      const { data } = await sb
-        .from('module')
-        .select('title,objective,steps,summary_hint')
-        .eq('code', 'K_P1_OVERVIEW')
-        .limit(1)
-        .maybeSingle();
-      if (data) setOverview(data as unknown as Overview);
-    };
-    fetchOverview();
-  }, []);
-
-  const overviewSteps = useMemo(() => {
-    if (overview?.steps && Array.isArray(overview.steps)) {
-      return overview.steps;
-    }
-    return [];
-  }, [overview]);
 
   return (
     <div className="space-y-6">
@@ -129,35 +98,7 @@ export default function AboutPage(){
           Padi helps young learners build strong reading, writing, and comprehension skills using a proven multisensory method.
           It blends phonological awareness, phonics, vocabulary building, reading fluency, and comprehension strategies so every child moves at the right pace.
         </p>
-        {overview?.summary_hint && (
-          <p className="mt-3 text-sm text-blue-800">{overview.summary_hint}</p>
-        )}
       </div>
-      {overviewSteps.length > 0 && (
-        <div className="rounded-2xl border border-gray-100 bg-white/90 p-5 shadow-sm space-y-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-xs uppercase tracking-wide text-blue-700 font-semibold">Phase 1 Overview</p>
-              <h4 className="text-lg font-semibold text-gray-900">{overview?.title || 'Phonological Awareness'}</h4>
-              <p className="text-sm text-gray-700 mt-1">{overview?.objective}</p>
-            </div>
-          </div>
-          <div className="grid gap-3 md:grid-cols-2">
-            {overviewSteps.map(step => (
-              <div key={step.step_id} className="rounded-xl border border-gray-100 bg-white p-4 shadow-sm">
-                <h5 className="text-sm font-semibold text-gray-900">
-                  {step.payload?.headline || 'Overview'}
-                </h5>
-                <ul className="mt-2 space-y-1 text-sm text-gray-700 list-disc list-inside">
-                  {(step.payload?.sentences || []).map((s, idx) => (
-                    <li key={idx}>{s.text}</li>
-                  ))}
-                </ul>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
       <div className="space-y-4">
         <h4 className="text-base font-semibold text-gray-900">Core Concepts</h4>
         <div className="grid gap-4 md:grid-cols-2">

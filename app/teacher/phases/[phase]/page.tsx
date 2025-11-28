@@ -37,13 +37,15 @@ export default function PhaseDetail({ params }: { params: Promise<{ phase: strin
         .select('id,code,title,description,summary')
         .eq('code', phase)
         .maybeSingle();
-      if (phaseRow) setPhaseRow(phaseRow as Phase);
-      const { data: groupRows } = await sb
-        .from('module_group')
-        .select('id,code,title,description,module_count,is_locked')
-        .eq('phase_id', phaseRow?.id)
-        .order('display_order');
-      if (groupRows) setGroups(groupRows as Group[]);
+      if (phaseRow) {
+        setPhaseRow(phaseRow as Phase);
+        const { data: groupRows } = await sb
+          .from('module_group')
+          .select('id,code,title,description,module_count,is_locked')
+          .eq('phase_id', phaseRow.id)
+          .order('display_order');
+        if (groupRows) setGroups(groupRows as Group[]);
+      }
     };
     fetchPhase();
   }, [phase]);

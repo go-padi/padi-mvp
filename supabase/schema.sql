@@ -51,6 +51,18 @@ create table if not exists module_detail (
   lesson jsonb,
   metadata jsonb
 );
+
+create table if not exists lesson_note (
+  id uuid primary key default gen_random_uuid(),
+  module_detail_id uuid references module_detail(id) on delete cascade,
+  teacher_id text,
+  student_id uuid references student(id),
+  notes text,
+  attachment_url text,
+  attachment_name text,
+  attachment_type text,
+  created_at timestamptz default now()
+);
 create table if not exists student (
   id uuid primary key default gen_random_uuid(),
   class_id text not null,

@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { supabaseClient } from '@/lib/supabase';
 import clsx from 'clsx';
 import { useAdminMode } from '../layout';
+import { PhaseTabs } from '@/components/PhaseTabs';
 
 type PhaseRow = {
   id: string;
@@ -37,13 +38,15 @@ export default function PhasesPage(){
 
   return (
     <div className="space-y-10">
+      <PhaseTabs active="K_P1" />
       <div className="space-y-3">
+        <h2 className="text-2xl font-semibold text-gray-900">K-Reading Kickstart Program</h2>
         <p className="text-sm text-gray-700">Click on any phase to explore its content</p>
-        <div className="grid gap-4 md:grid-cols-3">
+        <div className="grid gap-4 md:grid-cols-3 items-stretch">
           {phases.map(phase => {
             const locked = phase.is_locked && !adminMode;
             return (
-              <div key={phase.id} className="rounded-2xl border border-gray-100 bg-white p-5 shadow-sm">
+              <div key={phase.id} className="rounded-2xl border border-gray-100 bg-white p-5 shadow-sm flex flex-col justify-between">
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-xs uppercase tracking-wide text-gray-600">{phase.months || ''} {phase.lesson_range ? `| ${phase.lesson_range}` : ''}</p>

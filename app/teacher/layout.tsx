@@ -7,7 +7,6 @@ import { createContext, useContext, useEffect, useMemo, useState } from 'react';
 const tabs = [
   { id: 'about', label: 'About Method', href: '/teacher/about' },
   { id: 'phases', label: 'Phases', href: '/teacher/phases' },
-  { id: 'lessons', label: 'Daily Lessons', href: '/teacher/lessons' },
   { id: 'assessments', label: 'Assessments', href: '/teacher/assessments' },
   { id: 'grouping', label: 'Grouping & Progress', href: '/teacher/grouping' },
   { id: 'resources', label: 'Resources', href: '/teacher/resources' },

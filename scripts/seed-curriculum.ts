@@ -16,7 +16,13 @@ const phases = [
     description: 'Phonological Awareness Foundation',
     months: 'Months 1-3',
     lesson_range: 'Lessons 1-60',
-    summary: 'Build early listening and sound awareness before formal phonics.',
+    summary: `Phonological Awareness is one of the key predictors and a vital prerequisite for learning to read and spell. It is the ability to identify and manipulate units of sound.
+
+The basic phonological awareness ability is detecting rhyme. The students with competent phonological awareness will easily recognize that the rime part is the same and only the onset is changed in words like pat, sat, and mat. The students with language learning disability often do not have this ability. Early intervention with exposure to rhymes is vital.
+
+Phonological awareness involves the understanding that sentences are made up of words, that words are created from syllables, and syllables from sounds. When counting words, students with language learning disability may think that "Atlantic" is three words, not being aware that the components are syllables that make up one word. This knowledge cannot be assumed but must be taught directly.
+
+Once the students are aware of the syllable components, they can learn to manipulate them, by adding, deleting, and reversing them. Only after extensive practice with syllables are the students able to identify and manipulate sounds in syllables. The awareness of phonemes is the highest skill and requires daily practice. The students who can accurately detect and manipulate the sounds in syllables are well equipped for reading and spelling activities.`,
     is_locked: false,
     display_order: 1,
     outcomes: [
@@ -36,49 +42,48 @@ const phases = [
           {
             code: 'LS-1',
             title: 'The Silence Game',
-            subtitle: 'Module LS-1',
+            subtitle: 'LS1',
             summary: 'Sharpen listening skills with intentional silence and sound awareness.',
             is_locked: false,
             display_order: 1,
             lesson: {
               materials: ['A quiet classroom'],
-              aims: ['Sharpen listening skills', 'Build attention span', 'Strengthen auditory discrimination'],
+              aims: ['Sharpen the students listening skills', 'Develop good attention span', 'Build auditory discrimination'],
               presentation_steps: [
-                'Tell students they are going to play the Silence Game.',
-                'Ask each child to close their eyes and listen to the sounds in the room, outside the room, and within themselves.',
+                'Tell the students that they are going to play a game called Silence Game.',
+                'Ask each of them to close their eyes and listen to the sounds in the room, outside the room, and within themselves.',
                 'Set a timer for 2 minutes.',
-                'After 2 minutes, ask students to share what they heard.',
+                'After 2 minutes of listening quietly, ask them to share what they heard (clock ticks, voices, footsteps, animals, coughing, faucet, flush, cars, breathing, air conditioner, etc.).',
               ],
               examples: [
                 'Clock ticks',
-                'Footsteps',
-                'Coughing',
-                'Cars',
-                'Air conditioner',
                 'Voices',
+                'Footsteps',
                 'Animals',
+                'Coughing',
                 'Faucet',
+                'Flush',
+                'Cars',
                 'Breathing',
+                'Air conditioner',
               ],
-              extension: ['Play in a different room or outdoors', 'Use recordings of birds or animals and ask students to guess the animal'],
+              extension: [
+                'Play the game in a different room or outdoors.',
+                'Use recordings of birds or other animals and ask students to guess the animal.',
+              ],
             },
           },
-          {
-            code: 'LS-2',
-            title: 'Module 2',
-            subtitle: 'Module LS-2',
-            summary: 'Coming soon',
-            is_locked: true,
-            display_order: 2,
-          },
-          {
-            code: 'LS-3',
-            title: 'Module 3',
-            subtitle: 'Module LS-3',
-            summary: 'Coming soon',
-            is_locked: true,
-            display_order: 3,
-          },
+          ...Array.from({ length: 12 }).map((_, idx) => {
+            const n = idx + 2;
+            return {
+              code: `LS-${n}`,
+              title: `Module ${n}`,
+              subtitle: `LS${n}`,
+              summary: 'Content coming soon',
+              is_locked: true,
+              display_order: n,
+            };
+          }),
         ],
       },
       {
@@ -97,6 +102,24 @@ const phases = [
         module_count: 10,
         is_locked: true,
         display_order: 3,
+        modules: [],
+      },
+      {
+        code: 'K_P1_SYL',
+        title: 'Syllables',
+        description: 'Clap, segment, and blend syllables',
+        module_count: 10,
+        is_locked: true,
+        display_order: 4,
+        modules: [],
+      },
+      {
+        code: 'K_P1_PA',
+        title: 'Phonemic Awareness',
+        description: 'Work with individual sounds',
+        module_count: 10,
+        is_locked: true,
+        display_order: 5,
         modules: [],
       },
     ],

@@ -3,7 +3,7 @@ import Link from 'next/link';
 import { use, useEffect, useState } from 'react';
 import { supabaseClient } from '@/lib/supabase';
 import clsx from 'clsx';
-import { useAdminMode } from '../../../layout';
+import { useAdminMode } from '../../../../layout';
 
 type Group = { id:string; code:string; title:string; description:string|null; is_locked:boolean|null; phase_id:string };
 type ModuleRow = { id:string; code:string; title:string; subtitle:string|null; summary:string|null; is_locked:boolean|null; display_order:number|null };

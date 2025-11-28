@@ -1,6 +1,6 @@
 'use client';
 import Link from 'next/link';
-import { useEffect, useState } from 'react';
+import { use, useEffect, useState } from 'react';
 import { supabaseClient } from '@/lib/supabase';
 
 type Lesson = {
@@ -22,7 +22,8 @@ type ModuleRow = {
   group_id: string | null;
 };
 
-export default function ModuleDetailPage({ params }: { params: { code: string } }) {
+export default function ModuleDetailPage({ params }: { params: Promise<{ code: string }> }) {
+  const { code } = use(params);
   const [module, setModule] = useState<ModuleRow | null>(null);
   const [notes, setNotes] = useState('');
   const [audioFile, setAudioFile] = useState<File | null>(null);
@@ -34,12 +35,12 @@ export default function ModuleDetailPage({ params }: { params: { code: string } 
       const { data } = await sb
         .from('module_detail')
         .select('id,code,title,subtitle,summary,lesson,phase_id,group_id')
-        .eq('code', params.code)
+        .eq('code', code)
         .maybeSingle();
       if (data) setModule(data as ModuleRow);
     };
     fetchModule();
-  }, [params.code]);
+  }, [code]);
 
   const lesson = module?.lesson || {};
 

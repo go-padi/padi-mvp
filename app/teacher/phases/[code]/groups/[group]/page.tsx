@@ -1,6 +1,6 @@
 'use client';
 import Link from 'next/link';
-import { useEffect, useState } from 'react';
+import { use, useEffect, useState } from 'react';
 import { supabaseClient } from '@/lib/supabase';
 import clsx from 'clsx';
 import { useAdminMode } from '../../../layout';
@@ -8,7 +8,8 @@ import { useAdminMode } from '../../../layout';
 type Group = { id:string; code:string; title:string; description:string|null; is_locked:boolean|null; phase_id:string };
 type ModuleRow = { id:string; code:string; title:string; subtitle:string|null; summary:string|null; is_locked:boolean|null; display_order:number|null };
 
-export default function GroupModulesPage({ params }:{ params:{ code:string; group:string } }){
+export default function GroupModulesPage({ params }:{ params: Promise<{ code:string; group:string }> }){
+  const { code, group: groupCode } = use(params);
   const [group,setGroup]=useState<Group|null>(null);
   const [modules,setModules]=useState<ModuleRow[]>([]);
   const { adminMode } = useAdminMode();
@@ -16,7 +17,7 @@ export default function GroupModulesPage({ params }:{ params:{ code:string; grou
   useEffect(()=>{
     const fetchGroup=async()=>{
       const sb=supabaseClient();
-      const { data: g } = await sb.from('module_group').select('id,code,title,description,is_locked,phase_id').eq('code', params.group).maybeSingle();
+      const { data: g } = await sb.from('module_group').select('id,code,title,description,is_locked,phase_id').eq('code', groupCode).maybeSingle();
       if(g) setGroup(g as Group);
       const { data: mods } = await sb
         .from('module_detail')
@@ -26,12 +27,12 @@ export default function GroupModulesPage({ params }:{ params:{ code:string; grou
       if(mods) setModules(mods as ModuleRow[]);
     };
     fetchGroup();
-  },[params.group]);
+  },[groupCode]);
 
   return (
     <div className="space-y-6">
       <div className="flex items-center gap-3">
-        <Link href={`/teacher/phases/${params.code}`} className="text-sm text-gray-700 hover:text-gray-900">← Back to Phase</Link>
+        <Link href={`/teacher/phases/${code}`} className="text-sm text-gray-700 hover:text-gray-900">← Back to Phase</Link>
       </div>
       <div>
         <h2 className="text-3xl font-semibold text-gray-900">{group?.title || 'Modules'}</h2>

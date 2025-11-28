@@ -1,6 +1,6 @@
 'use client';
 import Link from 'next/link';
-import { useEffect, useState } from 'react';
+import { use, useEffect, useState } from 'react';
 import { supabaseClient } from '@/lib/supabase';
 import clsx from 'clsx';
 import { useAdminMode } from '../../layout';
@@ -22,7 +22,8 @@ type Group = {
   is_locked: boolean | null;
 };
 
-export default function PhaseDetail({ params }: { params: { code: string } }){
+export default function PhaseDetail({ params }: { params: Promise<{ code: string }> }){
+  const { code } = use(params);
   const [phase, setPhase] = useState<Phase | null>(null);
   const [groups, setGroups] = useState<Group[]>([]);
   const { adminMode } = useAdminMode();
@@ -33,7 +34,7 @@ export default function PhaseDetail({ params }: { params: { code: string } }){
       const { data: phaseRow } = await sb
         .from('phase')
         .select('id,code,title,description,summary')
-        .eq('code', params.code)
+        .eq('code', code)
         .maybeSingle();
       if (phaseRow) setPhase(phaseRow as Phase);
       const { data: groupRows } = await sb

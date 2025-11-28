@@ -1,35 +1,59 @@
 # PADI MVP
 
 ## Overview
-This project is a Next.js 15 application that uses Supabase for data storage. It provides a landing page with navigation to a module library, student management, and demo class routes. The app uses a shared root layout to apply global styles, render a top navigation bar, and wrap page content in a container.
+This project is a Next.js 15 application that uses Supabase for data storage. It provides:
+- A public marketing home with CTAs to Students and the Teacher Dashboard.
+- A Teacher Dashboard with tabs (About Method, Phases, Assessments, Grouping & Progress, Resources).
+- A Phases flow: Phase -> Developmental Areas -> Modules -> Lesson, seeded for Phase 1 (Learning Sensorially, LS1-13).
+- A Module Library and simple Students page.
 
 ## Key Areas
 ### Navigation & Layout
-- `components/TopNav.tsx` builds a navigation bar with active-route highlighting via `usePathname` and `clsx`, linking to Dashboard, Library, and Students.
-- Global styles live in `app/globals.css` with reusable Tailwind utility classes such as `.card`, `.btn`, and `.container` for consistent styling.
+- `components/TopNav.tsx` builds the sticky top navigation with For Students/For Teachers, Library, and Dashboard links.
+- `app/teacher/layout.tsx` provides the teacher top tabs and an Admin toggle (client-side only).
+- Global styles live in `app/globals.css` with reusable Tailwind utility classes such as `.card`, `.btn`, and `.container`.
+
+### Teacher Flows
+- `app/teacher/about/page.tsx` shows the method overview and program structure.
+- `app/teacher/phases/page.tsx` lists Phase 1–3 cards and outcomes; `app/teacher/phases/[phase]/page.tsx` shows phase detail and developmental areas.
+- `app/teacher/phases/[phase]/areas/[area]/page.tsx` lists modules for an area; `app/teacher/phases/[phase]/areas/[area]/modules/[module]/page.tsx` shows the lesson (LS1 populated, LS2-13 placeholders).
+- Admin toggle only affects UI locks; no auth is wired yet.
 
 ### Library (Modules)
-- `app/library/page.tsx` is a client component that queries Supabase for module records with optional domain, section, and search filters. It refetches data on filter changes and renders results with `ModuleCard`.
-- `components/ModuleCard.tsx` displays each module's code, section, title, objective, and domain in a card layout.
+- `app/library/page.tsx` queries Supabase for module records with filters and renders `ModuleCard`.
+- `components/ModuleCard.tsx` displays module metadata in a card layout.
 
 ### Students
-- `app/students/page.tsx` is a client page for managing students per `classId`. It loads students from Supabase, supports adding a new student name, and re-queries after inserts.
+- `app/students/page.tsx` manages students per `classId`, loading from Supabase and inserting new names.
 
 ### Supabase Integration & Data
-- `lib/supabase.ts` creates a browser Supabase client using environment variables `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_ANON_KEY`.
-- The database schema includes `module` and `student` tables for lesson metadata and student/class relationships.
-- `scripts/seed-modules.ts` reads `scripts/modules.json` and inserts the sample modules into Supabase using a service role key. Run it with `pnpm seed:modules` after configuring `.env.local`.
+- `lib/supabase.ts` creates a browser Supabase client using `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_ANON_KEY`.
+- Schema: legacy `module` + `student`, plus new `phase`, `module_group`, `module_detail`, `lesson_note`.
+- Seeds:
+  - `scripts/seed-modules.ts` for legacy modules.
+  - `scripts/seed-curriculum.ts` for phases/groups/modules (Phase 1 with LS1-13, LS1 populated).
 
 ## Getting Started
-1. Install dependencies with `pnpm install`.
-2. Set environment variables:
+1. Install dependencies: `pnpm install`.
+2. Set environment variables in `.env.local`:
    - `NEXT_PUBLIC_SUPABASE_URL`
    - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
-   - `SUPABASE_SERVICE_ROLE_KEY` (for seeding)
-3. Seed sample modules with `pnpm seed:modules`.
-4. Start the development server with `pnpm dev`.
+   - `SUPABASE_SERVICE_ROLE_KEY` (for seeding and server-side tasks)
+3. Apply schema to Supabase (tables are in `supabase/schema.sql`).
+4. Seed curriculum (Phase 1, LS1-13): `pnpm seed:curriculum` (uses service role).
+   - Optional legacy modules: `pnpm seed:modules`.
+5. Run dev server (pick a free port): `pnpm dev -- --port 3010` (or omit `--port`).
+6. Visit:
+   - `/teacher/about` (default teacher landing)
+   - `/teacher/phases` (Phase cards)
+   - `/teacher/phases/K_P1/areas/K_P1_LS` (Learning Sensorially modules)
+   - `/teacher/phases/K_P1/areas/K_P1_LS/modules/LS-1` (Silence Game lesson)
+
+### RLS and Storage
+- If Row Level Security is on, add read policies for `phase`, `module_group`, `module_detail`, and (if used) `module`. Example for public reads: `for select to anon using (true)` (or switch to `authenticated`).
+- Lesson attachments use the `lesson-attachments` storage bucket. Keep it private and add policies allowing authenticated users to read/insert within their own prefix. Upload path uses `user.id/<module>/...` and signed URLs for access.
 
 ## Next Steps
-- Extend placeholder class routes (`app/classes/[id]/plan` and `app/classes/[id]/today`) and assessments to add planning/teaching flows and data models.
-- Add Supabase row-level security policies and error/loading states in client components for production readiness.
-- Explore `app/globals.css` to keep new UI elements consistent with existing card, button, and link patterns.
+- Add more Phase 1 content (Rhyming, Words and Sentences, Syllables, Phonemic Awareness) and Phase 2/3 placeholders.
+- Wire real auth for teachers and enforce uploads/notes per user with RLS.
+- Expand lesson views beyond LS1 and support richer note storage/listing.

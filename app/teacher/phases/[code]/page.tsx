@@ -45,11 +45,11 @@ export default function PhaseDetail({ params }: { params: Promise<{ code: string
       if (groupRows) setGroups(groupRows as Group[]);
     };
     fetchPhase();
-  }, [params.code]);
+  }, [code]);
 
   return (
     <div className="space-y-6">
-      <Link href="/teacher" className="inline-flex items-center gap-2 text-sm text-gray-700 hover:text-gray-900">
+      <Link href="/teacher/phases" className="inline-flex items-center gap-2 text-sm text-gray-700 hover:text-gray-900">
         ← Back to Phases
       </Link>
       <div className="space-y-3">
@@ -81,7 +81,7 @@ export default function PhaseDetail({ params }: { params: Promise<{ code: string
                     <p className="text-xs text-gray-600 mt-1">{g.module_count ? `${g.module_count} modules available` : ''}</p>
                   </div>
                   <Link
-                    href={locked ? '#' : `/teacher/phases/${params.code}/groups/${g.code}`}
+                    href={locked ? '#' : `/teacher/phases/${code}/groups/${g.code}`}
                     className={clsx(
                       'rounded-xl border px-4 py-2 text-sm font-semibold',
                       locked ? 'border-gray-200 text-gray-400 cursor-not-allowed bg-gray-50' : 'border-gray-900 text-gray-900 hover:bg-gray-900 hover:text-white'

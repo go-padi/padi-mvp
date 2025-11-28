@@ -53,7 +53,7 @@ export default function ModuleDetailPage({ params }: { params: Promise<{ code: s
   return (
     <div className="space-y-6">
       <div className="flex items-center gap-3">
-        <Link href={module?.group_id ? `/teacher` : '/teacher'} className="text-sm text-gray-700 hover:text-gray-900">
+        <Link href="/teacher/phases" className="text-sm text-gray-700 hover:text-gray-900">
           ← Back to Modules
         </Link>
       </div>

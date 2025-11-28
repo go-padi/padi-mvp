@@ -5,7 +5,7 @@ import clsx from 'clsx';
 
 const navLinks = [
   { href: '/students', label: 'For Students' },
-  { href: '/teacher', label: 'For Teachers' },
+  { href: '/teacher/about', label: 'For Teachers' },
 ];
 
 export default function TopNav(){
@@ -18,18 +18,21 @@ export default function TopNav(){
           <span>Padi</span>
         </Link>
         <div className="flex items-center gap-2">
-          {navLinks.map(link => (
-            <Link
-              key={link.href}
-              href={link.href}
-              className={clsx(
-                'px-3 py-2 rounded-lg text-sm hover:bg-gray-100',
-                pathname === link.href && 'bg-gray-100 font-semibold'
-              )}
-            >
-              {link.label}
-            </Link>
-          ))}
+          {navLinks.map(link => {
+            const active = pathname === link.href || pathname.startsWith(link.href + '/');
+            return (
+              <Link
+                key={link.href}
+                href={link.href}
+                className={clsx(
+                  'px-3 py-2 rounded-lg text-sm hover:bg-gray-100',
+                  active && 'bg-gray-100 font-semibold'
+                )}
+              >
+                {link.label}
+              </Link>
+            );
+          })}
           <Link href="/library" className="px-3 py-2 rounded-lg text-sm hover:bg-gray-100">
             Library
           </Link>

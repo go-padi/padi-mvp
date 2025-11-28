@@ -6,7 +6,7 @@ import { createContext, useContext, useEffect, useMemo, useState } from 'react';
 
 const tabs = [
   { id: 'about', label: 'About Method', href: '/teacher/about' },
-  { id: 'phases', label: 'Phases', href: '/teacher' },
+  { id: 'phases', label: 'Phases', href: '/teacher/phases' },
   { id: 'lessons', label: 'Daily Lessons', href: '/teacher/lessons' },
   { id: 'assessments', label: 'Assessments', href: '/teacher/assessments' },
   { id: 'grouping', label: 'Grouping & Progress', href: '/teacher/grouping' },
@@ -62,7 +62,7 @@ export default function TeacherLayout({ children }: { children: React.ReactNode 
         </div>
         <div className="flex flex-wrap gap-2">
           {tabs.map(tab => {
-            const active = pathname === tab.href || (tab.href === '/teacher' && pathname.startsWith('/teacher'));
+            const active = pathname === tab.href || pathname.startsWith(`${tab.href}/`) || (tab.href === '/teacher/about' && pathname === '/teacher');
             return (
               <Link
                 key={tab.id}

@@ -2,6 +2,9 @@
 import Link from 'next/link';
 import { use, useEffect, useState } from 'react';
 import { supabaseClient } from '@/lib/supabase';
+import clsx from 'clsx';
+import { useTeachingMode } from '@/lib/teachingModeContext';
+import { TeachingModeToggle } from '@/components/TeachingModeToggle';
 
 type Lesson = {
   materials?: string[];
@@ -17,6 +20,7 @@ type ModuleRow = {
   title: string;
   subtitle: string | null;
   summary: string | null;
+  teaching_mode: 'individual' | 'group';
   lesson: Lesson | null;
 };
 
@@ -33,21 +37,31 @@ export default function LessonPage({ params }: { params: Promise<{ phase: string
   const [saving, setSaving] = useState(false);
   const [status, setStatus] = useState<string | null>(null);
   const [needsAuth, setNeedsAuth] = useState(false);
+  const { mode } = useTeachingMode();
 
   useEffect(() => {
     const fetchData = async () => {
       const sb = supabaseClient();
-      const { data: mod } = await sb
+      let query = sb
         .from('module_detail')
-        .select('id,code,title,subtitle,summary,lesson')
-        .eq('code', module)
-        .maybeSingle();
+        .select('id,code,title,subtitle,summary,lesson,teaching_mode')
+        .eq('code', module);
+      query = mode === 'both' ? query : query.eq('teaching_mode', mode);
+      let { data: mod } = await query.maybeSingle();
+      if (!mod && mode !== 'both') {
+        const fallback = await sb
+          .from('module_detail')
+          .select('id,code,title,subtitle,summary,lesson,teaching_mode')
+          .eq('code', module)
+          .maybeSingle();
+        mod = fallback.data;
+      }
       if (mod) setModuleRow(mod as ModuleRow);
       const { data: studentRows } = await sb.from('student').select('id,full_name').order('full_name');
       if (studentRows) setStudents(studentRows as Student[]);
     };
     fetchData();
-  }, [module]);
+  }, [module, mode]);
 
   const lesson = moduleRow?.lesson || {};
 
@@ -108,7 +122,7 @@ export default function LessonPage({ params }: { params: Promise<{ phase: string
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between rounded-2xl border border-gray-100 bg-white p-4 shadow-sm">
+      <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-gray-100 bg-white p-4 shadow-sm">
         <div className="flex items-center gap-2">
           <Link href="/teacher" className="text-sm text-gray-700 hover:text-gray-900" title="Home">
             🏠
@@ -117,11 +131,24 @@ export default function LessonPage({ params }: { params: Promise<{ phase: string
             ← Back to Modules
           </Link>
         </div>
-        <div className="text-xs text-gray-500">{moduleRow?.code}</div>
+        <div className="flex items-center gap-2">
+          <TeachingModeToggle />
+          <div className="text-xs text-gray-500">{moduleRow?.code}</div>
+        </div>
       </div>
 
       <div className="space-y-2">
-        <h2 className="text-3xl font-semibold text-gray-900">{moduleRow?.subtitle ? `Module ${moduleRow.subtitle}` : moduleRow?.title || 'Module'}</h2>
+        <h2 className="text-3xl font-semibold text-gray-900 flex items-center gap-3">
+          {moduleRow?.subtitle ? `Module ${moduleRow.subtitle}` : moduleRow?.title || 'Module'}
+          {moduleRow?.teaching_mode && (
+            <span className={clsx(
+              'rounded-full px-3 py-1 text-xs font-semibold uppercase tracking-wide',
+              moduleRow.teaching_mode === 'individual' ? 'bg-purple-50 text-purple-700' : 'bg-blue-50 text-blue-700'
+            )}>
+              {moduleRow.teaching_mode === 'individual' ? 'Individual' : 'Group'}
+            </span>
+          )}
+        </h2>
         <p className="text-sm text-gray-700">{moduleRow?.summary}</p>
       </div>
 

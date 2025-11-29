@@ -5,6 +5,8 @@ import { supabaseClient } from '@/lib/supabase';
 import clsx from 'clsx';
 import { useAdminMode } from '../layout';
 import { PhaseTabs } from '@/components/PhaseTabs';
+import { TeachingModeToggle } from '@/components/TeachingModeToggle';
+import { useTeachingMode } from '@/lib/teachingModeContext';
 
 type PhaseRow = {
   id: string;
@@ -22,6 +24,7 @@ export default function PhasesPage(){
   const [phases, setPhases] = useState<PhaseRow[]>([]);
   const [outcomes, setOutcomes] = useState<Outcome[]>([]);
   const { adminMode } = useAdminMode();
+  const { mode } = useTeachingMode();
 
   useEffect(() => {
     const fetchPhases = async () => {
@@ -38,9 +41,13 @@ export default function PhasesPage(){
 
   return (
     <div className="space-y-10">
-      <PhaseTabs active="K_P1" />
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <PhaseTabs active="K_P1" />
+        <TeachingModeToggle />
+      </div>
       <div className="space-y-3">
         <h2 className="text-2xl font-semibold text-gray-900">K-Reading Kickstart Program</h2>
+        <p className="text-xs text-gray-600">Teaching mode: {mode === 'both' ? 'Individual + Group' : mode === 'group' ? 'Group' : 'Individual'}</p>
         <p className="text-sm text-gray-700">Click on any phase to explore its content</p>
         <div className="grid gap-4 md:grid-cols-3 items-stretch">
           {phases.map(phase => {

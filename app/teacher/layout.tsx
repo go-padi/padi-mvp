@@ -61,7 +61,7 @@ export default function TeacherLayout({ children }: { children: React.ReactNode 
         </div>
         <div className="flex flex-wrap gap-2">
           {tabs.map(tab => {
-            const active = pathname === tab.href || pathname.startsWith(`${tab.href}/`) || (tab.href === '/teacher/about' && pathname === '/teacher');
+            const active = pathname === tab.href || pathname.startsWith(`${tab.href}/`);
             return (
               <Link
                 key={tab.id}

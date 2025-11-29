@@ -5,10 +5,12 @@ import { supabaseClient } from '@/lib/supabase';
 import clsx from 'clsx';
 import { useAdminMode } from '../../../../layout';
 import { PhaseTabs } from '@/components/PhaseTabs';
+import { useTeachingMode } from '@/lib/teachingModeContext';
+import { TeachingModeToggle } from '@/components/TeachingModeToggle';
 
 type Phase = { id:string; code:string; title:string; summary:string|null };
-type Group = { id:string; code:string; title:string; description:string|null; is_locked:boolean|null; module_count:number|null };
-type ModuleRow = { id:string; code:string; title:string; subtitle:string|null; summary:string|null; is_locked:boolean|null; display_order:number|null };
+type Group = { id:string; code:string; title:string; description:string|null; is_locked:boolean|null; module_count:number|null; teaching_mode: 'group' | 'individual' };
+type ModuleRow = { id:string; code:string; title:string; subtitle:string|null; summary:string|null; is_locked:boolean|null; display_order:number|null; teaching_mode: 'group' | 'individual' };
 
 export default function AreaPage({ params }:{ params: Promise<{ phase:string; area:string }> }){
   const { phase, area } = use(params);
@@ -16,28 +18,48 @@ export default function AreaPage({ params }:{ params: Promise<{ phase:string; ar
   const [groups,setGroups]=useState<Group[]>([]);
   const [modules,setModules]=useState<ModuleRow[]>([]);
   const { adminMode } = useAdminMode();
+  const { mode } = useTeachingMode();
 
   useEffect(()=>{
     const fetchData=async()=>{
       const sb=supabaseClient();
       const { data: p } = await sb.from('phase').select('id,code,title,summary').eq('code', phase).maybeSingle();
       if(p) setPhaseRow(p as Phase);
-      const { data: gs } = await sb.from('module_group').select('id,code,title,description,is_locked,module_count').eq('phase_id', p?.id).order('display_order');
+
+      let groupQuery = sb.from('module_group')
+        .select('id,code,title,description,is_locked,module_count,teaching_mode')
+        .eq('phase_id', p?.id || null);
+      groupQuery = mode === 'both' ? groupQuery.in('teaching_mode', ['group', 'individual']) : groupQuery.eq('teaching_mode', mode);
+      const { data: gs } = await groupQuery.order('display_order');
       if(gs) setGroups(gs as Group[]);
-      const { data: mods } = await sb.from('module_detail').select('id,code,title,subtitle,summary,is_locked,display_order').eq('group_id',
-        (gs as any)?.find((g:Group)=>g.code===area)?.id || null).order('display_order');
+
+      const activeGroup = (gs as Group[] | null | undefined)?.find((g:Group)=>g.code===area);
+      if(!activeGroup){
+        setModules([]);
+        return;
+      }
+
+      let moduleQuery = sb
+        .from('module_detail')
+        .select('id,code,title,subtitle,summary,is_locked,display_order,teaching_mode')
+        .eq('group_id', activeGroup.id);
+      moduleQuery = mode === 'both' ? moduleQuery.eq('teaching_mode', activeGroup.teaching_mode) : moduleQuery.eq('teaching_mode', mode);
+      const { data: mods } = await moduleQuery.order('display_order');
       if(mods) setModules(mods as ModuleRow[]);
     };
     fetchData();
-  },[phase, area]);
+  },[phase, area, mode]);
 
   const sortedModules = useMemo(()=>modules.slice().sort((a,b)=> (a.display_order||0)-(b.display_order||0)),[modules]);
-
-  const currentGroup = groups.find(g=>g.code===area);
+  const filteredGroups = useMemo(() => (mode === 'both' ? groups : groups.filter(g => g.teaching_mode === mode)), [groups, mode]);
+  const currentGroup = filteredGroups.find(g=>g.code===area);
 
   return (
     <div className="space-y-6">
-      <PhaseTabs active={phase} />
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <PhaseTabs active={phase} />
+        <TeachingModeToggle />
+      </div>
       <div className="flex items-center gap-3">
         <Link href={`/teacher/phases/${phase}`} className="text-sm text-gray-700 hover:text-gray-900">← Back to Phase</Link>
       </div>
@@ -49,8 +71,11 @@ export default function AreaPage({ params }:{ params: Promise<{ phase:string; ar
       </div>
       <div className="space-y-3">
         <h3 className="text-lg font-semibold text-gray-900">Developmental Areas</h3>
+        {filteredGroups.length === 0 && (
+          <div className="rounded-2xl border border-gray-100 bg-white p-4 shadow-sm text-sm text-gray-700">Curriculum coming soon.</div>
+        )}
         <div className="grid gap-3 md:grid-cols-2">
-          {groups.map(g=>{
+          {filteredGroups.map(g=>{
             const locked = g.is_locked && !adminMode;
             const active = g.code===area;
             return (
@@ -65,6 +90,14 @@ export default function AreaPage({ params }:{ params: Promise<{ phase:string; ar
               >
                 <p className="text-sm font-semibold text-gray-900 flex items-center gap-2">
                   {g.title} {g.is_locked ? <span className="text-gray-400 text-xs">🔒</span> : null}
+                  {mode === 'both' && (
+                    <span className={clsx(
+                      'rounded-full px-2 py-0.5 text-[11px] font-semibold uppercase tracking-wide',
+                      g.teaching_mode === 'individual' ? 'bg-purple-50 text-purple-700' : 'bg-blue-50 text-blue-700'
+                    )}>
+                      {g.teaching_mode === 'individual' ? 'Individual' : 'Group'}
+                    </span>
+                  )}
                 </p>
                 <p className="text-xs text-gray-600">{g.description || 'Coming soon'}</p>
               </Link>
@@ -86,14 +119,22 @@ export default function AreaPage({ params }:{ params: Promise<{ phase:string; ar
             return (
               <div key={mod.id} className={clsx('rounded-2xl border p-4 shadow-sm flex items-center justify-between',
                 idx===0 ? 'border-blue-300 bg-blue-50' : 'border-gray-100 bg-white')}>
-                <div>
-                  <p className="text-sm font-semibold text-gray-900 flex items-center gap-2">
-                    {mod.subtitle || mod.title}
-                    {mod.is_locked ? <span className="text-gray-400 text-xs">🔒</span> : null}
-                  </p>
-                  <p className="text-xs text-gray-600">{mod.title}</p>
-                  <p className="text-xs text-gray-600 mt-1">{mod.summary || (locked ? 'Coming soon' : '')}</p>
-                </div>
+              <div>
+                <p className="text-sm font-semibold text-gray-900 flex items-center gap-2">
+                  {mod.subtitle || mod.title}
+                  {mod.is_locked ? <span className="text-gray-400 text-xs">🔒</span> : null}
+                  {mode === 'both' && (
+                    <span className={clsx(
+                      'rounded-full px-2 py-0.5 text-[11px] font-semibold uppercase tracking-wide',
+                      mod.teaching_mode === 'individual' ? 'bg-purple-50 text-purple-700' : 'bg-blue-50 text-blue-700'
+                    )}>
+                      {mod.teaching_mode === 'individual' ? 'Individual' : 'Group'}
+                    </span>
+                  )}
+                </p>
+                <p className="text-xs text-gray-600">{mod.title}</p>
+                <p className="text-xs text-gray-600 mt-1">{mod.summary || (locked ? 'Coming soon' : '')}</p>
+              </div>
                 <Link
                   href={locked ? '#' : `/teacher/phases/${phase}/areas/${area}/modules/${mod.code}`}
                   className={clsx(

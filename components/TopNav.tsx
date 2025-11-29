@@ -4,8 +4,8 @@ import { usePathname } from 'next/navigation';
 import clsx from 'clsx';
 
 const navLinks = [
-  { href: '/students', label: 'For Students' },
-  { href: '/teacher/about', label: 'For Teachers' },
+  { href: '/teacher/phases', label: 'Teacher Dashboard' },
+  { href: '/library', label: 'Library' },
 ];
 
 export default function TopNav(){
@@ -33,13 +33,13 @@ export default function TopNav(){
               </Link>
             );
           })}
-          <Link href="/library" className="px-3 py-2 rounded-lg text-sm hover:bg-gray-100">
-            Library
+          <Link
+            href="/teacher"
+            className="ml-1 rounded-xl bg-gradient-to-r from-blue-600 to-purple-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:opacity-95"
+          >
+            Start Teaching
           </Link>
-          <Link href="/students" className="px-3 py-2 rounded-lg text-sm hover:bg-gray-100">
-            Dashboard
-          </Link>
-          <Link href="/signin" className="ml-2 px-3 py-2 rounded-xl text-sm border bg-white hover:bg-gray-50">
+          <Link href="/signin" className="px-3 py-2 rounded-xl text-sm border bg-white hover:bg-gray-50">
             Sign In
           </Link>
         </div>

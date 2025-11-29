@@ -1,5 +1,11 @@
--- schema and policies trimmed for brevity in this starter
 -- (Use the full schema I provided earlier in chat if you need all policies.)
+DO $$
+BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'teaching_mode') THEN
+    CREATE TYPE teaching_mode AS ENUM ('individual', 'group');
+  END IF;
+END$$;
+
 create table if not exists module (
   id uuid primary key default gen_random_uuid(),
   code text not null,
@@ -35,6 +41,7 @@ create table if not exists module_group (
   description text,
   module_count int default 0,
   is_locked boolean default false,
+  teaching_mode teaching_mode not null default 'group',
   display_order int default 0
 );
 
@@ -47,6 +54,7 @@ create table if not exists module_detail (
   subtitle text,
   summary text,
   is_locked boolean default false,
+  teaching_mode teaching_mode not null default 'group',
   display_order int default 0,
   lesson jsonb,
   metadata jsonb
@@ -69,3 +77,9 @@ create table if not exists student (
   full_name text not null,
   created_at timestamptz default now()
 );
+
+alter table module_group
+  add column if not exists teaching_mode teaching_mode not null default 'group';
+
+alter table module_detail
+  add column if not exists teaching_mode teaching_mode not null default 'group';

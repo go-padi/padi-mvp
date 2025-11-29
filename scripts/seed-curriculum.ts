@@ -37,6 +37,7 @@ Once the students are aware of the syllable components, they can learn to manipu
         description: 'Sharpen listening skills and auditory discrimination',
         module_count: 13,
         is_locked: false,
+        teaching_mode: 'group',
         display_order: 1,
         modules: [
           {
@@ -45,6 +46,7 @@ Once the students are aware of the syllable components, they can learn to manipu
             subtitle: 'LS1',
             summary: 'Sharpen listening skills with intentional silence and sound awareness.',
             is_locked: false,
+            teaching_mode: 'group',
             display_order: 1,
             lesson: {
               materials: ['A quiet classroom'],
@@ -81,6 +83,7 @@ Once the students are aware of the syllable components, they can learn to manipu
               subtitle: `LS${n}`,
               summary: 'Content coming soon',
               is_locked: true,
+              teaching_mode: 'group',
               display_order: n,
             };
           }),
@@ -92,6 +95,7 @@ Once the students are aware of the syllable components, they can learn to manipu
         description: 'Develop rhyming discrimination and production',
         module_count: 10,
         is_locked: true,
+        teaching_mode: 'group',
         display_order: 2,
         modules: [],
       },
@@ -101,6 +105,7 @@ Once the students are aware of the syllable components, they can learn to manipu
         description: 'Build word and sentence awareness',
         module_count: 10,
         is_locked: true,
+        teaching_mode: 'group',
         display_order: 3,
         modules: [],
       },
@@ -110,6 +115,7 @@ Once the students are aware of the syllable components, they can learn to manipu
         description: 'Clap, segment, and blend syllables',
         module_count: 10,
         is_locked: true,
+        teaching_mode: 'group',
         display_order: 4,
         modules: [],
       },
@@ -119,6 +125,7 @@ Once the students are aware of the syllable components, they can learn to manipu
         description: 'Work with individual sounds',
         module_count: 10,
         is_locked: true,
+        teaching_mode: 'group',
         display_order: 5,
         modules: [],
       },
@@ -150,8 +157,113 @@ Once the students are aware of the syllable components, they can learn to manipu
   },
 ];
 
+const individualCurriculum: Record<string, {
+  code: string;
+  title: string;
+  description: string;
+  module_count: number;
+  is_locked: boolean;
+  display_order: number;
+  modules: {
+    code: string;
+    title: string;
+    subtitle?: string;
+    summary?: string | null;
+    is_locked: boolean;
+    display_order: number;
+  }[];
+}[]> = {
+  K_P1: [
+    {
+      code: 'K_P1_IND_SA',
+      title: 'Sound Awareness (Individual)',
+      description: 'One-on-one listening and sound identification activities',
+      module_count: 10,
+      is_locked: false,
+      display_order: 1,
+      modules: [
+        {
+          code: 'K_P1_IND_SA_1',
+          title: 'Lesson 1 (Individual placeholder)',
+          subtitle: 'Ind 1',
+          summary: 'Foundational sound awareness practice for individual sessions.',
+          is_locked: false,
+          display_order: 1,
+        },
+        {
+          code: 'K_P1_IND_SA_2',
+          title: 'Lesson 2 (Individual placeholder)',
+          subtitle: 'Ind 2',
+          summary: 'Follow-up listening task for one-on-one work.',
+          is_locked: true,
+          display_order: 2,
+        },
+      ],
+    },
+    {
+      code: 'K_P1_IND_RHY',
+      title: 'Individual Rhyme Practice',
+      description: 'Personalized rhyme detection and creation',
+      module_count: 6,
+      is_locked: true,
+      display_order: 2,
+      modules: [
+        {
+          code: 'K_P1_IND_RHY_1',
+          title: 'Lesson 1 (Individual placeholder)',
+          subtitle: 'Ind 3',
+          summary: 'Placeholder individual rhyme lesson.',
+          is_locked: true,
+          display_order: 1,
+        },
+      ],
+    },
+  ],
+  K_P2: [
+    {
+      code: 'K_P2_IND_PREVIEW',
+      title: 'Phase 2 Individual Preview',
+      description: 'Individualized phonics support (placeholder)',
+      module_count: 2,
+      is_locked: true,
+      display_order: 1,
+      modules: [
+        {
+          code: 'K_P2_IND_PREVIEW_1',
+          title: 'Lesson 1 (Individual placeholder)',
+          subtitle: 'Ind P2-1',
+          summary: 'Placeholder individual lesson for Phase 2.',
+          is_locked: true,
+          display_order: 1,
+        },
+      ],
+    },
+  ],
+  K_P3: [
+    {
+      code: 'K_P3_IND_PREVIEW',
+      title: 'Phase 3 Individual Preview',
+      description: 'Advanced one-on-one fluency support (placeholder)',
+      module_count: 2,
+      is_locked: true,
+      display_order: 1,
+      modules: [
+        {
+          code: 'K_P3_IND_PREVIEW_1',
+          title: 'Lesson 1 (Individual placeholder)',
+          subtitle: 'Ind P3-1',
+          summary: 'Placeholder individual lesson for Phase 3.',
+          is_locked: true,
+          display_order: 1,
+        },
+      ],
+    },
+  ],
+};
+
 async function run() {
   // seed phases
+  const phaseIndex: Record<string, { id: string; is_locked: boolean }> = {};
   for (const p of phases) {
     const { data: phaseRow, error: phaseErr } = await supabase
       .from('phase')
@@ -172,6 +284,7 @@ async function run() {
       .select()
       .single();
     if (phaseErr) throw phaseErr;
+    phaseIndex[p.code] = { id: phaseRow.id, is_locked: !!phaseRow.is_locked };
 
     for (const g of p.groups) {
       const { data: groupRow, error: groupErr } = await supabase
@@ -184,6 +297,7 @@ async function run() {
             description: g.description,
             module_count: g.module_count,
             is_locked: g.is_locked,
+            teaching_mode: g.teaching_mode || 'group',
             display_order: g.display_order,
           },
           { onConflict: 'code' }
@@ -202,8 +316,55 @@ async function run() {
             subtitle: m.subtitle,
             summary: m.summary,
             is_locked: m.is_locked,
+            teaching_mode: (m as any).teaching_mode || 'group',
             display_order: m.display_order,
             lesson: m.lesson || null,
+            metadata: {},
+          },
+          { onConflict: 'code' }
+        );
+        if (moduleErr) throw moduleErr;
+      }
+    }
+  }
+
+  // seed minimal individual curriculum placeholders per phase
+  for (const [phaseCode, groups] of Object.entries(individualCurriculum)) {
+    const phaseMeta = phaseIndex[phaseCode];
+    if (!phaseMeta) continue;
+    for (const g of groups) {
+      const { data: groupRow, error: groupErr } = await supabase
+        .from('module_group')
+        .upsert(
+          {
+            code: g.code,
+            phase_id: phaseMeta.id,
+            title: g.title,
+            description: g.description,
+            module_count: g.module_count,
+            is_locked: g.is_locked ?? phaseMeta.is_locked,
+            teaching_mode: 'individual',
+            display_order: g.display_order,
+          },
+          { onConflict: 'code' }
+        )
+        .select()
+        .single();
+      if (groupErr) throw groupErr;
+
+      for (const m of g.modules) {
+        const { error: moduleErr } = await supabase.from('module_detail').upsert(
+          {
+            code: m.code,
+            phase_id: phaseMeta.id,
+            group_id: groupRow.id,
+            title: m.title,
+            subtitle: m.subtitle,
+            summary: m.summary || null,
+            is_locked: m.is_locked,
+            teaching_mode: 'individual',
+            display_order: m.display_order,
+            lesson: null,
             metadata: {},
           },
           { onConflict: 'code' }

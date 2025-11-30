@@ -14,8 +14,11 @@
 - Added mode-aware teaching cards on `/teacher` (students/groups) with placeholder group data.
 
 # Next session goals
-NEW: added Individual and Group toggle; removed student tab - made this a teacher first app for now. 
+
 ----
+*NEW: added Individual and Group toggle; removed student tab - made this a teacher first app for now.*
+Need to fix:
+- Teacher Dashboard still highlights Phases, need to go to Abouth Method when user clicks in.
 Still to do:
 1) Add more Phase 1 content; now need to add for ind and group (Rhyming, Words and Sentences, Syllables, Phonemic Awareness) and Phase 2/3 placeholders.
     - add status bar for each module; test once Learning Sensorially has been populated

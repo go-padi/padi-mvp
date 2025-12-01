@@ -2,6 +2,7 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import clsx from 'clsx';
+import AuthStatusIndicator from './AuthStatusIndicator';
 
 const navLinks = [
   { href: '/teacher/phases', label: 'Teacher Dashboard' },
@@ -33,6 +34,7 @@ export default function TopNav(){
               </Link>
             );
           })}
+          <AuthStatusIndicator />
           <Link
             href="/teacher"
             className="ml-1 rounded-xl bg-gradient-to-r from-blue-600 to-purple-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:opacity-95"

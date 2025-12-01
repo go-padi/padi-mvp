@@ -5,6 +5,7 @@ import clsx from 'clsx';
 import { supabaseClient } from '@/lib/supabase';
 import { TeachingModeToggle } from '@/components/TeachingModeToggle';
 import { useTeachingMode } from '@/lib/teachingModeContext';
+import { useAuth } from '@/lib/authContext';
 
 type StudentCard = { id: string; name: string; phase: string; status: string; focus: string };
 type GroupCard = { id: string; name: string; phase: string; status: string; focus: string };
@@ -22,9 +23,14 @@ const fallbackGroups: GroupCard[] = [
 
 export default function TeacherIndexPage() {
   const { mode } = useTeachingMode();
+  const { isLoggedIn } = useAuth();
   const [students, setStudents] = useState<StudentCard[]>([]);
 
   useEffect(() => {
+    if (!isLoggedIn) {
+      setStudents([]);
+      return;
+    }
     const load = async () => {
       const sb = supabaseClient();
       // TODO: filter by teacher/class once auth is connected.
@@ -42,15 +48,15 @@ export default function TeacherIndexPage() {
       }
     };
     load();
-  }, []);
+  }, [isLoggedIn]);
 
   const cards = useMemo(() => {
-    const studentCards = (students.length ? students : fallbackStudents).map(s => ({ ...s, type: 'student' as const }));
+    const studentCards = ((isLoggedIn && students.length) ? students : fallbackStudents).map(s => ({ ...s, type: 'student' as const }));
     const groupCards = fallbackGroups.map(g => ({ ...g, type: 'group' as const }));
     if (mode === 'individual') return studentCards;
     if (mode === 'group') return groupCards;
     return [...studentCards, ...groupCards];
-  }, [mode, students]);
+  }, [mode, students, isLoggedIn]);
 
   return (
     <div className="space-y-8">
@@ -61,6 +67,12 @@ export default function TeacherIndexPage() {
         </div>
         <TeachingModeToggle />
       </div>
+
+      {!isLoggedIn && (
+        <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-xs text-amber-800">
+          Preview mode: log in to sync your classes and save lesson progress.
+        </div>
+      )}
 
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
         {cards.map(card => (
@@ -87,10 +99,16 @@ export default function TeacherIndexPage() {
               <span className="text-gray-600">{card.focus}</span>
             </div>
             <Link
-              href="/teacher/phases/K_P1"
-              className="inline-flex items-center justify-center rounded-xl bg-gray-900 px-4 py-2 text-sm font-semibold text-white hover:bg-gray-800"
+              href={isLoggedIn ? "/teacher/phases/K_P1" : "#"}
+              className={clsx(
+                'inline-flex items-center justify-center rounded-xl px-4 py-2 text-sm font-semibold',
+                isLoggedIn
+                  ? 'bg-gray-900 text-white hover:bg-gray-800'
+                  : 'bg-gray-100 text-gray-500 cursor-not-allowed'
+              )}
+              aria-disabled={!isLoggedIn}
             >
-              View lessons →
+              {isLoggedIn ? 'View lessons →' : 'Preview lessons'}
             </Link>
           </div>
         ))}

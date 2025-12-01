@@ -3,6 +3,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import clsx from 'clsx';
 import { createContext, useContext, useEffect, useMemo, useState } from 'react';
+import { useAuth } from '@/lib/authContext';
 
 const tabs = [
   { id: 'about', label: 'About Method', href: '/teacher/about' },
@@ -18,6 +19,7 @@ export const useAdminMode = () => useContext(AdminContext);
 
 export default function TeacherLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
+  const { isLoggedIn } = useAuth();
   const [adminMode, setAdminMode] = useState(false);
 
   useEffect(() => {
@@ -42,6 +44,9 @@ export default function TeacherLayout({ children }: { children: React.ReactNode 
             <h1 className="text-3xl font-semibold text-gray-900">Teacher Dashboard</h1>
             <p className="text-sm text-gray-700">
               Guide students through the Padi multisensory reading method with confidence.
+            </p>
+            <p className={clsx('text-xs mt-1', isLoggedIn ? 'text-green-700' : 'text-amber-700')}>
+              {isLoggedIn ? 'Workspace tools enabled for this session.' : 'Preview mode — log in to unlock workspace features.'}
             </p>
           </div>
           <div className="flex items-center gap-2">

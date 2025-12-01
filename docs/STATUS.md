@@ -18,6 +18,10 @@ Need to fix:
 to do: all focused on Teacher Dashboard and Log in vs Log out state
 1) Wire auth (teacher sign-in) and align RLS/read policies to `authenticated` instead of `anon`.
   - Auth and Sign In: Feature Specification (starting Dec 1 - goal to be done is Dec 7)
+    -- added # 1. Auth and Global App State; need to fix top nav
+      - remove sign in / consolidate 
+      - remove the kids OR make sure its clear its just an example
+      - fix the direct Phase highlight; instead go to About Method
 
 2) Add more Phase 1 content; now need to add for ind and group (Rhyming, Words and Sentences, Syllables, Phonemic Awareness) and Phase 2/3 placeholders.
     - add status bar for each module; test once Learning Sensorially has been populated

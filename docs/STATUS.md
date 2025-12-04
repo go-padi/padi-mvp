@@ -9,13 +9,11 @@
 # Next session goals
 
 ----
-*NEW: added Individual and Group toggle; removed student tab - made this a teacher first app for now.*
-Need to fix:
-- Teacher Dashboard still highlights Phases, need to go to About Method when user clicks in.
+- Teacher Dashboard still highlights Phases, need to go to About Method when user clicks in. -- FIXED
 
 ### Creating docs for each feature rollout moving forward. 
 
-to do: all focused on Teacher Dashboard and Log in vs Log out state
+to do: all focused on Teacher Dashboard and Log in vs Log out state - fixed; worked on task 1 of auth-and-signin.md
 1) Wire auth (teacher sign-in) and align RLS/read policies to `authenticated` instead of `anon`.
   - Auth and Sign In: Feature Specification (starting Dec 1 - goal to be done is Dec 7)
     -- added # 1. Auth and Global App State; need to fix top nav

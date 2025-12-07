@@ -5,6 +5,7 @@ import { supabaseClient } from '@/lib/supabase';
 import clsx from 'clsx';
 import { useTeachingMode } from '@/lib/teachingModeContext';
 import { TeachingModeToggle } from '@/components/TeachingModeToggle';
+import { useAuth } from '@/lib/auth-store';
 
 type Lesson = {
   materials?: string[];
@@ -28,6 +29,7 @@ type Student = { id: string; full_name: string };
 
 export default function LessonPage({ params }: { params: Promise<{ phase: string; area: string; module: string }> }) {
   const { phase, area, module } = use(params);
+  const { isLoggedIn } = useAuth();
   const [moduleRow, setModuleRow] = useState<ModuleRow | null>(null);
   const [notes, setNotes] = useState('');
   const [teacherId, setTeacherId] = useState('teacher-1');
@@ -57,11 +59,15 @@ export default function LessonPage({ params }: { params: Promise<{ phase: string
         mod = fallback.data;
       }
       if (mod) setModuleRow(mod as ModuleRow);
-      const { data: studentRows } = await sb.from('student').select('id,full_name').order('full_name');
-      if (studentRows) setStudents(studentRows as Student[]);
+      if (isLoggedIn) {
+        const { data: studentRows } = await sb.from('student').select('id,full_name').order('full_name');
+        if (studentRows) setStudents(studentRows as Student[]);
+      } else {
+        setStudents([]);
+      }
     };
     fetchData();
-  }, [module, mode]);
+  }, [module, mode, isLoggedIn]);
 
   const lesson = moduleRow?.lesson || {};
 
@@ -201,62 +207,75 @@ export default function LessonPage({ params }: { params: Promise<{ phase: string
         <div className="rounded-2xl border border-gray-100 bg-white p-5 shadow-sm text-sm text-gray-700">Content coming soon.</div>
       )}
 
-      <div className="rounded-2xl border border-gray-100 bg-white p-5 shadow-sm space-y-4">
-        <h3 className="text-lg font-semibold text-gray-900">Teacher Notes & Observations</h3>
-        <div className="grid gap-3 md:grid-cols-2">
+      {isLoggedIn ? (
+        <div className="rounded-2xl border border-gray-100 bg-white p-5 shadow-sm space-y-4">
+          <h3 className="text-lg font-semibold text-gray-900">Teacher Notes & Observations</h3>
+          <div className="grid gap-3 md:grid-cols-2">
+            <div className="space-y-2">
+              <label className="text-sm font-semibold text-gray-800">Teacher ID</label>
+              <input
+                className="w-full rounded-xl border border-gray-200 p-3 text-sm"
+                value={teacherId}
+                onChange={e=>setTeacherId(e.target.value)}
+              />
+            </div>
+            <div className="space-y-2">
+              <label className="text-sm font-semibold text-gray-800">Student (optional)</label>
+              <select
+                className="w-full rounded-xl border border-gray-200 p-3 text-sm"
+                value={studentId}
+                onChange={e=>setStudentId(e.target.value)}
+              >
+                <option value="">Not selected</option>
+                {students.map(s => <option key={s.id} value={s.id}>{s.full_name}</option>)}
+              </select>
+            </div>
+          </div>
           <div className="space-y-2">
-            <label className="text-sm font-semibold text-gray-800">Teacher ID</label>
-            <input
+            <label className="text-sm font-semibold text-gray-800">Session Notes</label>
+            <textarea
               className="w-full rounded-xl border border-gray-200 p-3 text-sm"
-              value={teacherId}
-              onChange={e=>setTeacherId(e.target.value)}
+              rows={4}
+              value={notes}
+              onChange={e => setNotes(e.target.value)}
+              placeholder="Record observations about student behavior, engagement, and any challenges..."
             />
           </div>
           <div className="space-y-2">
-            <label className="text-sm font-semibold text-gray-800">Student (optional)</label>
-            <select
-              className="w-full rounded-xl border border-gray-200 p-3 text-sm"
-              value={studentId}
-              onChange={e=>setStudentId(e.target.value)}
-            >
-              <option value="">Not selected</option>
-              {students.map(s => <option key={s.id} value={s.id}>{s.full_name}</option>)}
-            </select>
+            <label className="text-sm font-semibold text-gray-800">Upload Audio Recording (optional)</label>
+            <input
+              type="file"
+              accept="audio/*"
+              onChange={e => setAudioFile(e.target.files?.[0] || null)}
+              className="block w-full text-sm"
+            />
           </div>
+          <button
+            onClick={saveNotes}
+            disabled={saving}
+            className="w-full rounded-xl bg-gradient-to-r from-blue-600 to-purple-600 px-4 py-3 text-sm font-semibold text-white shadow-sm disabled:opacity-60"
+          >
+            {saving ? 'Saving...' : 'Save Notes & Continue'}
+          </button>
+          {status && <p className="text-sm text-gray-700">{status}</p>}
+          {needsAuth && (
+            <p className="text-sm text-red-600">
+              Sign in to save notes and uploads. (Auth flow not wired here—use a signed-in session in Supabase.)
+            </p>
+          )}
         </div>
-        <div className="space-y-2">
-          <label className="text-sm font-semibold text-gray-800">Session Notes</label>
-          <textarea
-            className="w-full rounded-xl border border-gray-200 p-3 text-sm"
-            rows={4}
-            value={notes}
-            onChange={e => setNotes(e.target.value)}
-            placeholder="Record observations about student behavior, engagement, and any challenges..."
-          />
-        </div>
-        <div className="space-y-2">
-          <label className="text-sm font-semibold text-gray-800">Upload Audio Recording (optional)</label>
-          <input
-            type="file"
-            accept="audio/*"
-            onChange={e => setAudioFile(e.target.files?.[0] || null)}
-            className="block w-full text-sm"
-          />
-        </div>
-        <button
-          onClick={saveNotes}
-          disabled={saving}
-          className="w-full rounded-xl bg-gradient-to-r from-blue-600 to-purple-600 px-4 py-3 text-sm font-semibold text-white shadow-sm disabled:opacity-60"
-        >
-          {saving ? 'Saving...' : 'Save Notes & Continue'}
-        </button>
-        {status && <p className="text-sm text-gray-700">{status}</p>}
-        {needsAuth && (
-          <p className="text-sm text-red-600">
-            Sign in to save notes and uploads. (Auth flow not wired here—use a signed-in session in Supabase.)
+      ) : (
+        <div className="rounded-2xl border border-gray-100 bg-white p-5 shadow-sm space-y-2">
+          <h3 className="text-lg font-semibold text-gray-900">Workspace preview</h3>
+          <p className="text-sm text-gray-700">
+            This is a read-only preview of the lesson. Sign in to record notes, attach audio, and personalize lessons for
+            your students and groups.
           </p>
-        )}
-      </div>
+          <Link href="/teacher/phases" className="text-sm font-semibold text-blue-700 hover:underline">
+            Return to phases →
+          </Link>
+        </div>
+      )}
     </div>
   );
 }

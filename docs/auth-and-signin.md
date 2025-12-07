@@ -22,7 +22,7 @@ Real backend auth can be added later. For now, state can be local (for example R
 
 ---
 
-# 1. Auth and Global App State --> FNALIZING 12/4
+# 1. Auth and Global App State --> done
 
 ### Goals
 
@@ -54,10 +54,8 @@ Auth actions:
 The AuthProvider wraps the app. Use a useAuth() hook to read isLoggedIn and userEmail, and to call login and logout.
 
 For now, implement login with a local stub:
-
-Accept any email
-
-Require password 1234!
+ -Accept any email
+ -Require password 1234!
 
 On success, set isLoggedIn = true and userEmail = email
 
@@ -70,16 +68,13 @@ Auth indicator in the top navigation
 The top right navigation acts as the AuthStatusIndicator.
 
 Logged out state
-
-Match the logged_out_state mock.
+- Match the logged_out_state mock.
+(`docs/imgs/logged_out_state.png`))
 
 Top right items:
-
-Teacher Dashboard text link
-
-Start Teaching primary button
-
-Sign in secondary button
+- Teacher Dashboard text link
+- Start Teaching primary button
+- Sign in secondary button
 
 Behavior:
 
@@ -90,31 +85,25 @@ Clicking Sign in opens the sign in modal
 Clicking Teacher Dashboard while logged out also opens the sign in modal
 
 Logged in state
-
-Match the loggedin_state_12_4 mock.
+- Match the loggedin_state_12_4 mock.
+(`docs/imgs/loggedin_state_12_4.png`)
 
 Top right items:
-
-Teacher Dashboard text link
-
-Start Teaching primary button
-
-Logged in as {userEmail} label
+- Teacher Dashboard text link
+- Start Teaching primary button
+- Logged in as {userEmail} label
 
 Sign out text button next to the label
 
 Behavior:
-
-Teacher Dashboard now navigates to the teacher dashboard route directly
-
-Sign in button is hidden
-
-Sign out clears auth state and returns the nav to the logged out layout
+- Teacher Dashboard now navigates to the teacher dashboard route directly
+- Sign in button is hidden
+- Sign out clears auth state and returns the nav to the logged out layout
 
 Sign in modal
 
 Use the sign_in_modal mock.
-
+`/docs/imgs/sign_in_modal.png`
 Trigger:
 
 Clicking Sign in in the nav
@@ -151,16 +140,19 @@ Logged out users see read only or preview versions of the dashboard and tabs
 
 Logged in users see the editable, data driven workspace views
 
-# 2. Anonymous (Logged Out) Experience --> HERE 
+# 2. Anonymous (Logged Out) Experience --> HERE (need to uat real quick and move on.)
 
 Anonymous users should be able to explore:
 
 - The method and pedagogy  
-- Phases and sample modules  
-- A single sample lesson  
-- A preview of Start Teaching
+- Phases and sample modules
+   - sample modules do not appear for logged out users when initially click into phases
+   - they do if you click out and then click back in
+   NEED TO FIX
+- A single sample lesson (need to fix; have to click into phase 2 then back to phase 1 right now for it to appead)  
+- A preview of Start Teaching (works)
 
-They must never see real or fake student or group data.
+They must never see real or fake student or group data. -> works
 
 ## 2.1 Home and Dashboard
 

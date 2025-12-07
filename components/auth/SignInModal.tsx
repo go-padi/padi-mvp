@@ -1,14 +1,13 @@
 'use client';
 import { FormEvent, MouseEvent, useEffect, useState } from 'react';
-import { useAuth } from '@/lib/authContext';
+import { useAuth } from '@/lib/auth-store';
 
-type Mode = 'signIn' | 'createAccount';
+type SignInModalProps = { onClose: () => void };
 
-export function SignInModal({ onClose }: { onClose: () => void }) {
-  const { login, signup } = useAuth();
+export function SignInModal({ onClose }: SignInModalProps) {
+  const { login } = useAuth();
   const [email, setEmail] = useState('teacher@school.edu');
   const [password, setPassword] = useState('1234!');
-  const [mode, setMode] = useState<Mode>('signIn');
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
@@ -16,27 +15,34 @@ export function SignInModal({ onClose }: { onClose: () => void }) {
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.key === 'Escape') onClose();
     };
-    document.addEventListener('keydown', handleKeyDown);
-    return () => document.removeEventListener('keydown', handleKeyDown);
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
   }, [onClose]);
 
-  const handleSubmit = async (e: FormEvent) => {
-    e.preventDefault();
+  const attemptLogin = async () => {
     setError(null);
     setLoading(true);
     try {
-      if (mode === 'signIn') {
-        await login(email, password);
-      } else {
-        await signup(email, password);
-      }
+      await login(email, password);
       onClose();
     } catch (err) {
-      const message = err instanceof Error ? err.message : 'Unable to sign in. Please try again.';
+      const message =
+        err instanceof Error && err.message
+          ? err.message
+          : 'Test mode: use password 1234! to sign in.';
       setError(message);
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    await attemptLogin();
+  };
+
+  const handleCreateAccount = async () => {
+    await attemptLogin();
   };
 
   const handleOverlayClick = (event: MouseEvent<HTMLDivElement>) => {
@@ -45,13 +51,6 @@ export function SignInModal({ onClose }: { onClose: () => void }) {
     }
   };
 
-  const headline = mode === 'signIn' ? 'Sign In' : 'Create Account';
-  const subtitle =
-    mode === 'signIn'
-      ? 'Sign in to access your teaching dashboard'
-      : 'Create an account to access your teaching dashboard';
-  const primaryLabel = mode === 'signIn' ? 'Sign In' : 'Create Account';
-
   return (
     <div
       className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4"
@@ -59,19 +58,19 @@ export function SignInModal({ onClose }: { onClose: () => void }) {
       role="dialog"
       aria-modal="true"
     >
-      <div className="w-full max-w-md rounded-2xl bg-white shadow-2xl ring-1 ring-black/5 relative">
+      <div className="relative w-full max-w-md rounded-2xl bg-white shadow-2xl ring-1 ring-black/5">
         <button
           type="button"
           onClick={onClose}
           className="absolute right-3 top-3 rounded-full p-1 text-gray-500 hover:bg-gray-100"
           aria-label="Close sign in"
         >
-          ✕
+          X
         </button>
         <form className="space-y-4 p-6" onSubmit={handleSubmit}>
           <div className="space-y-1">
-            <h2 className="text-xl font-semibold text-gray-900">{headline}</h2>
-            <p className="text-sm text-gray-600">{subtitle}</p>
+            <h2 className="text-xl font-semibold text-gray-900">Sign In</h2>
+            <p className="text-sm text-gray-600">Sign in to access your teaching dashboard</p>
           </div>
           <div className="space-y-2">
             <label className="text-sm font-medium text-gray-800" htmlFor="email">
@@ -101,24 +100,20 @@ export function SignInModal({ onClose }: { onClose: () => void }) {
               required
             />
           </div>
-          {error && (
-            <div className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700">
-              {error}
-            </div>
-          )}
+          {error && <div className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700">{error}</div>}
           <button
             type="submit"
             disabled={loading}
             className="inline-flex w-full items-center justify-center rounded-xl bg-gray-900 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-gray-800 disabled:opacity-70"
           >
-            {loading ? 'Working...' : primaryLabel}
+            {loading ? 'Signing in...' : 'Sign In'}
           </button>
           <button
             type="button"
-            onClick={() => setMode(mode === 'signIn' ? 'createAccount' : 'signIn')}
+            onClick={handleCreateAccount}
             className="w-full text-center text-sm font-semibold text-gray-700 underline underline-offset-2"
           >
-            {mode === 'signIn' ? "Don't have an account? Create one" : 'Have an account? Sign in'}
+            Don&apos;t have an account? Create one
           </button>
         </form>
       </div>

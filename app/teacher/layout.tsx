@@ -3,7 +3,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import clsx from 'clsx';
 import { createContext, useContext, useEffect, useMemo, useState } from 'react';
-import { useAuth } from '@/lib/authContext';
+import { useAuth } from '@/lib/auth-store';
 
 const tabs = [
   { id: 'about', label: 'About Method', href: '/teacher/about' },

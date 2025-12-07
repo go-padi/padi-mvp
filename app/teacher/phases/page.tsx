@@ -7,7 +7,7 @@ import { useAdminMode } from '../layout';
 import { PhaseTabs } from '@/components/PhaseTabs';
 import { TeachingModeToggle } from '@/components/TeachingModeToggle';
 import { useTeachingMode } from '@/lib/teachingModeContext';
-import { useAuth } from '@/lib/authContext';
+import { useAuth } from '@/lib/auth-store';
 
 type PhaseRow = {
   id: string;

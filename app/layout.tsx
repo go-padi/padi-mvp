@@ -1,6 +1,6 @@
 import "./globals.css";
 import TopNav from "@/components/TopNav";
-import { AuthProvider } from "@/lib/authContext";
+import { AuthProvider } from "@/lib/auth-store";
 import { TeachingModeProvider } from "@/lib/teachingModeContext";
 
 export const metadata = { title: "Padi Teacher App", description: "Plan and run lessons with Padi" };

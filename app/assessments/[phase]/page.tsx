@@ -1,5 +1,5 @@
 'use client';
-import { useAuth } from '@/lib/authContext';
+import { useAuth } from '@/lib/auth-store';
 
 export default function Assess({ params }: { params: { phase: string } }) {
   const { isLoggedIn } = useAuth();

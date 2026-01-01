@@ -9,17 +9,16 @@
 # Next session goals
 
 ----
-- Teacher Dashboard still highlights Phases, need to go to About Method when user clicks in. -- FIXED
 
 ### Creating docs for each feature rollout moving forward. 
 
 to do: all focused on Teacher Dashboard and Log in vs Log out state - fixed; worked on task 1 of auth-and-signin.md
 1) Wire auth (teacher sign-in) and align RLS/read policies to `authenticated` instead of `anon`.
-  - Auth and Sign In: Feature Specification (starting Dec 1 - goal to be done is Dec 7)
+  - Auth and Sign In: Feature Specification (starting Dec 1 - goal to be done is Dec 14)
     -- added # 1. Auth and Global App State; need to fix top nav
-      - remove sign in / consolidate 
+      - remove sign in / consolidate  [done] 
       - remove the kids OR make sure its clear its just an example
-      - fix the direct Phase highlight; instead go to About Method
+      - fix the direct Phase highlight; instead go to About Method [done]
 
 2) Add more Phase 1 content; now need to add for ind and group (Rhyming, Words and Sentences, Syllables, Phonemic Awareness) and Phase 2/3 placeholders.
     - add status bar for each module; test once Learning Sensorially has been populated
@@ -29,7 +28,8 @@ to do: all focused on Teacher Dashboard and Log in vs Log out state - fixed; wor
 5) automated assessments - python ML modules that live outside of core app? need to research best way to do this.
 
 Areas:
-1. Auth and login
-2. Progress and tracking for teachers
-4. Within teacher dashboard: Assessments; Grouping and Progress
-3. Start Teaching - entire flow (will do later)
+1. Auth and login [week of Dec 29]
+2. Progress and tracking for teachers [week of Dec 29]
+3. Within teacher dashboard: Assessments; Grouping and Progress 
+4. Start Teaching - determine the flow
+

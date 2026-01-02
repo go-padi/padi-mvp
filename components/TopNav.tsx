@@ -2,7 +2,7 @@
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import clsx from 'clsx';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useAuth } from '@/lib/auth-store';
 import { SignInModal } from './auth/SignInModal';
 
@@ -13,18 +13,25 @@ export default function TopNav(){
   const [isSignInOpen, setSignInOpen] = useState(false);
 
   const goToDashboard = () => {
-    if (isLoggedIn) {
-      router.push('/teacher/phases');
-    } else {
-      setSignInOpen(true);
-    }
+    router.push('/teacher/dashboard');
   };
 
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const handler = () => setSignInOpen(true);
+    window.addEventListener('padi-open-signin', handler);
+    return () => window.removeEventListener('padi-open-signin', handler);
+  }, []);
+
   const isDashboardActive =
+    pathname === '/teacher/dashboard' ||
+    pathname.startsWith('/teacher/dashboard') ||
     pathname === '/teacher/phases' ||
     pathname.startsWith('/teacher/phases/') ||
-    pathname === '/teacher' ||
-    pathname.startsWith('/teacher/about');
+    pathname.startsWith('/teacher/about') ||
+    pathname.startsWith('/teacher/assessments') ||
+    pathname.startsWith('/teacher/grouping') ||
+    pathname.startsWith('/teacher/resources');
 
   return (
     <>
@@ -42,6 +49,7 @@ export default function TopNav(){
                 'rounded-lg px-3 py-2 text-sm font-semibold',
                 isDashboardActive ? 'bg-gray-100 text-gray-900' : 'text-gray-800 hover:bg-gray-100'
               )}
+              aria-current={isDashboardActive ? 'page' : undefined}
             >
               Teacher Dashboard
             </button>
@@ -52,16 +60,16 @@ export default function TopNav(){
               Start Teaching
             </Link>
             {!isLoggedIn && (
-              <button
-                type="button"
-                onClick={() => setSignInOpen(true)}
-                className="rounded-xl border border-gray-200 bg-white px-4 py-2 text-sm font-semibold text-gray-900 hover:bg-gray-50"
-              >
-                Sign In
-              </button>
-            )}
-            {isLoggedIn && (
-              <div className="flex items-center gap-2 text-sm text-gray-800">
+            <button
+              type="button"
+              onClick={() => setSignInOpen(true)}
+              className="rounded-xl border border-gray-200 bg-white px-4 py-2 text-sm font-semibold text-gray-900 hover:bg-gray-50"
+            >
+              Sign In
+            </button>
+          )}
+          {isLoggedIn && (
+            <div className="flex items-center gap-2 text-sm text-gray-800">
                 <span className="font-semibold text-gray-900">Logged in as {user?.email}</span>
                 <button
                   type="button"

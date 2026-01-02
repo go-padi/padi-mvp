@@ -14,11 +14,12 @@ export type AuthUser = { email: string };
 export type AuthState = {
   isLoggedIn: boolean;
   user: AuthUser | null;
+  isHydrated: boolean;
   login: (email: string, password: string) => Promise<void>;
   logout: () => void;
 };
 
-const STORAGE_KEY = 'padi_auth_state';
+const STORAGE_KEY = 'padi.auth';
 const defaultState: Pick<AuthState, 'isLoggedIn' | 'user'> = {
   isLoggedIn: false,
   user: null,
@@ -37,45 +38,50 @@ const AuthContext = createContext<AuthState | undefined>(undefined);
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [isLoggedIn, setIsLoggedIn] = useState(defaultState.isLoggedIn);
   const [user, setUser] = useState<AuthUser | null>(defaultState.user);
+  const [isHydrated, setIsHydrated] = useState(false);
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
-    const stored = window.sessionStorage.getItem(STORAGE_KEY);
-    if (!stored) return;
-    try {
-      const parsed = JSON.parse(stored) as Partial<AuthState>;
-      setIsLoggedIn(Boolean(parsed.isLoggedIn));
-      setUser(parsed.user ?? null);
-    } catch {
-      setIsLoggedIn(defaultState.isLoggedIn);
-      setUser(defaultState.user);
+    const stored = window.localStorage.getItem(STORAGE_KEY);
+    if (stored) {
+      try {
+        const parsed = JSON.parse(stored) as Partial<AuthState>;
+        setIsLoggedIn(Boolean(parsed.isLoggedIn));
+        setUser(parsed.user ?? null);
+      } catch {
+        setIsLoggedIn(defaultState.isLoggedIn);
+        setUser(defaultState.user);
+      }
     }
+    setIsHydrated(true);
   }, []);
-
-  useEffect(() => {
-    if (typeof window === 'undefined') return;
-    window.sessionStorage.setItem(STORAGE_KEY, JSON.stringify({ isLoggedIn, user }));
-  }, [isLoggedIn, user]);
 
   const login = useCallback(async (email: string, password: string) => {
     const authUser = await authenticate(email, password);
     setIsLoggedIn(true);
     setUser(authUser);
+    if (typeof window !== 'undefined') {
+      window.localStorage.setItem(STORAGE_KEY, JSON.stringify({ isLoggedIn: true, user: authUser }));
+    }
   }, []);
 
   const logout = useCallback(() => {
     setIsLoggedIn(defaultState.isLoggedIn);
     setUser(defaultState.user);
+    if (typeof window !== 'undefined') {
+      window.localStorage.removeItem(STORAGE_KEY);
+    }
   }, []);
 
   const value = useMemo(
     () => ({
       isLoggedIn,
       user,
+      isHydrated,
       login,
       logout,
     }),
-    [isLoggedIn, user, login, logout]
+    [isLoggedIn, user, isHydrated, login, logout]
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

@@ -6,6 +6,8 @@ import { supabaseClient } from '@/lib/supabase';
 import { TeachingModeToggle } from '@/components/TeachingModeToggle';
 import { useTeachingMode } from '@/lib/teachingModeContext';
 import { useAuth } from '@/lib/auth-store';
+import { demoStudents } from '@/lib/demo/demoStudents';
+import { demoGroups } from '@/lib/demo/demoGroups';
 
 type StudentCard = { id: string; name: string; phase: string; status: string; focus: string };
 type GroupCard = { id: string; name: string; phase: string; status: string; focus: string };
@@ -38,14 +40,12 @@ const previewHighlights = [
 
 export default function TeacherIndexPage() {
   const { mode } = useTeachingMode();
-  const { isLoggedIn } = useAuth();
+  const { isLoggedIn, isHydrated } = useAuth();
   const [students, setStudents] = useState<StudentCard[]>([]);
+  const dataMode = isLoggedIn ? 'live' : 'demo';
 
   useEffect(() => {
-    if (!isLoggedIn) {
-      setStudents([]);
-      return;
-    }
+    if (!isHydrated || dataMode === 'demo') return;
     const load = async () => {
       const sb = supabaseClient();
       // TODO: filter by teacher/class once auth is connected.
@@ -63,26 +63,54 @@ export default function TeacherIndexPage() {
       }
     };
     load();
-  }, [isLoggedIn]);
+  }, [isLoggedIn, dataMode]);
 
   const cards = useMemo(() => {
-    const studentCards = ((isLoggedIn && students.length) ? students : fallbackStudents).map(s => ({
+    if (dataMode === 'demo') {
+      const studentCards = demoStudents.map(s => ({
+        id: s.id,
+        name: s.name,
+        phase: s.phase,
+        status: s.assessmentStatus,
+        focus: s.focusAreas[0],
+        type: 'student' as const,
+      }));
+      const groupCards = demoGroups.map(g => ({
+        id: g.id,
+        name: g.name,
+        phase: g.phase,
+        status: g.status,
+        focus: g.focus,
+        type: 'group' as const,
+      }));
+      if (mode === 'individual') return studentCards;
+      if (mode === 'group') return groupCards;
+      return [...studentCards, ...groupCards];
+    }
+
+    const studentCards = students.map(s => ({
       ...s,
       type: 'student' as const,
     }));
-    const groupCards = fallbackGroups.map(g => ({ ...g, type: 'group' as const }));
     if (mode === 'individual') return studentCards;
-    if (mode === 'group') return groupCards;
-    return [...studentCards, ...groupCards];
-  }, [mode, students, isLoggedIn]);
+    if (mode === 'group') return [];
+    return studentCards;
+  }, [mode, students, dataMode]);
 
-  if (!isLoggedIn) {
+  if (!isHydrated) {
+    return <div className="rounded-2xl border border-gray-100 bg-white p-5 shadow-sm text-sm text-gray-700">Loading...</div>;
+  }
+
+  if (dataMode === 'demo') {
     return (
       <div className="space-y-8">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
             <h2 className="text-2xl font-semibold text-gray-900">Start teaching</h2>
-            <p className="text-sm text-gray-700">Preview how Padi guides your lessons and planning.</p>
+            <div className="flex items-center gap-2">
+              <p className="text-sm text-gray-700">Preview how Padi guides your lessons and planning.</p>
+              <span className="rounded-full bg-amber-100 px-2 py-0.5 text-[11px] font-semibold text-amber-800">Demo data</span>
+            </div>
           </div>
           <TeachingModeToggle />
         </div>
@@ -106,7 +134,7 @@ export default function TeacherIndexPage() {
             <p className="text-xs text-gray-600">Sign in to see your roster, take notes, and track assessments.</p>
           </div>
           <Link href="/teacher/phases" className="btn btn-primary">
-            Explore Dashboard
+            Log in to unlock
           </Link>
         </div>
       </div>

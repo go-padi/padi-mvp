@@ -27,9 +27,57 @@ type ModuleRow = {
 
 type Student = { id: string; full_name: string };
 
+const fallbackLesson: Lesson = {
+  materials: ['A quiet classroom'],
+  aims: ['Sharpen the students listening skills', 'Develop good attention span', 'Build auditory discrimination'],
+  presentation_steps: [
+    'Tell the students that they are going to play a game called Silence Game.',
+    'Ask each of them to close their eyes and listen to the sounds in the room, outside the room, and within themselves.',
+    'Set a timer for 2 minutes.',
+    'After 2 minutes of listening quietly, ask them to share what they heard (clock ticks, voices, footsteps, animals, coughing, faucet, flush, cars, breathing, air conditioner, etc.).',
+  ],
+  examples: [
+    'Clock ticks',
+    'Voices',
+    'Footsteps',
+    'Animals',
+    'Coughing',
+    'Faucet',
+    'Flush',
+    'Cars',
+    'Breathing',
+    'Air conditioner',
+  ],
+  extension: [
+    'Play the game in a different room or outdoors.',
+    'Use recordings of birds or other animals and ask students to guess the animal.',
+  ],
+};
+
+const fallbackModuleByCode: Record<string, ModuleRow> = {
+  'LS-1': {
+    id: 'fallback-ls-1',
+    code: 'LS-1',
+    title: 'The Silence Game',
+    subtitle: 'LS1',
+    summary: 'Sharpen listening skills with intentional silence and sound awareness.',
+    teaching_mode: 'group',
+    lesson: fallbackLesson,
+  },
+  'K_P1_IND_SA_1': {
+    id: 'fallback-ind-sa-1',
+    code: 'K_P1_IND_SA_1',
+    title: 'Lesson 1 (Individual placeholder)',
+    subtitle: 'Ind 1',
+    summary: 'Foundational sound awareness practice for individual sessions.',
+    teaching_mode: 'individual',
+    lesson: null,
+  },
+};
+
 export default function LessonPage({ params }: { params: Promise<{ phase: string; area: string; module: string }> }) {
   const { phase, area, module } = use(params);
-  const { isLoggedIn } = useAuth();
+  const { isLoggedIn, isHydrated } = useAuth();
   const [moduleRow, setModuleRow] = useState<ModuleRow | null>(null);
   const [notes, setNotes] = useState('');
   const [teacherId, setTeacherId] = useState('teacher-1');
@@ -43,6 +91,13 @@ export default function LessonPage({ params }: { params: Promise<{ phase: string
 
   useEffect(() => {
     const fetchData = async () => {
+      if (!isHydrated) return;
+      if (!isLoggedIn) {
+        setModuleRow(fallbackModuleByCode[module] || null);
+        setStudents([]);
+        return;
+      }
+
       const sb = supabaseClient();
       let query = sb
         .from('module_detail')
@@ -67,7 +122,11 @@ export default function LessonPage({ params }: { params: Promise<{ phase: string
       }
     };
     fetchData();
-  }, [module, mode, isLoggedIn]);
+  }, [module, mode, isLoggedIn, isHydrated]);
+
+  if (!isHydrated) {
+    return <div className="rounded-2xl border border-gray-100 bg-white p-5 shadow-sm text-sm text-gray-700">Loading...</div>;
+  }
 
   const lesson = moduleRow?.lesson || {};
 

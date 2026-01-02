@@ -62,10 +62,11 @@ export default function PhasesPage(){
   const [outcomes, setOutcomes] = useState<Outcome[]>(fallbackOutcomes);
   const { adminMode } = useAdminMode();
   const { mode } = useTeachingMode();
-  const { isLoggedIn } = useAuth();
+  const { isLoggedIn, isHydrated } = useAuth();
 
   useEffect(() => {
     const fetchPhases = async () => {
+      if (!isHydrated) return;
       if (!isLoggedIn) {
         setPhases(fallbackPhases);
         setOutcomes(fallbackOutcomes);
@@ -83,7 +84,11 @@ export default function PhasesPage(){
       }
     };
     fetchPhases();
-  }, [isLoggedIn]);
+  }, [isLoggedIn, isHydrated]);
+
+  if (!isHydrated) {
+    return <div className="rounded-2xl border border-gray-100 bg-white p-5 shadow-sm text-sm text-gray-700">Loading...</div>;
+  }
 
   return (
     <div className="space-y-10">
@@ -121,8 +126,16 @@ export default function PhasesPage(){
                     href={locked ? '#' : `/teacher/phases/${phase.code}`}
                     className={clsx(
                       'inline-flex items-center justify-center rounded-xl px-4 py-2 text-sm font-semibold',
-                      locked ? 'bg-gray-100 text-gray-400 cursor-not-allowed' : 'bg-gray-900 text-white hover:bg-gray-800'
+                      locked
+                        ? 'border border-blue-200 bg-white text-blue-700 hover:bg-blue-50'
+                        : 'bg-gray-900 text-white hover:bg-gray-800'
                     )}
+                    onClick={evt => {
+                      if (locked) {
+                        evt.preventDefault();
+                        window.dispatchEvent(new Event('padi-open-signin'));
+                      }
+                    }}
                     aria-disabled={locked}
                   >
                     {buttonLabel}

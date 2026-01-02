@@ -28,8 +28,10 @@ to do: all focused on Teacher Dashboard and Log in vs Log out state - fixed; wor
 5) automated assessments - python ML modules that live outside of core app? need to research best way to do this.
 
 Areas:
-1. Auth and login [week of Dec 29]
+1. Auth and sign in [week of Dec 29]
+Left off here: https://go-padi.atlassian.net/browse/KAN-11 notes on what i need to fix.
 2. Progress and tracking for teachers [week of Dec 29]
 3. Within teacher dashboard: Assessments; Grouping and Progress 
 4. Start Teaching - determine the flow
+5. Add all content from K Reading to app
 

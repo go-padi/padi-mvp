@@ -21,6 +21,13 @@ export default function TeacherLayout({ children }: { children: React.ReactNode 
   const pathname = usePathname();
   const { isLoggedIn } = useAuth();
   const [adminMode, setAdminMode] = useState(false);
+  const isDashboardView =
+    pathname.startsWith('/teacher/dashboard') ||
+    pathname.startsWith('/teacher/phases') ||
+    pathname.startsWith('/teacher/about') ||
+    pathname.startsWith('/teacher/assessments') ||
+    pathname.startsWith('/teacher/grouping') ||
+    pathname.startsWith('/teacher/resources');
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
@@ -38,51 +45,63 @@ export default function TeacherLayout({ children }: { children: React.ReactNode 
   return (
     <AdminContext.Provider value={value}>
       <div className="space-y-6">
-        <div className="flex items-center justify-between">
-          <div>
-            <p className="text-xs font-semibold text-blue-700 uppercase tracking-wide">Teacher</p>
-            <h1 className="text-3xl font-semibold text-gray-900">Teacher Dashboard</h1>
-            <p className="text-sm text-gray-700">
-              Guide students through the Padi multisensory reading method with confidence.
-            </p>
-            <p className={clsx('text-xs mt-1', isLoggedIn ? 'text-green-700' : 'text-amber-700')}>
-              {isLoggedIn ? 'Workspace tools enabled for this session.' : 'Preview mode — log in to unlock workspace features.'}
-            </p>
-          </div>
-          <div className="flex items-center gap-2">
-            <button
-              onClick={() => setAdminMode(v => !v)}
-              className={clsx(
-                'rounded-xl border px-3 py-2 text-sm',
-                adminMode ? 'border-blue-600 bg-blue-50 text-blue-700 font-semibold' : 'border-gray-200 bg-white text-gray-700'
-              )}
-              title="Toggle admin mode"
-            >
-              {adminMode ? 'Admin On' : 'Admin Off'}
-            </button>
-            <Link href="/library" className="btn">Upload Content</Link>
-            <Link href="/" className="btn">Home</Link>
-          </div>
-        </div>
-        <div className="flex flex-wrap gap-2">
-          {tabs.map(tab => {
-            const active = pathname === tab.href || pathname.startsWith(`${tab.href}/`);
-            return (
-              <Link
-                key={tab.id}
-                href={tab.href}
-                className={clsx(
-                  'rounded-full border px-4 py-2 text-sm',
-                  active
-                    ? 'border-blue-600 bg-blue-50 text-blue-700 font-semibold'
-                    : 'border-gray-200 bg-white text-gray-700 hover:bg-gray-50'
-                )}
-              >
-                {tab.label}
-              </Link>
-            );
-          })}
-        </div>
+        {isDashboardView && (
+          <>
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-xs font-semibold text-blue-700 uppercase tracking-wide">Teacher</p>
+                <h1 className="text-3xl font-semibold text-gray-900">Teacher Dashboard</h1>
+                <p className="text-sm text-gray-700">
+                  Guide students through the Padi multisensory reading method with confidence.
+                </p>
+                <div className="flex items-center gap-2 mt-1">
+                  <p className={clsx('text-xs', isLoggedIn ? 'text-green-700' : 'text-amber-700')}>
+                    {isLoggedIn ? 'Workspace tools enabled for this session.' : 'Preview mode — log in to unlock workspace features.'}
+                  </p>
+                  {!isLoggedIn && (
+                    <span className="rounded-full bg-amber-100 px-2 py-0.5 text-[11px] font-semibold text-amber-800">
+                      Demo data
+                    </span>
+                  )}
+                </div>
+              </div>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => setAdminMode(v => !v)}
+                  className={clsx(
+                    'rounded-xl border px-3 py-2 text-sm',
+                    adminMode ? 'border-blue-600 bg-blue-50 text-blue-700 font-semibold' : 'border-gray-200 bg-white text-gray-700'
+                  )}
+                  title="Toggle admin mode"
+                >
+                  {adminMode ? 'Admin On' : 'Admin Off'}
+                </button>
+                <Link href="/library" className="btn">Upload Content</Link>
+                <Link href="/" className="btn">Home</Link>
+              </div>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              {tabs.map(tab => {
+                const active = pathname === tab.href || pathname.startsWith(`${tab.href}/`);
+                return (
+                  <Link
+                    key={tab.id}
+                    href={tab.href}
+                    className={clsx(
+                      'rounded-full border px-4 py-2 text-sm',
+                      active
+                        ? 'border-blue-600 bg-blue-50 text-blue-700 font-semibold'
+                        : 'border-gray-200 bg-white text-gray-700 hover:bg-gray-50'
+                    )}
+                    aria-current={active ? 'page' : undefined}
+                  >
+                    {tab.label}
+                  </Link>
+                );
+              })}
+            </div>
+          </>
+        )}
         {children}
       </div>
     </AdminContext.Provider>

@@ -30,7 +30,7 @@ to do: all focused on Teacher Dashboard and Log in vs Log out state - fixed; wor
 Areas:
 1. Auth and sign in [week of Dec 29]
 Left off here: https://go-padi.atlassian.net/browse/KAN-11 notes on what i need to fix.
-2. Progress and tracking for teachers [week of Dec 29]
+2. Progress and tracking for teachers [week of Jan 12]
 3. Within teacher dashboard: Assessments; Grouping and Progress 
 4. Start Teaching - determine the flow
 5. Add all content from K Reading to app

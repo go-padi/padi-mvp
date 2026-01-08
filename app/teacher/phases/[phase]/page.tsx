@@ -7,32 +7,8 @@ import { useAdminMode } from '../../layout';
 import { PhaseTabs } from '@/components/PhaseTabs';
 import { TeachingModeToggle } from '@/components/TeachingModeToggle';
 import { useTeachingMode } from '@/lib/teachingModeContext';
-
-const fallbackPhase = {
-  code: 'K_P1',
-  title: 'Phase 1',
-  summary: `Phonological Awareness is one of the key predictors and a vital prerequisite for learning to read and spell. It is the ability to identify and manipulate units of sound.
-
-The basic phonological awareness ability is detecting rhyme. The students with competent phonological awareness will easily recognize that the rime part is the same and only the onset is changed in words like pat, sat, and mat. The students with language learning disability often do not have this ability. Early intervention with exposure to rhymes is vital.
-
-Phonological awareness involves the understanding that sentences are made up of words, that words are created from syllables, and syllables from sounds. When counting words, students with language learning disability may think that "Atlantic" is three words, not being aware that the components are syllables that make up one word. This knowledge cannot be assumed but must be taught directly.
-
-Once the students are aware of the syllable components, they can learn to manipulate them, by adding, deleting, and reversing them. Only after extensive practice with syllables are the students able to identify and manipulate sounds in syllables. The awareness of phonemes is the highest skill and requires daily practice. The students who can accurately detect and manipulate the sounds in syllables are well equipped for reading and spelling activities.`,
-  description: 'Phonological Awareness Foundation',
-};
-
-const fallbackGroups: Group[] = [
-  { id: 'fallback-ls', code: 'K_P1_LS', title: 'Learning Sensorially', description: 'Sharpen listening skills and auditory discrimination', module_count: 13, is_locked: false, teaching_mode: 'group' },
-  { id: 'fallback-rhy', code: 'K_P1_RHY', title: 'Rhyming', description: 'Develop rhyming discrimination and production', module_count: 10, is_locked: true, teaching_mode: 'group' },
-  { id: 'fallback-ws', code: 'K_P1_WS', title: 'Words and Sentences', description: 'Build word and sentence awareness', module_count: 10, is_locked: true, teaching_mode: 'group' },
-  { id: 'fallback-syl', code: 'K_P1_SYL', title: 'Syllables', description: 'Clap, segment, and blend syllables', module_count: 10, is_locked: true, teaching_mode: 'group' },
-  { id: 'fallback-pa', code: 'K_P1_PA', title: 'Phonemic Awareness', description: 'Work with individual sounds', module_count: 10, is_locked: true, teaching_mode: 'group' },
-];
-
-const fallbackIndividualGroups: Group[] = [
-  { id: 'fallback-ind-sa', code: 'K_P1_IND_SA', title: 'Sound Awareness (Individual)', description: 'One-on-one listening and sound identification activities', module_count: 10, is_locked: false, teaching_mode: 'individual' },
-  { id: 'fallback-ind-rhy', code: 'K_P1_IND_RHY', title: 'Individual Rhyme Practice', description: 'Personalized rhyme detection and creation', module_count: 6, is_locked: true, teaching_mode: 'individual' },
-];
+import { useAuth } from '@/lib/auth-store';
+import { previewGroupsByPhase, previewPhaseByCode } from '@/lib/demo/demoCurriculum';
 
 type Phase = {
   id: string;
@@ -58,9 +34,30 @@ export default function PhaseDetail({ params }: { params: Promise<{ phase: strin
   const [groupsByMode, setGroupsByMode] = useState<{ group: Group[]; individual: Group[] }>({ group: [], individual: [] });
   const { adminMode } = useAdminMode();
   const { mode } = useTeachingMode();
+  const { isLoggedIn, isHydrated } = useAuth();
+  const dataMode = isLoggedIn ? 'live' : 'preview';
 
   useEffect(() => {
     const fetchPhase = async () => {
+      if (!isHydrated) return;
+      if (dataMode === 'preview') {
+        const previewPhase = previewPhaseByCode[phase];
+        setPhaseRow(previewPhase ? { id: previewPhase.code, code: previewPhase.code, title: previewPhase.title, description: previewPhase.description, summary: null } : null);
+        const previewGroups = previewGroupsByPhase[phase] || [];
+        const grouped = {
+          group: previewGroups.filter(g => g.teaching_mode === 'group'),
+          individual: previewGroups.filter(g => g.teaching_mode === 'individual'),
+        };
+        const filtered =
+          mode === 'both'
+            ? grouped
+            : {
+                group: mode === 'group' ? grouped.group : [],
+                individual: mode === 'individual' ? grouped.individual : [],
+              };
+        setGroupsByMode(filtered);
+        return;
+      }
       const sb = supabaseClient();
       const { data: phaseRow } = await sb
         .from('phase')
@@ -84,21 +81,18 @@ export default function PhaseDetail({ params }: { params: Promise<{ phase: strin
             group: (groupRows as Group[]).filter(g => g.teaching_mode === 'group'),
             individual: (groupRows as Group[]).filter(g => g.teaching_mode === 'individual'),
           });
-        } else if (phase === 'K_P1') {
-          setGroupsByMode({
-            group: mode === 'individual' ? [] : fallbackGroups,
-            individual: mode === 'group' ? [] : fallbackIndividualGroups,
-          });
         } else {
           setGroupsByMode({ group: [], individual: [] });
         }
       }
     };
     fetchPhase();
-  }, [phase, mode]);
+  }, [phase, mode, isLoggedIn, isHydrated, dataMode]);
 
   const renderGroupCard = (g: Group) => {
-    const locked = g.is_locked && !adminMode;
+    const previewLocked = dataMode === 'preview' && g.is_locked;
+    const locked = dataMode === 'live' ? g.is_locked && !adminMode : false;
+    const ctaLabel = previewLocked ? 'Preview structure' : locked ? 'Coming Soon' : 'View Modules →';
     return (
       <div key={g.id} className="rounded-2xl border border-gray-100 bg-white p-5 shadow-sm flex flex-col gap-2">
         <div className="flex items-center justify-between">
@@ -124,7 +118,7 @@ export default function PhaseDetail({ params }: { params: Promise<{ phase: strin
             )}
             aria-disabled={locked}
           >
-            {locked ? 'Coming Soon' : 'View Modules →'}
+            {ctaLabel}
           </Link>
         </div>
       </div>
@@ -147,13 +141,13 @@ export default function PhaseDetail({ params }: { params: Promise<{ phase: strin
         ← Back to Phases
       </Link>
       <div className="space-y-3">
-        <h2 className="text-3xl font-semibold text-gray-900">{phaseRow?.title || (phase === 'K_P1' ? fallbackPhase.title : 'Phase')}</h2>
-        {phaseRow?.summary || (phase === 'K_P1' ? fallbackPhase.summary : null) ? (
-          <p className="text-sm text-gray-700 whitespace-pre-line">{phaseRow?.summary || fallbackPhase.summary}</p>
+        <h2 className="text-3xl font-semibold text-gray-900">{phaseRow?.title || previewPhaseByCode[phase]?.title || 'Phase'}</h2>
+        {phaseRow?.summary ? (
+          <p className="text-sm text-gray-700 whitespace-pre-line">{phaseRow.summary}</p>
         ) : null}
-        {phaseRow?.description || (phase === 'K_P1' ? fallbackPhase.description : null) ? (
+        {phaseRow?.description || previewPhaseByCode[phase]?.description ? (
           <div className="rounded-2xl border border-blue-100 bg-white p-5 shadow-sm text-sm text-gray-800 space-y-3 whitespace-pre-line">
-            {phaseRow?.description || fallbackPhase.description}
+            {phaseRow?.description || previewPhaseByCode[phase]?.description}
           </div>
         ) : (
           <div className="rounded-2xl border border-gray-100 bg-white p-5 shadow-sm text-sm text-gray-700">

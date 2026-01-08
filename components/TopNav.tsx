@@ -16,22 +16,25 @@ export default function TopNav(){
     router.push('/teacher/dashboard');
   };
 
+  const isMatch = (base: string) => pathname === base || pathname.startsWith(`${base}/`);
+  const isDashboardActive =
+    isMatch('/teacher/dashboard') ||
+    isMatch('/teacher/phases') ||
+    isMatch('/teacher/about') ||
+    isMatch('/teacher/assessments') ||
+    isMatch('/teacher/grouping') ||
+    isMatch('/teacher/resources');
+
+  const isStartTeachingRoute = pathname === '/teacher' || pathname === '/start-teaching' || isMatch('/teacher/start-teaching') || isMatch('/start-teaching');
+  const startTeachingHighlight = isStartTeachingRoute || pathname === '/';
+  const isSignInRoute = pathname === '/signin' || pathname === '/login';
+
   useEffect(() => {
     if (typeof window === 'undefined') return;
     const handler = () => setSignInOpen(true);
     window.addEventListener('padi-open-signin', handler);
     return () => window.removeEventListener('padi-open-signin', handler);
   }, []);
-
-  const isDashboardActive =
-    pathname === '/teacher/dashboard' ||
-    pathname.startsWith('/teacher/dashboard') ||
-    pathname === '/teacher/phases' ||
-    pathname.startsWith('/teacher/phases/') ||
-    pathname.startsWith('/teacher/about') ||
-    pathname.startsWith('/teacher/assessments') ||
-    pathname.startsWith('/teacher/grouping') ||
-    pathname.startsWith('/teacher/resources');
 
   return (
     <>
@@ -47,7 +50,9 @@ export default function TopNav(){
               onClick={goToDashboard}
               className={clsx(
                 'rounded-lg px-3 py-2 text-sm font-semibold',
-                isDashboardActive ? 'bg-gray-100 text-gray-900' : 'text-gray-800 hover:bg-gray-100'
+                isDashboardActive
+                  ? 'bg-gray-100 text-gray-900 ring-2 ring-offset-2 ring-blue-200'
+                  : 'text-gray-800 hover:bg-gray-100'
               )}
               aria-current={isDashboardActive ? 'page' : undefined}
             >
@@ -55,7 +60,11 @@ export default function TopNav(){
             </button>
             <Link
               href="/teacher"
-              className="rounded-xl bg-gradient-to-r from-blue-600 to-purple-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:opacity-95"
+              className={clsx(
+                'rounded-xl bg-gradient-to-r from-blue-600 to-purple-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:opacity-95',
+                startTeachingHighlight && 'ring-2 ring-offset-2 ring-blue-200'
+              )}
+              aria-current={isStartTeachingRoute ? 'page' : undefined}
             >
               Start Teaching
             </Link>
@@ -63,7 +72,11 @@ export default function TopNav(){
             <button
               type="button"
               onClick={() => setSignInOpen(true)}
-              className="rounded-xl border border-gray-200 bg-white px-4 py-2 text-sm font-semibold text-gray-900 hover:bg-gray-50"
+              className={clsx(
+                'rounded-xl border border-gray-200 bg-white px-4 py-2 text-sm font-semibold text-gray-900 hover:bg-gray-50',
+                isSignInRoute && 'border-blue-600 bg-blue-50 text-blue-800 ring-2 ring-offset-2 ring-blue-200'
+              )}
+              aria-current={isSignInRoute ? 'page' : undefined}
             >
               Sign In
             </button>

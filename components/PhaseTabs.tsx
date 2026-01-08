@@ -8,7 +8,7 @@ const phases = [
   { code: 'K_P3', title: 'Phase 3', meta: '6 to 9 months · Lessons 120-180' },
 ];
 
-export function PhaseTabs({ active }: { active: string }) {
+export function PhaseTabs({ active }: { active?: string }) {
   return (
     <div className="flex flex-wrap gap-2">
       {phases.map(p => (

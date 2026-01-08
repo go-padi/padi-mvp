@@ -4,6 +4,7 @@ import clsx from 'clsx';
 import { useAuth } from '@/lib/auth-store';
 import { TeachingModeToggle } from '@/components/TeachingModeToggle';
 import { demoGroups, demoStudentsByGroup } from '@/lib/demo/demoGroups';
+import { demoStudents } from '@/lib/demo/demoStudents';
 import { useTeachingMode } from '@/lib/teachingModeContext';
 
 export default function GroupingPage() {
@@ -40,7 +41,7 @@ export default function GroupingPage() {
 
       {dataMode === 'demo' && (
         <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-xs text-amber-800">
-          Read-only preview: log in to manage real groups and progress notes.
+          Read-only preview: sign in to see live grouping and progress
         </div>
       )}
 
@@ -88,42 +89,68 @@ export default function GroupingPage() {
       )}
 
       {dataMode === 'demo' && showStudentMode && (
-        <div className="space-y-3">
-          <div className="flex items-center justify-between">
-            <div>
-              <h3 className="text-xl font-semibold text-gray-900">Students</h3>
-              <p className="text-sm text-gray-700">Students organized by their current group.</p>
+        <div className="space-y-5">
+          <div className="space-y-2">
+            <h3 className="text-xl font-semibold text-gray-900">Individual Students</h3>
+            <p className="text-sm text-gray-700">Students not currently assigned to a group.</p>
+            <div className="grid gap-3 md:grid-cols-3">
+              {demoStudents.filter(s => !s.groupId).map(student => (
+                <div key={student.id} className="rounded-xl border border-gray-100 bg-white p-4 shadow-sm space-y-2">
+                  <div className="flex items-center justify-between">
+                    <p className="text-sm font-semibold text-gray-900">{student.name}</p>
+                    <span className="rounded-full bg-purple-50 px-2 py-0.5 text-[11px] font-semibold text-purple-700">Individual</span>
+                  </div>
+                  <p className="text-xs text-gray-600">{student.progressLabel}</p>
+                  <div className="flex flex-wrap gap-1">
+                    {student.focusAreas.map(tag => (
+                      <span key={tag} className="rounded-full bg-gray-100 px-2 py-0.5 text-[11px] font-semibold text-gray-700">
+                        {tag}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              ))}
             </div>
           </div>
+
           <div className="space-y-3">
-            {demoGroups.map(g => (
-              <div key={g.id} className="rounded-2xl border border-gray-100 bg-white p-5 shadow-sm">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-semibold text-gray-900">{g.name}</p>
-                    <p className="text-xs text-gray-600">{g.focus}</p>
-                  </div>
-                  <span className="text-xs text-gray-600">{g.progressLabel}</span>
-                </div>
-                <div className="mt-3 grid gap-3 md:grid-cols-3">
-                  {(demoStudentsByGroup[g.id] || []).map(student => (
-                    <div key={student.id} className="rounded-xl border border-gray-100 bg-white p-4 shadow-sm space-y-1">
-                      <div className="flex items-center justify-between">
-                        <p className="text-sm font-semibold text-gray-900">{student.name}</p>
-                        <span className="text-xs text-gray-600">{student.progressLabel}</span>
-                      </div>
-                      <div className="flex flex-wrap gap-1">
-                        {student.focusAreas.map(tag => (
-                          <span key={tag} className="rounded-full bg-gray-100 px-2 py-0.5 text-[11px] font-semibold text-gray-700">
-                            {tag}
-                          </span>
-                        ))}
-                      </div>
-                    </div>
-                  ))}
-                </div>
+            <div className="flex items-center justify-between">
+              <div>
+                <h3 className="text-xl font-semibold text-gray-900">Grouped Students</h3>
+                <p className="text-sm text-gray-700">Students organized by their current group.</p>
               </div>
-            ))}
+            </div>
+            <div className="space-y-3">
+              {demoGroups.map(g => (
+                <div key={g.id} className="rounded-2xl border border-gray-100 bg-white p-5 shadow-sm">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm font-semibold text-gray-900">{g.name}</p>
+                      <p className="text-xs text-gray-600">{g.focus}</p>
+                    </div>
+                    <span className="text-xs text-gray-600">{g.progressLabel}</span>
+                  </div>
+                  <div className="mt-3 grid gap-3 md:grid-cols-3">
+                    {(demoStudentsByGroup[g.id] || []).map(student => (
+                      <div key={student.id} className="rounded-xl border border-gray-100 bg-white p-4 shadow-sm space-y-2">
+                        <div className="flex items-center justify-between">
+                          <p className="text-sm font-semibold text-gray-900">{student.name}</p>
+                          <span className="rounded-full bg-blue-50 px-2 py-0.5 text-[11px] font-semibold text-blue-700">{g.name}</span>
+                        </div>
+                        <p className="text-xs text-gray-600">{student.progressLabel}</p>
+                        <div className="flex flex-wrap gap-1">
+                          {student.focusAreas.map(tag => (
+                            <span key={tag} className="rounded-full bg-gray-100 px-2 py-0.5 text-[11px] font-semibold text-gray-700">
+                              {tag}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
         </div>
       )}

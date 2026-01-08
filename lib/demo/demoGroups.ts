@@ -29,7 +29,7 @@ export const demoGroups: DemoGroup[] = [
     name: 'Group B',
     phase: 'Phase 1',
     focus: 'Sound Awareness',
-    status: 'Not started',
+    status: 'In progress',
     progressPercent: 22,
     progressLabel: 'Avg 8/36 lessons',
     tags: ['Sound ID', 'Attention'],

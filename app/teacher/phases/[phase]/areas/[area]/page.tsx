@@ -8,81 +8,11 @@ import { PhaseTabs } from '@/components/PhaseTabs';
 import { useTeachingMode } from '@/lib/teachingModeContext';
 import { TeachingModeToggle } from '@/components/TeachingModeToggle';
 import { useAuth } from '@/lib/auth-store';
+import { previewGroupsByPhase, previewModulesByGroup, previewPhaseByCode } from '@/lib/demo/demoCurriculum';
 
 type Phase = { id:string; code:string; title:string; summary:string|null };
 type Group = { id:string; code:string; title:string; description:string|null; is_locked:boolean|null; module_count:number|null; teaching_mode: 'group' | 'individual' };
 type ModuleRow = { id:string; code:string; title:string; subtitle:string|null; summary:string|null; is_locked:boolean|null; display_order:number|null; teaching_mode: 'group' | 'individual' };
-
-const fallbackPhase: Phase = {
-  id: 'phase-1-preview',
-  code: 'K_P1',
-  title: 'Phase 1: Foundations & Phonological Awareness',
-  summary:
-    'Preview of Phase 1 for anonymous visitors. Log in to unlock the full lesson sequence, progress tracking, and saved notes.',
-};
-
-const fallbackGroups: Group[] = [
-  { id: 'fallback-ls', code: 'K_P1_LS', title: 'Learning Sensorially', description: 'Sharpen listening skills and auditory discrimination', is_locked: false, module_count: 13, teaching_mode: 'group' },
-  { id: 'fallback-rhy', code: 'K_P1_RHY', title: 'Rhyming', description: 'Develop rhyming discrimination and production', is_locked: true, module_count: 10, teaching_mode: 'group' },
-  { id: 'fallback-ws', code: 'K_P1_WS', title: 'Words and Sentences', description: 'Build word and sentence awareness', is_locked: true, module_count: 10, teaching_mode: 'group' },
-  { id: 'fallback-syl', code: 'K_P1_SYL', title: 'Syllables', description: 'Clap, segment, and blend syllables', is_locked: true, module_count: 10, teaching_mode: 'group' },
-  { id: 'fallback-pa', code: 'K_P1_PA', title: 'Phonemic Awareness', description: 'Work with individual sounds', is_locked: true, module_count: 10, teaching_mode: 'group' },
-];
-
-const fallbackIndividualGroups: Group[] = [
-  { id: 'fallback-ind-sa', code: 'K_P1_IND_SA', title: 'Sound Awareness (Individual)', description: 'One-on-one listening and sound identification activities', is_locked: false, module_count: 10, teaching_mode: 'individual' },
-  { id: 'fallback-ind-rhy', code: 'K_P1_IND_RHY', title: 'Individual Rhyme Practice', description: 'Personalized rhyme detection and creation', is_locked: true, module_count: 6, teaching_mode: 'individual' },
-];
-
-const fallbackModulesByGroup: Record<string, ModuleRow[]> = {
-  K_P1_LS: [
-    {
-      id: 'fallback-ls-1',
-      code: 'LS-1',
-      title: 'The Silence Game',
-      subtitle: 'LS1',
-      summary: 'Sharpen listening skills with intentional silence and sound awareness.',
-      is_locked: false,
-      display_order: 1,
-      teaching_mode: 'group',
-    },
-    ...Array.from({ length: 3 }).map((_, idx) => {
-      const n = idx + 2;
-      return {
-        id: `fallback-ls-${n}`,
-        code: `LS-${n}`,
-        title: `Module ${n}`,
-        subtitle: `LS${n}`,
-        summary: 'Content coming soon',
-        is_locked: true,
-        display_order: n,
-        teaching_mode: 'group' as const,
-      };
-    }),
-  ],
-  K_P1_IND_SA: [
-    {
-      id: 'fallback-ind-sa-1',
-      code: 'K_P1_IND_SA_1',
-      title: 'Lesson 1 (Individual placeholder)',
-      subtitle: 'Ind 1',
-      summary: 'Foundational sound awareness practice for individual sessions.',
-      is_locked: false,
-      display_order: 1,
-      teaching_mode: 'individual',
-    },
-    {
-      id: 'fallback-ind-sa-2',
-      code: 'K_P1_IND_SA_2',
-      title: 'Lesson 2 (Individual placeholder)',
-      subtitle: 'Ind 2',
-      summary: 'Follow-up listening task for one-on-one work.',
-      is_locked: true,
-      display_order: 2,
-      teaching_mode: 'individual',
-    },
-  ],
-};
 
 export default function AreaPage({ params }:{ params: Promise<{ phase:string; area:string }> }){
   const { phase, area } = use(params);
@@ -92,20 +22,18 @@ export default function AreaPage({ params }:{ params: Promise<{ phase:string; ar
   const { adminMode } = useAdminMode();
   const { mode } = useTeachingMode();
   const { isLoggedIn, isHydrated } = useAuth();
-  const dataMode = isLoggedIn ? 'live' : 'demo';
+  const dataMode = isLoggedIn ? 'live' : 'preview';
 
   useEffect(()=>{
     const fetchData=async()=>{
       if (!isHydrated) return;
-      const usePreviewData = () => {
-        const previewGroups = [...fallbackGroups, ...fallbackIndividualGroups];
-        setPhaseRow(fallbackPhase);
-        setGroups(previewGroups);
-        setModules(fallbackModulesByGroup[area] || []);
-      };
-
-      if (dataMode === 'demo') {
-        usePreviewData();
+      if (dataMode === 'preview') {
+        const previewPhase = previewPhaseByCode[phase];
+        setPhaseRow(previewPhase ? { id: previewPhase.code, code: previewPhase.code, title: previewPhase.title, summary: previewPhase.summary || null } : null);
+        const previewGroups = previewGroupsByPhase[phase] || [];
+        const groupedByMode = mode === 'both' ? previewGroups : previewGroups.filter(g => g.teaching_mode === mode);
+        setGroups(groupedByMode);
+        setModules((previewModulesByGroup[area] || []).filter(m => (mode === 'both' ? true : m.teaching_mode === mode)));
         return;
       }
 
@@ -166,8 +94,8 @@ export default function AreaPage({ params }:{ params: Promise<{ phase:string; ar
           <div className="rounded-2xl border border-gray-100 bg-white p-4 shadow-sm text-sm text-gray-700">Curriculum coming soon.</div>
         )}
         <div className="grid gap-3 md:grid-cols-2">
-          {filteredGroups.map(g=>{
-            const locked = g.is_locked && !adminMode;
+        {filteredGroups.map(g=>{
+            const locked = dataMode === 'live' ? g.is_locked && !adminMode : false;
             const active = g.code===area;
             return (
               <Link
@@ -206,7 +134,7 @@ export default function AreaPage({ params }:{ params: Promise<{ phase:string; ar
         </div>
         <div className="grid gap-3">
           {sortedModules.map((mod, idx) => {
-            const locked = mod.is_locked && !adminMode;
+            const locked = dataMode === 'preview' ? !!mod.is_locked : mod.is_locked && !adminMode;
             return (
               <div key={mod.id} className={clsx('rounded-2xl border p-4 shadow-sm flex items-center justify-between',
                 idx===0 ? 'border-blue-300 bg-blue-50' : 'border-gray-100 bg-white')}>
@@ -225,7 +153,7 @@ export default function AreaPage({ params }:{ params: Promise<{ phase:string; ar
                 </p>
                 <p className="text-xs text-gray-600">{mod.title}</p>
                 <p className="text-xs text-gray-600 mt-1">
-                  {locked && !isLoggedIn
+                  {locked && dataMode === 'preview'
                     ? 'Log in to unlock full lesson sequence'
                     : mod.summary || (locked ? 'Coming soon' : '')}
                 </p>

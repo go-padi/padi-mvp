@@ -6,6 +6,7 @@ import clsx from 'clsx';
 import { useTeachingMode } from '@/lib/teachingModeContext';
 import { TeachingModeToggle } from '@/components/TeachingModeToggle';
 import { useAuth } from '@/lib/auth-store';
+import { previewModuleByCode } from '@/lib/demo/demoCurriculum';
 
 type Lesson = {
   materials?: string[];
@@ -22,58 +23,11 @@ type ModuleRow = {
   subtitle: string | null;
   summary: string | null;
   teaching_mode: 'individual' | 'group';
+  is_locked: boolean | null;
   lesson: Lesson | null;
 };
 
 type Student = { id: string; full_name: string };
-
-const fallbackLesson: Lesson = {
-  materials: ['A quiet classroom'],
-  aims: ['Sharpen the students listening skills', 'Develop good attention span', 'Build auditory discrimination'],
-  presentation_steps: [
-    'Tell the students that they are going to play a game called Silence Game.',
-    'Ask each of them to close their eyes and listen to the sounds in the room, outside the room, and within themselves.',
-    'Set a timer for 2 minutes.',
-    'After 2 minutes of listening quietly, ask them to share what they heard (clock ticks, voices, footsteps, animals, coughing, faucet, flush, cars, breathing, air conditioner, etc.).',
-  ],
-  examples: [
-    'Clock ticks',
-    'Voices',
-    'Footsteps',
-    'Animals',
-    'Coughing',
-    'Faucet',
-    'Flush',
-    'Cars',
-    'Breathing',
-    'Air conditioner',
-  ],
-  extension: [
-    'Play the game in a different room or outdoors.',
-    'Use recordings of birds or other animals and ask students to guess the animal.',
-  ],
-};
-
-const fallbackModuleByCode: Record<string, ModuleRow> = {
-  'LS-1': {
-    id: 'fallback-ls-1',
-    code: 'LS-1',
-    title: 'The Silence Game',
-    subtitle: 'LS1',
-    summary: 'Sharpen listening skills with intentional silence and sound awareness.',
-    teaching_mode: 'group',
-    lesson: fallbackLesson,
-  },
-  'K_P1_IND_SA_1': {
-    id: 'fallback-ind-sa-1',
-    code: 'K_P1_IND_SA_1',
-    title: 'Lesson 1 (Individual placeholder)',
-    subtitle: 'Ind 1',
-    summary: 'Foundational sound awareness practice for individual sessions.',
-    teaching_mode: 'individual',
-    lesson: null,
-  },
-};
 
 export default function LessonPage({ params }: { params: Promise<{ phase: string; area: string; module: string }> }) {
   const { phase, area, module } = use(params);
@@ -88,12 +42,22 @@ export default function LessonPage({ params }: { params: Promise<{ phase: string
   const [status, setStatus] = useState<string | null>(null);
   const [needsAuth, setNeedsAuth] = useState(false);
   const { mode } = useTeachingMode();
+  const dataMode = isLoggedIn ? 'live' : 'preview';
 
   useEffect(() => {
     const fetchData = async () => {
       if (!isHydrated) return;
-      if (!isLoggedIn) {
-        setModuleRow(fallbackModuleByCode[module] || null);
+      if (dataMode === 'preview') {
+        const previewModule = previewModuleByCode[module];
+        setModuleRow(
+          previewModule
+            ? {
+                ...(previewModule as ModuleRow),
+                is_locked: previewModule.is_locked ?? null,
+                lesson: previewModule.lesson || null,
+              }
+            : null
+        );
         setStudents([]);
         return;
       }
@@ -101,7 +65,7 @@ export default function LessonPage({ params }: { params: Promise<{ phase: string
       const sb = supabaseClient();
       let query = sb
         .from('module_detail')
-        .select('id,code,title,subtitle,summary,lesson,teaching_mode')
+        .select('id,code,title,subtitle,summary,lesson,teaching_mode,is_locked')
         .eq('code', module);
       query = mode === 'both' ? query : query.eq('teaching_mode', mode);
       let { data: mod } = await query.maybeSingle();
@@ -117,15 +81,62 @@ export default function LessonPage({ params }: { params: Promise<{ phase: string
       if (isLoggedIn) {
         const { data: studentRows } = await sb.from('student').select('id,full_name').order('full_name');
         if (studentRows) setStudents(studentRows as Student[]);
-      } else {
-        setStudents([]);
       }
     };
     fetchData();
-  }, [module, mode, isLoggedIn, isHydrated]);
+  }, [module, mode, isLoggedIn, isHydrated, dataMode]);
 
   if (!isHydrated) {
     return <div className="rounded-2xl border border-gray-100 bg-white p-5 shadow-sm text-sm text-gray-700">Loading...</div>;
+  }
+
+  if (dataMode === 'preview' && (!moduleRow || moduleRow.is_locked)) {
+    return (
+      <div className="space-y-6">
+        <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-gray-100 bg-white p-4 shadow-sm">
+          <div className="flex items-center gap-2">
+            <Link href="/teacher" className="text-sm text-gray-700 hover:text-gray-900" title="Home">
+              🏠
+            </Link>
+            <Link href={`/teacher/phases/${phase}/areas/${area}`} className="text-sm text-gray-700 hover:text-gray-900">
+              ← Back to Modules
+            </Link>
+          </div>
+          <div className="flex items-center gap-2">
+            <TeachingModeToggle />
+            <div className="text-xs text-gray-500">{module}</div>
+          </div>
+        </div>
+        <div className="rounded-2xl border border-amber-200 bg-amber-50 p-5 shadow-sm text-sm text-amber-800 space-y-2">
+          <p className="font-semibold">Lesson locked</p>
+          <p>Log in to unlock the full lesson sequence. One sample lesson is available from the Phase 1 preview.</p>
+          <Link href={`/teacher/phases/${phase}`} className="text-sm font-semibold text-blue-700 hover:underline">
+            Return to phase overview →
+          </Link>
+        </div>
+      </div>
+    );
+  }
+
+  if (!moduleRow) {
+    return (
+      <div className="space-y-6">
+        <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-gray-100 bg-white p-4 shadow-sm">
+          <div className="flex items-center gap-2">
+            <Link href="/teacher" className="text-sm text-gray-700 hover:text-gray-900" title="Home">
+              🏠
+            </Link>
+            <Link href={`/teacher/phases/${phase}/areas/${area}`} className="text-sm text-gray-700 hover:text-gray-900">
+              ← Back to Modules
+            </Link>
+          </div>
+          <TeachingModeToggle />
+        </div>
+        <div className="rounded-2xl border border-gray-100 bg-white p-5 shadow-sm text-sm text-gray-700">
+          Lesson not found.
+        </div>
+      </div>
+    );
   }
 
   const lesson = moduleRow?.lesson || {};

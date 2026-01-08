@@ -6,8 +6,9 @@ import { supabaseClient } from '@/lib/supabase';
 import { TeachingModeToggle } from '@/components/TeachingModeToggle';
 import { useTeachingMode } from '@/lib/teachingModeContext';
 import { useAuth } from '@/lib/auth-store';
-import { demoStudents } from '@/lib/demo/demoStudents';
-import { demoGroups } from '@/lib/demo/demoGroups';
+import { demoTeacherData } from '@/lib/demo/demoTeacherData';
+import { mapDemoToStartTeachingPreview } from '@/lib/startTeaching/preview/mapDemoToStartTeachingPreview';
+import { useStartTeachingData } from '@/lib/startTeaching/useStartTeachingData';
 
 type StudentCard = { id: string; name: string; phase: string; status: string; focus: string };
 type GroupCard = { id: string; name: string; phase: string; status: string; focus: string };
@@ -43,6 +44,8 @@ export default function TeacherIndexPage() {
   const { isLoggedIn, isHydrated } = useAuth();
   const [students, setStudents] = useState<StudentCard[]>([]);
   const dataMode = isLoggedIn ? 'live' : 'demo';
+  const previewModel = useMemo(() => mapDemoToStartTeachingPreview(demoTeacherData), []);
+  const startData = useStartTeachingData();
 
   useEffect(() => {
     if (!isHydrated || dataMode === 'demo') return;
@@ -67,7 +70,7 @@ export default function TeacherIndexPage() {
 
   const cards = useMemo(() => {
     if (dataMode === 'demo') {
-      const studentCards = demoStudents.map(s => ({
+      const studentCards = demoTeacherData.students.map(s => ({
         id: s.id,
         name: s.name,
         phase: s.phase,
@@ -75,7 +78,7 @@ export default function TeacherIndexPage() {
         focus: s.focusAreas[0],
         type: 'student' as const,
       }));
-      const groupCards = demoGroups.map(g => ({
+      const groupCards = demoTeacherData.groups.map(g => ({
         id: g.id,
         name: g.name,
         phase: g.phase,
@@ -102,6 +105,30 @@ export default function TeacherIndexPage() {
   }
 
   if (dataMode === 'demo') {
+    const previewStudents =
+      mode === 'group'
+        ? []
+        : startData.students.map(s => ({
+            id: s.id,
+            name: s.name,
+            progress: s.progressPercent,
+            area: s.focusAreas[0] || 'Learning Sensorially',
+          }));
+    const previewGroups =
+      mode === 'individual'
+        ? []
+        : startData.groups.map(g => ({
+            id: g.id,
+            name: g.name,
+            size: g.studentIds.length,
+          }));
+
+    const openSignIn = () => {
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(new Event('padi-open-signin'));
+      }
+    };
+
     return (
       <div className="space-y-8">
         <div className="flex flex-wrap items-center justify-between gap-3">
@@ -127,6 +154,74 @@ export default function TeacherIndexPage() {
             </div>
           ))}
         </div>
+
+        <div className="flex flex-wrap items-center gap-3">
+          {mode !== 'group' && (
+            <button
+              onClick={openSignIn}
+              className="rounded-xl bg-gray-900 text-white px-4 py-2 text-sm font-semibold hover:bg-gray-800"
+            >
+              Add Student
+            </button>
+          )}
+          {mode !== 'individual' && (
+            <button
+              onClick={openSignIn}
+              className="rounded-xl border border-gray-200 bg-white px-4 py-2 text-sm font-semibold text-gray-900 hover:bg-gray-50"
+            >
+              Add Group
+            </button>
+          )}
+        </div>
+
+        {!!previewStudents.length && (
+          <div className="space-y-3">
+            <div className="flex items-center justify-between">
+              <h3 className="text-lg font-semibold text-gray-900">Students (preview)</h3>
+              <span className="text-xs text-gray-600">Read-only demo</span>
+            </div>
+              <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
+              {previewStudents.map(student => (
+                <Link key={student.id} href={`/start-teaching/students/${student.id}`} className="rounded-2xl border border-gray-100 bg-white p-4 shadow-sm space-y-2 hover:border-blue-200">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm font-semibold text-gray-900">{student.name}</p>
+                      <p className="text-xs text-gray-600">{student.area}</p>
+                    </div>
+                    <span className="rounded-full bg-purple-50 px-2 py-0.5 text-[11px] font-semibold text-purple-700">Student</span>
+                  </div>
+                  <div className="h-2 w-full rounded-full bg-gray-100 overflow-hidden">
+                    <div className="h-2 bg-purple-500" style={{ width: `${student.progress}%` }} />
+                  </div>
+                  <p className="text-xs text-gray-600">{student.progress}% complete</p>
+                </Link>
+              ))}
+              </div>
+            </div>
+          )}
+
+        {!!previewGroups.length && (
+          <div className="space-y-3">
+            <div className="flex items-center justify-between">
+              <h3 className="text-lg font-semibold text-gray-900">Groups (preview)</h3>
+              <span className="text-xs text-gray-600">Read-only demo</span>
+            </div>
+            <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
+              {previewGroups.map(group => (
+                <Link key={group.id} href={`/start-teaching/groups/${group.id}`} className="rounded-2xl border border-gray-100 bg-white p-4 shadow-sm space-y-2 hover:border-blue-200">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm font-semibold text-gray-900">{group.name}</p>
+                      <p className="text-xs text-gray-600">{group.size} students</p>
+                    </div>
+                    <span className="rounded-full bg-blue-50 px-2 py-0.5 text-[11px] font-semibold text-blue-700">Group</span>
+                  </div>
+                  <p className="text-xs text-gray-700">Sign in to manage this group.</p>
+                </Link>
+              ))}
+            </div>
+          </div>
+        )}
 
         <div className="rounded-2xl border border-gray-100 bg-white p-5 shadow-sm flex items-center justify-between">
           <div>

@@ -3,11 +3,11 @@ import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import { supabaseClient } from '@/lib/supabase';
 import clsx from 'clsx';
-import { useAdminMode } from '../layout';
 import { PhaseTabs } from '@/components/PhaseTabs';
 import { TeachingModeToggle } from '@/components/TeachingModeToggle';
 import { useTeachingMode } from '@/lib/teachingModeContext';
 import { useAuth } from '@/lib/auth-store';
+import { previewPhases, previewPhaseByCode } from '@/lib/demo/demoCurriculum';
 
 type PhaseRow = {
   id: string;
@@ -60,15 +60,15 @@ const fallbackOutcomes: Outcome[] = [
 export default function PhasesPage(){
   const [phases, setPhases] = useState<PhaseRow[]>(fallbackPhases);
   const [outcomes, setOutcomes] = useState<Outcome[]>(fallbackOutcomes);
-  const { adminMode } = useAdminMode();
   const { mode } = useTeachingMode();
   const { isLoggedIn, isHydrated } = useAuth();
+  const dataMode = isLoggedIn ? 'live' : 'preview';
 
   useEffect(() => {
     const fetchPhases = async () => {
       if (!isHydrated) return;
-      if (!isLoggedIn) {
-        setPhases(fallbackPhases);
+      if (dataMode === 'preview') {
+        setPhases(previewPhases as PhaseRow[]);
         setOutcomes(fallbackOutcomes);
         return;
       }
@@ -79,12 +79,12 @@ export default function PhasesPage(){
         const o = (data.find(p => p.outcomes)?.outcomes || []) as Outcome[];
         setOutcomes(o.length ? o : fallbackOutcomes);
       } else {
-        setPhases(fallbackPhases);
+        setPhases(previewPhases as PhaseRow[]);
         setOutcomes(fallbackOutcomes);
       }
     };
     fetchPhases();
-  }, [isLoggedIn, isHydrated]);
+  }, [dataMode, isHydrated]);
 
   if (!isHydrated) {
     return <div className="rounded-2xl border border-gray-100 bg-white p-5 shadow-sm text-sm text-gray-700">Loading...</div>;
@@ -93,7 +93,7 @@ export default function PhasesPage(){
   return (
     <div className="space-y-10">
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <PhaseTabs active="K_P1" />
+        <PhaseTabs />
         <TeachingModeToggle />
       </div>
       {!isLoggedIn && (
@@ -107,10 +107,10 @@ export default function PhasesPage(){
         <p className="text-sm text-gray-700">Click on any phase to explore its content</p>
         <div className="grid gap-4 md:grid-cols-3 items-stretch">
           {phases.map(phase => {
-            const locked = !isLoggedIn || (phase.is_locked && !adminMode);
-            const buttonLabel = !isLoggedIn ? 'Log in to explore' : locked ? 'Locked' : `Explore ${phase.title}`;
+            const previewCopy = previewPhaseByCode[phase.code]?.description;
+            const description = previewCopy || phase.description || 'Coming soon';
             return (
-              <div key={phase.id} className="rounded-2xl border border-gray-100 bg-white p-5 shadow-sm flex flex-col justify-between">
+              <div key={phase.id || phase.code} className="rounded-2xl border border-gray-100 bg-white p-5 shadow-sm flex flex-col justify-between">
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-xs uppercase tracking-wide text-gray-600">{phase.months || ''} {phase.lesson_range ? `| ${phase.lesson_range}` : ''}</p>
@@ -120,26 +120,15 @@ export default function PhasesPage(){
                     </h3>
                   </div>
                 </div>
-                <p className="mt-2 text-sm text-gray-700 min-h-[48px]">{phase.description || 'Coming soon'}</p>
+                <p className="mt-2 text-sm text-gray-700 min-h-[48px]">{description}</p>
                 <div className="mt-4">
                   <Link
-                    href={locked ? '#' : `/teacher/phases/${phase.code}`}
-                    className={clsx(
-                      'inline-flex items-center justify-center rounded-xl px-4 py-2 text-sm font-semibold',
-                      locked
-                        ? 'border border-blue-200 bg-white text-blue-700 hover:bg-blue-50'
-                        : 'bg-gray-900 text-white hover:bg-gray-800'
+                    href={`/teacher/phases/${phase.code}`}
+                    className={clsx('inline-flex items-center justify-center rounded-xl px-4 py-2 text-sm font-semibold',
+                      'bg-gray-900 text-white hover:bg-gray-800'
                     )}
-                    onClick={evt => {
-                      if (locked) {
-                        evt.preventDefault();
-                        window.dispatchEvent(new Event('padi-open-signin'));
-                      }
-                    }}
-                    aria-disabled={locked}
                   >
-                    {buttonLabel}
-                    {!locked && <span className="ml-2">→</span>}
+                    Explore {phase.title} <span className="ml-2">→</span>
                   </Link>
                 </div>
               </div>

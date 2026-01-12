@@ -12,23 +12,11 @@
 
 ### Creating docs for each feature rollout moving forward. 
 
-to do: all focused on Teacher Dashboard and Log in vs Log out state - fixed; worked on task 1 of auth-and-signin.md
-1) Wire auth (teacher sign-in) and align RLS/read policies to `authenticated` instead of `anon`.
-  - Auth and Sign In: Feature Specification (starting Dec 1 - goal to be done is Dec 14)
-    -- added # 1. Auth and Global App State; need to fix top nav
-      - remove sign in / consolidate  [done] 
-      - remove the kids OR make sure its clear its just an example
-      - fix the direct Phase highlight; instead go to About Method [done]
-
-2) Add more Phase 1 content; now need to add for ind and group (Rhyming, Words and Sentences, Syllables, Phonemic Awareness) and Phase 2/3 placeholders.
-    - add status bar for each module; test once Learning Sensorially has been populated
-    - populate all of Learning Sensorially and add ability to only unlock when signed in - building to also add a paywall to see content (not added yet)
-3) Optionally list saved notes/attachments per module and per student.
-4) Connect the Student progress to the tracker
-5) automated assessments - python ML modules that live outside of core app? need to research best way to do this.
+to do: 
 
 Areas:
 1. Auth and sign in [logged in state- doing]
+Pausing on row level security. pick back up here.
 2. Progress and tracking for teachers [week of Jan 12]
 3. Within teacher dashboard: Assessments; Grouping and Progress [logged out state- done, need to do logged in]
 4. Start Teaching - determine the flow

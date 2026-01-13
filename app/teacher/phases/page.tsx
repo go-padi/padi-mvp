@@ -107,8 +107,13 @@ export default function PhasesPage(){
         <p className="text-sm text-gray-700">Click on any phase to explore its content</p>
         <div className="grid gap-4 md:grid-cols-3 items-stretch">
           {phases.map(phase => {
-            const previewCopy = previewPhaseByCode[phase.code]?.description;
-            const description = previewCopy || phase.description || 'Coming soon';
+            const previewCopy = dataMode === 'preview' ? previewPhaseByCode[phase.code]?.description : null;
+            const description =
+              dataMode === 'preview'
+                ? previewCopy || phase.description || 'Coming soon'
+                : phase.code === 'K_P1'
+                  ? 'Phase 1 available'
+                  : phase.description || 'Content coming soon';
             return (
               <div key={phase.id || phase.code} className="rounded-2xl border border-gray-100 bg-white p-5 shadow-sm flex flex-col justify-between">
                 <div className="flex items-center justify-between">

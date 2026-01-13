@@ -3,6 +3,7 @@ import Link from 'next/link';
 import clsx from 'clsx';
 import { useAuth } from '@/lib/auth-store';
 import { TeachingModeToggle } from '@/components/TeachingModeToggle';
+import { EmptyStateStartTeachingCTA } from '@/components/EmptyStateStartTeachingCTA';
 import { demoAssessments } from '@/lib/demo/demoAssessments';
 import { useTeachingMode } from '@/lib/teachingModeContext';
 import { supabaseClient } from '@/lib/supabase';
@@ -24,6 +25,7 @@ export default function AssessmentsPage() {
   const { mode: teachingMode } = useTeachingMode();
   const [rows, setRows] = useState<AssessmentRow[]>([]);
   const mode = isLoggedIn ? 'live' : 'preview';
+  const showStartTeachingCta = mode === 'live' && rows.length === 0;
 
   useEffect(() => {
     const load = async () => {
@@ -88,19 +90,26 @@ export default function AssessmentsPage() {
         </div>
       )}
 
-      {renderTable('Individual Students', individualRows, teachingMode === 'individual' || teachingMode === 'both')}
-      {renderTable('Group Students', groupRows, teachingMode === 'group' || teachingMode === 'both', true)}
+      {renderTable('Individual Students', individualRows, teachingMode === 'individual' || teachingMode === 'both', false, showStartTeachingCta)}
+      {renderTable('Group Students', groupRows, teachingMode === 'group' || teachingMode === 'both', true, showStartTeachingCta)}
     </div>
   );
 }
 
-function renderTable(title: string, rows: AssessmentRow[], shouldShow: boolean, showGroupName = false) {
+function renderTable(
+  title: string,
+  rows: AssessmentRow[],
+  shouldShow: boolean,
+  showGroupName = false,
+  showStartTeachingCta = false
+) {
   if (!shouldShow) return null;
   if (!rows.length) {
     return (
       <div className="rounded-2xl border border-gray-100 bg-white p-5 shadow-sm space-y-2">
         <h3 className="text-lg font-semibold text-gray-900">{title}</h3>
         <p className="text-sm text-gray-700">No assessments yet in this view.</p>
+        {showStartTeachingCta && <EmptyStateStartTeachingCTA />}
       </div>
     );
   }

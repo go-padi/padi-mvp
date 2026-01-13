@@ -16,7 +16,7 @@ to do:
 
 Areas:
 1. Auth and sign in [logged in state- doing]
-Pausing on row level security. pick back up here.
+Pausing on https://go-padi.atlassian.net/browse/KAN-14; need to update Start teaching so that I can test Supabase entered data per tenant for Logged in Teacher Dashboard
 2. Progress and tracking for teachers [week of Jan 12]
 3. Within teacher dashboard: Assessments; Grouping and Progress [logged out state- done, need to do logged in]
 4. Start Teaching - determine the flow

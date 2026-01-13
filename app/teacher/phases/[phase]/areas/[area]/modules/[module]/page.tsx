@@ -1,6 +1,7 @@
 'use client';
 import Link from 'next/link';
-import { use, useEffect, useState } from 'react';
+import { use, useEffect, useMemo, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { supabaseClient } from '@/lib/supabase';
 import clsx from 'clsx';
 import { useTeachingMode } from '@/lib/teachingModeContext';
@@ -27,11 +28,12 @@ type ModuleRow = {
   lesson: Lesson | null;
 };
 
-type Student = { id: string; full_name: string };
+type Student = { id: string; name: string };
 
 export default function LessonPage({ params }: { params: Promise<{ phase: string; area: string; module: string }> }) {
   const { phase, area, module } = use(params);
   const { isLoggedIn, isHydrated } = useAuth();
+  const router = useRouter();
   const [moduleRow, setModuleRow] = useState<ModuleRow | null>(null);
   const [notes, setNotes] = useState('');
   const [teacherId, setTeacherId] = useState('teacher-1');
@@ -43,6 +45,15 @@ export default function LessonPage({ params }: { params: Promise<{ phase: string
   const [needsAuth, setNeedsAuth] = useState(false);
   const { mode } = useTeachingMode();
   const dataMode = isLoggedIn ? 'live' : 'preview';
+  const actionOptions = useMemo(() => {
+    if (!isLoggedIn) return [];
+    const options: { value: string; label: string }[] = [];
+    const includeAddStudent = mode === 'individual' || mode === 'both' || students.length === 0;
+    const includeAddGroup = mode === 'group' || mode === 'both';
+    if (includeAddStudent) options.push({ value: '__action_add_student__', label: 'Add Student' });
+    if (includeAddGroup) options.push({ value: '__action_add_group__', label: 'Add Group' });
+    return options;
+  }, [isLoggedIn, mode, students.length]);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -79,8 +90,33 @@ export default function LessonPage({ params }: { params: Promise<{ phase: string
       }
       if (mod) setModuleRow(mod as ModuleRow);
       if (isLoggedIn) {
-        const { data: studentRows } = await sb.from('student').select('id,full_name').order('full_name');
-        if (studentRows) setStudents(studentRows as Student[]);
+        const [studentRes, completionRes, assessmentRes] = await Promise.all([
+          sb.from('students').select('id,name').order('name'),
+          sb.from('lesson_completions').select('student_id').eq('module_id', module),
+          sb.from('module_assessments').select('student_id').eq('module_id', module),
+        ]);
+
+        const studentRows = (studentRes.data as { id: string; name: string | null }[] | null) || [];
+        const completionRows = (completionRes.data as { student_id: string }[] | null) || [];
+        const assessmentRows = (assessmentRes.data as { student_id: string }[] | null) || [];
+
+        const assignedStudentIds = new Set([
+          ...completionRows.map(row => row.student_id),
+          ...assessmentRows.map(row => row.student_id),
+        ]);
+        const completedStudentIds = new Set(assessmentRows.map(row => row.student_id));
+
+        const eligibleStudents = studentRows
+          .filter(student => assignedStudentIds.has(student.id) && !completedStudentIds.has(student.id))
+          .map(student => ({
+            id: student.id,
+            name: student.name || 'Student',
+          }));
+
+        setStudents(eligibleStudents);
+        if (studentId && !eligibleStudents.find(student => student.id === studentId)) {
+          setStudentId('');
+        }
       }
     };
     fetchData();
@@ -102,10 +138,10 @@ export default function LessonPage({ params }: { params: Promise<{ phase: string
               ← Back to Modules
             </Link>
           </div>
-          <div className="flex items-center gap-2">
-            <TeachingModeToggle />
-            <div className="text-xs text-gray-500">{module}</div>
-          </div>
+        <div className="flex items-center gap-2">
+          <TeachingModeToggle disabled />
+          <div className="text-xs text-gray-500">{module}</div>
+        </div>
         </div>
         <div className="rounded-2xl border border-amber-200 bg-amber-50 p-5 shadow-sm text-sm text-amber-800 space-y-2">
           <p className="font-semibold">Lesson locked</p>
@@ -140,6 +176,14 @@ export default function LessonPage({ params }: { params: Promise<{ phase: string
   }
 
   const lesson = moduleRow?.lesson || {};
+  const handleStudentChange = (value: string) => {
+    if (value === '__action_add_student__' || value === '__action_add_group__') {
+      setStudentId('');
+      router.push('/start-teaching');
+      return;
+    }
+    setStudentId(value);
+  };
 
   const saveNotes = async () => {
     setSaving(true);
@@ -208,7 +252,7 @@ export default function LessonPage({ params }: { params: Promise<{ phase: string
           </Link>
         </div>
         <div className="flex items-center gap-2">
-          <TeachingModeToggle />
+          <TeachingModeToggle disabled />
           <div className="text-xs text-gray-500">{moduleRow?.code}</div>
         </div>
       </div>
@@ -294,10 +338,17 @@ export default function LessonPage({ params }: { params: Promise<{ phase: string
               <select
                 className="w-full rounded-xl border border-gray-200 p-3 text-sm"
                 value={studentId}
-                onChange={e=>setStudentId(e.target.value)}
+                onChange={e=>handleStudentChange(e.target.value)}
+                disabled={!students.length && actionOptions.length === 0}
               >
-                <option value="">Not selected</option>
-                {students.map(s => <option key={s.id} value={s.id}>{s.full_name}</option>)}
+                <option value="">{students.length ? 'Not selected' : isLoggedIn ? 'Select a student' : 'No active students for this module'}</option>
+                {students.map(student => <option key={student.id} value={student.id}>{student.name}</option>)}
+                {isLoggedIn && actionOptions.map(option => (
+                  <option key={option.value} value={option.value}>{option.label}</option>
+                ))}
+                {!students.length && isLoggedIn && (
+                  <option value="" disabled>No active students for this module</option>
+                )}
               </select>
             </div>
           </div>

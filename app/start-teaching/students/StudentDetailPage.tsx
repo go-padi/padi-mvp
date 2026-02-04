@@ -6,6 +6,8 @@ import { useStartTeachingData } from '@/lib/startTeaching/useStartTeachingData';
 import { getStudentPreviewDetail } from '@/lib/startTeaching/preview/mapDemoToStartTeachingPreview';
 import { demoTeacherData } from '@/lib/demo/demoTeacherData';
 import { parseProgressLabel } from '@/lib/startTeaching/preview/mapDemoToStartTeachingPreview';
+import type { SectionProgress, PhaseProgress, StudentPreviewDetail } from '@/lib/startTeaching/preview/types';
+import type { StartTeachingStudent } from '@/lib/startTeaching/useStartTeachingData';
 
 const computeCoursePercent = (student: { progressPercent: number; progressLabel?: string | null }) => {
   const parsed = parseProgressLabel(student.progressLabel || null);
@@ -13,14 +15,74 @@ const computeCoursePercent = (student: { progressPercent: number; progressLabel?
   return Math.round(student.progressPercent || 0);
 };
 
+const buildPhaseProgress = (progressPercent: number, progressLabel?: string | null): PhaseProgress[] => {
+  const parsed = parseProgressLabel(progressLabel || null);
+  const total = parsed?.total ?? 36;
+  const completed = parsed?.completed ?? Math.round((progressPercent / 100) * total);
+  const inProgress = completed > 0 && completed < total ? 1 : 0;
+  const notStarted = total - completed - inProgress;
+  return [
+    {
+      id: 'K_P1',
+      name: 'Phase 1',
+      completed,
+      inProgress: Math.max(inProgress, 0),
+      notStarted: Math.max(notStarted, 0),
+      percent: total ? Math.round((completed / total) * 100) : 0,
+    },
+  ];
+};
+
+const buildSectionProgress = (focusAreas: string[], coursePercent: number): SectionProgress[] => {
+  const sections = focusAreas.length ? focusAreas : ['Learning Sensorially'];
+  return sections.map((name, idx) => {
+    const status: SectionProgress['status'] =
+      coursePercent >= 100 ? 'complete' : coursePercent > 0 ? 'in_progress' : 'not_started';
+    return {
+      id: `section-${idx}-${name}`,
+      name,
+      percent: status === 'complete' ? 100 : coursePercent,
+      status,
+      modules: [],
+    };
+  });
+};
+
+const buildLiveDetail = (student: StartTeachingStudent): StudentPreviewDetail => {
+  const focusAreas = student.focusAreas?.length ? student.focusAreas : ['Learning Sensorially'];
+  const coursePercent = computeCoursePercent({
+    progressPercent: student.progressPercent,
+    progressLabel: student.progressLabel,
+  });
+  return {
+    id: student.id,
+    name: student.name,
+    avatarInitials: (student.name || 'S')
+      .split(' ')
+      .map(part => part[0])
+      .join('')
+      .slice(0, 2)
+      .toUpperCase(),
+    currentPhase: student.phase || 'Phase 1',
+    currentArea: focusAreas[0] || 'Learning Sensorially',
+    progressPercent: student.progressPercent,
+    courseProgressPercent: coursePercent,
+    lessons: [],
+    phases: buildPhaseProgress(student.progressPercent, student.progressLabel),
+    sections: buildSectionProgress(focusAreas, coursePercent),
+  };
+};
+
 export function StudentDetailPage({ studentId }: { studentId: string }) {
-  const { isHydrated, isLoggedIn } = useAuth();
+  const { isHydrated } = useAuth();
   const { mode, students } = useStartTeachingData();
   const searchParams = useSearchParams();
   const backTo = searchParams?.get('back') || '/start-teaching';
 
   const liveStudent = students.find(s => s.id === studentId);
   const detail = mode === 'preview' ? getStudentPreviewDetail(demoTeacherData, studentId) : null;
+  const liveDetail = mode === 'live' && liveStudent ? buildLiveDetail(liveStudent) : null;
+  const detailModel = mode === 'preview' ? detail : liveDetail;
 
   if (!isHydrated) {
     return <div className="rounded-2xl border border-gray-100 bg-white p-5 shadow-sm text-sm text-gray-700">Loading...</div>;
@@ -39,23 +101,23 @@ export function StudentDetailPage({ studentId }: { studentId: string }) {
     );
   }
 
-  const coursePercent =
-    mode === 'preview' ? detail?.courseProgressPercent ?? 0 : computeCoursePercent(liveStudent!);
+  const coursePercent = detailModel?.courseProgressPercent ?? 0;
   const avatarInitials =
-    mode === 'preview'
-      ? detail?.avatarInitials
-      : (liveStudent?.name || 'S')
-          .split(' ')
-          .map(part => part[0])
-          .join('')
-          .slice(0, 2)
-          .toUpperCase();
+    detailModel?.avatarInitials ||
+    (liveStudent?.name || 'S')
+      .split(' ')
+      .map(part => part[0])
+      .join('')
+      .slice(0, 2)
+      .toUpperCase();
 
   return (
     <div className="space-y-6">
-      <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-xs text-amber-800">
-        This is demo data. Sign in to manage your own students and groups.
-      </div>
+      {mode === 'preview' && (
+        <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-xs text-amber-800">
+          This is demo data. Sign in to manage your own students and groups.
+        </div>
+      )}
 
       <Link href={backTo} className="text-sm text-gray-700 hover:text-gray-900">
         ← Back
@@ -68,10 +130,10 @@ export function StudentDetailPage({ studentId }: { studentId: string }) {
               {avatarInitials}
             </div>
             <div>
-              <p className="text-lg font-semibold text-gray-900">{mode === 'preview' ? detail?.name : liveStudent?.name}</p>
+              <p className="text-lg font-semibold text-gray-900">{detailModel?.name || liveStudent?.name}</p>
               <p className="text-xs text-gray-600">
-                {mode === 'preview' ? detail?.currentPhase : liveStudent?.phase || 'Phase 1'} •{' '}
-                {mode === 'preview' ? detail?.currentArea : liveStudent?.focusAreas?.[0] || 'Learning Sensorially'}
+                {detailModel?.currentPhase || liveStudent?.phase || 'Phase 1'} •{' '}
+                {detailModel?.currentArea || liveStudent?.focusAreas?.[0] || 'Learning Sensorially'}
               </p>
             </div>
           </div>
@@ -85,12 +147,12 @@ export function StudentDetailPage({ studentId }: { studentId: string }) {
         </div>
       </div>
 
-      {mode === 'preview' && detail && (
+      {detailModel && (
         <>
           <div className="rounded-2xl border border-gray-100 bg-white p-5 shadow-sm space-y-3">
             <h3 className="text-lg font-semibold text-gray-900">Phase progress</h3>
             <div className="grid gap-3 md:grid-cols-2">
-              {detail.phases.map(phase => (
+              {detailModel.phases.map(phase => (
                 <div key={phase.id} className="rounded-xl border border-gray-100 bg-white p-4 shadow-sm space-y-2">
                   <div className="flex items-center justify-between">
                     <p className="text-sm font-semibold text-gray-900">{phase.name}</p>
@@ -110,7 +172,7 @@ export function StudentDetailPage({ studentId }: { studentId: string }) {
           <div className="rounded-2xl border border-gray-100 bg-white p-5 shadow-sm space-y-3">
             <h3 className="text-lg font-semibold text-gray-900">Phase 1 sections</h3>
             <div className="space-y-3">
-              {detail.sections.map(section => (
+              {detailModel.sections.map(section => (
                 <div key={section.id} className="rounded-xl border border-gray-100 bg-white p-4 shadow-sm space-y-2">
                   <div className="flex items-center justify-between">
                     <p className="text-sm font-semibold text-gray-900">{section.name}</p>

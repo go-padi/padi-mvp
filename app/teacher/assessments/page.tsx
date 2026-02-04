@@ -1,5 +1,4 @@
 'use client';
-import Link from 'next/link';
 import clsx from 'clsx';
 import { useAuth } from '@/lib/auth-store';
 import { TeachingModeToggle } from '@/components/TeachingModeToggle';
@@ -35,22 +34,41 @@ export default function AssessmentsPage() {
         return;
       }
       const sb = supabaseClient();
-      const { data, error } = await sb.from('student').select('*').order('full_name');
-      if (error || !data) {
+      const [studentsRes, membershipsRes, groupsRes] = await Promise.all([
+        sb
+          .from('students')
+          .select('id,name,first_name,last_name,phase,assessment_status,focus_areas,progress_label')
+          .order('name'),
+        sb.from('student_group_memberships').select('student_id,group_id,active').eq('active', true),
+        sb.from('groups').select('id,name'),
+      ]);
+
+      if (studentsRes.error || membershipsRes.error || groupsRes.error || !studentsRes.data) {
         setRows([]);
         return;
       }
+
+      const groups = (groupsRes.data as { id: string; name: string | null }[] | null) || [];
+      const groupNameById = new Map(groups.map(group => [group.id, group.name || 'Group']));
+      const memberships =
+        (membershipsRes.data as { student_id: string; group_id: string; active: boolean | null }[] | null) || [];
+      const groupIdByStudent = new Map(memberships.map(m => [m.student_id, m.group_id]));
+
       setRows(
-        data.map(row => ({
-          id: row.id,
-          studentName: row.full_name || 'Student',
-          groupId: (row.group_id ?? row.groupId ?? null) as string | null,
-          groupName: (row.group_name ?? row.groupName ?? null) as string | null,
-          phase: (row.phase ?? row.phase_code ?? row.phaseCode ?? null) as string | null,
-          status: (row.assessment_status ?? 'Not started') as string,
-          focusAreas: Array.isArray(row.focus_areas) ? row.focus_areas : [],
-          progressLabel: (row.progress_label ?? null) as string | null,
-        }))
+        studentsRes.data.map(row => {
+          const fullName = [row.first_name, row.last_name].filter(Boolean).join(' ').trim();
+          const groupId = groupIdByStudent.get(row.id) || null;
+          return {
+            id: row.id,
+            studentName: fullName || row.name || 'Student',
+            groupId,
+            groupName: groupId ? groupNameById.get(groupId) || null : null,
+            phase: row.phase ?? null,
+            status: row.assessment_status ?? 'Not started',
+            focusAreas: Array.isArray(row.focus_areas) ? row.focus_areas : [],
+            progressLabel: row.progress_label ?? null,
+          };
+        })
       );
     };
     load();

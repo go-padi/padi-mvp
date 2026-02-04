@@ -1,5 +1,5 @@
 'use client';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState, type FormEvent, type MouseEvent } from 'react';
 import Link from 'next/link';
 import clsx from 'clsx';
 import { supabaseClient } from '@/lib/supabase';
@@ -7,7 +7,6 @@ import { TeachingModeToggle } from '@/components/TeachingModeToggle';
 import { useTeachingMode } from '@/lib/teachingModeContext';
 import { useAuth } from '@/lib/auth-store';
 import { demoTeacherData } from '@/lib/demo/demoTeacherData';
-import { mapDemoToStartTeachingPreview } from '@/lib/startTeaching/preview/mapDemoToStartTeachingPreview';
 import { useStartTeachingData } from '@/lib/startTeaching/useStartTeachingData';
 
 type StudentCard = { id: string; name: string; phase: string; status: string; focus: string };
@@ -41,32 +40,42 @@ const previewHighlights = [
 
 export default function TeacherIndexPage() {
   const { mode } = useTeachingMode();
-  const { isLoggedIn, isHydrated } = useAuth();
-  const [students, setStudents] = useState<StudentCard[]>([]);
+  const { isLoggedIn, isHydrated, user } = useAuth();
+  const [tenantId, setTenantId] = useState<string | null>(null);
+  const [tenantStatus, setTenantStatus] = useState<'idle' | 'loading' | 'ready'>('idle');
+  const [isAddStudentOpen, setAddStudentOpen] = useState(false);
   const dataMode = isLoggedIn ? 'live' : 'demo';
-  const previewModel = useMemo(() => mapDemoToStartTeachingPreview(demoTeacherData), []);
   const startData = useStartTeachingData();
 
   useEffect(() => {
-    if (!isHydrated || dataMode === 'demo') return;
-    const load = async () => {
+    if (!isLoggedIn || !user?.id) {
+      setTenantId(null);
+      setTenantStatus('idle');
+      return;
+    }
+    let isMounted = true;
+    const loadTenant = async () => {
+      setTenantStatus('loading');
       const sb = supabaseClient();
-      // TODO: filter by teacher/class once auth is connected.
-      const { data } = await sb.from('student').select('id,full_name').order('full_name');
-      if (data?.length) {
-        setStudents(
-          data.map(s => ({
-            id: s.id,
-            name: s.full_name,
-            phase: 'Phase 1',
-            status: 'Not started',
-            focus: 'Sound Awareness',
-          }))
-        );
+      const { data, error } = await sb
+        .from('profiles')
+        .select('tenant_id')
+        .eq('id', user.id)
+        .maybeSingle();
+      if (!isMounted) return;
+      if (error) {
+        setTenantId(null);
+        setTenantStatus('ready');
+        return;
       }
+      setTenantId(data?.tenant_id ?? null);
+      setTenantStatus('ready');
     };
-    load();
-  }, [isLoggedIn, dataMode]);
+    loadTenant();
+    return () => {
+      isMounted = false;
+    };
+  }, [isLoggedIn, user?.id]);
 
   const cards = useMemo(() => {
     if (dataMode === 'demo') {
@@ -91,14 +100,18 @@ export default function TeacherIndexPage() {
       return [...studentCards, ...groupCards];
     }
 
-    const studentCards = students.map(s => ({
-      ...s,
+    const studentCards = startData.students.map(s => ({
+      id: s.id,
+      name: s.name,
+      phase: s.phase || 'Phase 1',
+      status: s.assessmentStatus || 'Not started',
+      focus: s.focusAreas?.[0] || 'Learning Sensorially',
       type: 'student' as const,
     }));
     if (mode === 'individual') return studentCards;
     if (mode === 'group') return [];
     return studentCards;
-  }, [mode, students, dataMode]);
+  }, [mode, startData.students, dataMode]);
 
   if (!isHydrated) {
     return <div className="rounded-2xl border border-gray-100 bg-white p-5 shadow-sm text-sm text-gray-700">Loading...</div>;
@@ -243,8 +256,25 @@ export default function TeacherIndexPage() {
           <h2 className="text-2xl font-semibold text-gray-900">Start teaching</h2>
           <p className="text-sm text-gray-700">Jump into your current students or groups and launch lessons.</p>
         </div>
-        <TeachingModeToggle />
+        <div className="flex items-center gap-3">
+          {mode !== 'group' && (
+            <button
+              type="button"
+              onClick={() => setAddStudentOpen(true)}
+              disabled={!tenantId}
+              className="rounded-xl bg-gray-900 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-gray-800 disabled:cursor-not-allowed disabled:opacity-60"
+            >
+              Add Student
+            </button>
+          )}
+          <TeachingModeToggle />
+        </div>
       </div>
+      {isLoggedIn && tenantStatus === 'ready' && !tenantId && (
+        <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
+          Tenant not connected. Add a tenant to your profile to create students.
+        </div>
+      )}
 
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
         {cards.map(card => (
@@ -288,6 +318,152 @@ export default function TeacherIndexPage() {
         <Link href="/teacher/phases" className="btn btn-primary">
           Go to Teacher Dashboard
         </Link>
+      </div>
+      <AddStudentModal
+        open={isAddStudentOpen}
+        onClose={() => setAddStudentOpen(false)}
+        tenantId={tenantId}
+        onCreated={startData.refetch}
+      />
+    </div>
+  );
+}
+
+function AddStudentModal({
+  open,
+  onClose,
+  tenantId,
+  onCreated,
+}: {
+  open: boolean;
+  onClose: () => void;
+  tenantId: string | null;
+  onCreated: () => Promise<void>;
+}) {
+  const [firstName, setFirstName] = useState('');
+  const [lastName, setLastName] = useState('');
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!open) {
+      setFirstName('');
+      setLastName('');
+      setError(null);
+      setSaving(false);
+    }
+  }, [open]);
+
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') onClose();
+    };
+    if (open) {
+      window.addEventListener('keydown', handleKeyDown);
+    }
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [open, onClose]);
+
+  if (!open) return null;
+
+  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    if (!firstName.trim() || !lastName.trim()) {
+      setError('First and last name are required.');
+      return;
+    }
+    if (!tenantId) {
+      setError('Missing tenant. Please refresh and try again.');
+      return;
+    }
+    setSaving(true);
+    setError(null);
+    const sb = supabaseClient();
+    const fullName = `${firstName.trim()} ${lastName.trim()}`;
+    const { error: insertError } = await sb.from('students').insert({
+      tenant_id: tenantId,
+      name: fullName,
+      first_name: firstName.trim(),
+      last_name: lastName.trim(),
+      phase: 'Phase 1',
+      focus_areas: ['Learning Sensorially'],
+      progress_percent: 0,
+      progress_label: null,
+      assessment_status: 'Not started',
+    });
+    if (insertError) {
+      setError('Unable to add student. Please try again.');
+      setSaving(false);
+      return;
+    }
+    await onCreated();
+    onClose();
+  };
+
+  const handleOverlayClick = (event: MouseEvent<HTMLDivElement>) => {
+    if (event.target === event.currentTarget) {
+      onClose();
+    }
+  };
+
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4"
+      onClick={handleOverlayClick}
+      role="dialog"
+      aria-modal="true"
+    >
+      <div className="relative w-full max-w-md rounded-2xl bg-white shadow-2xl ring-1 ring-black/5">
+        <button
+          type="button"
+          onClick={onClose}
+          className="absolute right-3 top-3 rounded-full p-1 text-gray-500 hover:bg-gray-100"
+          aria-label="Close add student"
+        >
+          X
+        </button>
+        <form className="space-y-4 p-6" onSubmit={handleSubmit}>
+          <div className="space-y-1">
+            <h2 className="text-xl font-semibold text-gray-900">Add student</h2>
+            <p className="text-sm text-gray-600">Create a new student with initial Phase 1 progress.</p>
+          </div>
+          <div className="space-y-2">
+            <label className="text-sm font-medium text-gray-800" htmlFor="student-first-name">
+              First name
+            </label>
+            <input
+              id="student-first-name"
+              type="text"
+              value={firstName}
+              onChange={e => setFirstName(e.target.value)}
+              className="w-full rounded-xl border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-100"
+              placeholder="Maya"
+              required
+            />
+          </div>
+          <div className="space-y-2">
+            <label className="text-sm font-medium text-gray-800" htmlFor="student-last-name">
+              Last name
+            </label>
+            <input
+              id="student-last-name"
+              type="text"
+              value={lastName}
+              onChange={e => setLastName(e.target.value)}
+              className="w-full rounded-xl border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-100"
+              placeholder="Patel"
+              required
+            />
+          </div>
+          {error && <div className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700">{error}</div>}
+          <button
+            type="submit"
+            disabled={saving}
+            className="inline-flex w-full items-center justify-center rounded-xl bg-gray-900 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-gray-800 disabled:opacity-70"
+          >
+            {saving ? 'Adding...' : 'Add Student'}
+          </button>
+        </form>
       </div>
     </div>
   );

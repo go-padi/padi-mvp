@@ -8,69 +8,102 @@ import {
   useState,
   type ReactNode,
 } from 'react';
+import type { Session } from '@supabase/supabase-js';
+import { supabaseClient } from '@/lib/supabase';
 
-export type AuthUser = { email: string };
+export type AuthUser = { id: string; email: string | null };
 
 export type AuthState = {
   isLoggedIn: boolean;
   user: AuthUser | null;
   isHydrated: boolean;
   login: (email: string, password: string) => Promise<void>;
-  logout: () => void;
+  signup: (email: string, password: string) => Promise<{ session: Session | null; user: AuthUser | null }>;
+  logout: () => Promise<void>;
 };
-
-const STORAGE_KEY = 'padi.auth';
-const defaultState: Pick<AuthState, 'isLoggedIn' | 'user'> = {
-  isLoggedIn: false,
-  user: null,
-};
-
-async function authenticate(email: string, password: string): Promise<AuthUser> {
-  if (password !== '1234!') {
-    throw new Error('Test mode: use password 1234! to sign in.');
-  }
-  const trimmedEmail = email.trim();
-  return { email: trimmedEmail || 'teacher@school.edu' };
-}
 
 const AuthContext = createContext<AuthState | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [isLoggedIn, setIsLoggedIn] = useState(defaultState.isLoggedIn);
-  const [user, setUser] = useState<AuthUser | null>(defaultState.user);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [user, setUser] = useState<AuthUser | null>(null);
   const [isHydrated, setIsHydrated] = useState(false);
 
   useEffect(() => {
-    if (typeof window === 'undefined') return;
-    const stored = window.localStorage.getItem(STORAGE_KEY);
-    if (stored) {
-      try {
-        const parsed = JSON.parse(stored) as Partial<AuthState>;
-        setIsLoggedIn(Boolean(parsed.isLoggedIn));
-        setUser(parsed.user ?? null);
-      } catch {
-        setIsLoggedIn(defaultState.isLoggedIn);
-        setUser(defaultState.user);
+    let isMounted = true;
+    const sb = supabaseClient();
+    const initSession = async () => {
+      const { data } = await sb.auth.getSession();
+      if (!isMounted) return;
+      const sessionUser = data.session?.user || null;
+      setUser(sessionUser ? { id: sessionUser.id, email: sessionUser.email ?? null } : null);
+      setIsLoggedIn(Boolean(sessionUser));
+      setIsHydrated(true);
+    };
+
+    initSession();
+
+    const { data: subscription } = sb.auth.onAuthStateChange((event, session) => {
+      const sessionUser = session?.user || null;
+      if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED' || event === 'USER_UPDATED') {
+        setUser(sessionUser ? { id: sessionUser.id, email: sessionUser.email ?? null } : null);
+        setIsLoggedIn(Boolean(sessionUser));
+        setIsHydrated(true);
+        try {
+          if (typeof window !== 'undefined') {
+            window.localStorage.removeItem('padi.tenant_id');
+          }
+        } catch {}
+        if (event === 'SIGNED_IN' && session?.access_token) {
+          fetch('/api/auth/bootstrap-tenant', {
+            method: 'POST',
+            headers: { Authorization: `Bearer ${session.access_token}` },
+          }).catch(() => {});
+        }
+      } else if (event === 'SIGNED_OUT') {
+        setUser(null);
+        setIsLoggedIn(false);
+        setIsHydrated(true);
       }
-    }
-    setIsHydrated(true);
+    });
+
+    return () => {
+      isMounted = false;
+      subscription.subscription?.unsubscribe();
+    };
   }, []);
 
   const login = useCallback(async (email: string, password: string) => {
-    const authUser = await authenticate(email, password);
-    setIsLoggedIn(true);
-    setUser(authUser);
-    if (typeof window !== 'undefined') {
-      window.localStorage.setItem(STORAGE_KEY, JSON.stringify({ isLoggedIn: true, user: authUser }));
+    const sb = supabaseClient();
+    const { error } = await sb.auth.signInWithPassword({
+      email: email.trim(),
+      password,
+    });
+    if (error) {
+      throw error;
     }
   }, []);
 
-  const logout = useCallback(() => {
-    setIsLoggedIn(defaultState.isLoggedIn);
-    setUser(defaultState.user);
-    if (typeof window !== 'undefined') {
-      window.localStorage.removeItem(STORAGE_KEY);
+  const signup = useCallback(async (email: string, password: string) => {
+    const sb = supabaseClient();
+    const { data, error } = await sb.auth.signUp({
+      email: email.trim(),
+      password,
+    });
+    if (error) {
+      throw error;
     }
+    return {
+      session: data.session,
+      user: data.user ? { id: data.user.id, email: data.user.email ?? null } : null,
+    };
+  }, []);
+
+  const logout = useCallback(async () => {
+    const sb = supabaseClient();
+    await sb.auth.signOut();
+    setIsLoggedIn(false);
+    setUser(null);
   }, []);
 
   const value = useMemo(
@@ -79,9 +112,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       user,
       isHydrated,
       login,
+      signup,
       logout,
     }),
-    [isLoggedIn, user, isHydrated, login, logout]
+    [isLoggedIn, user, isHydrated, login, signup, logout]
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

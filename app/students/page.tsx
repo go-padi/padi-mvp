@@ -2,30 +2,69 @@
 import { useEffect, useState } from 'react';
 import { supabaseClient } from '@/lib/supabase';
 import { useAuth } from '@/lib/auth-store';
-type Student = { id:string; full_name:string };
+type Student = { id: string; name: string | null; first_name: string | null; last_name: string | null };
 
 export default function StudentsPage(){
-  const { isLoggedIn } = useAuth();
+  const { isLoggedIn, user } = useAuth();
   const sb = supabaseClient();
-  const [classId,setClassId]=useState('demo-class');
+  const [tenantId, setTenantId] = useState<string | null>(null);
+  const [tenantStatus, setTenantStatus] = useState<'idle' | 'loading' | 'ready'>('idle');
   const [students,setStudents]=useState<Student[]>([]);
   const [name,setName]=useState('');
 
   const load = async()=>{
-    const { data } = await sb.from('student').select('id,full_name').eq('class_id', classId).order('full_name');
+    if (!tenantId) return;
+    const { data } = await sb
+      .from('students')
+      .select('id,name,first_name,last_name')
+      .eq('tenant_id', tenantId)
+      .order('name');
     setStudents(data||[]);
   };
   useEffect(()=>{
-    if (!isLoggedIn) {
+    if (!isLoggedIn || !user?.id) {
       setStudents([]);
+      setTenantId(null);
+      setTenantStatus('idle');
       return;
     }
+    let isMounted = true;
+    const loadTenant = async () => {
+      setTenantStatus('loading');
+      const { data, error } = await sb
+        .from('profiles')
+        .select('tenant_id')
+        .eq('id', user.id)
+        .maybeSingle();
+      if (!isMounted) return;
+      if (error) {
+        setTenantId(null);
+        setTenantStatus('ready');
+        return;
+      }
+      setTenantId(data?.tenant_id ?? null);
+      setTenantStatus('ready');
+    };
+    loadTenant();
+    return () => {
+      isMounted = false;
+    };
+  },[isLoggedIn, user?.id, sb]);
+
+  useEffect(() => {
+    if (!tenantId || tenantStatus !== 'ready') return;
     load();
-  },[classId, isLoggedIn]);
+  }, [tenantId, tenantStatus]);
 
   const add = async()=>{
-    if(!name) return;
-    await sb.from('student').insert({ class_id: classId, full_name: name });
+    if(!name || !tenantId) return;
+    const trimmed = name.trim();
+    if (!trimmed) return;
+    const [first, ...rest] = trimmed.split(/\s+/);
+    const last = rest.join(' ') || null;
+    await sb
+      .from('students')
+      .insert({ tenant_id: tenantId, name: trimmed, first_name: first || null, last_name: last });
     setName('');
     load();
   };
@@ -47,19 +86,27 @@ export default function StudentsPage(){
         </div>
       ) : (
         <>
+          {tenantStatus === 'ready' && !tenantId && (
+            <div className="card border-amber-200 bg-amber-50 text-amber-800">
+              Tenant not connected. Add a tenant to your profile to create students.
+            </div>
+          )}
           <div className="card flex items-end gap-3">
             <div>
-              <label className="block text-xs text-gray-600">Class ID</label>
-              <input className="border rounded-lg px-3 py-2" value={classId} onChange={e=>setClassId(e.target.value)} />
+              <label className="block text-xs text-gray-600">Tenant ID</label>
+              <input className="border rounded-lg px-3 py-2" value={tenantId || ''} readOnly />
             </div>
             <div className="flex-1">
               <label className="block text-xs text-gray-600">Student name</label>
-              <input className="border rounded-lg px-3 py-2 w-full" value={name} onChange={e=>setName(e.target.value)} placeholder="e.g., Maya Patel" />
+              <input className="border rounded-lg px-3 py-2 w-full" value={name} onChange={e=>setName(e.target.value)} placeholder="e.g., Maya Patel" disabled={!tenantId} />
             </div>
-            <button onClick={add} className="btn btn-primary">Add</button>
+            <button onClick={add} className="btn btn-primary" disabled={!tenantId}>Add</button>
           </div>
           <div className="grid md:grid-cols-2 gap-3">
-            {students.map(s => <div key={s.id} className="card">{s.full_name}</div>)}
+            {students.map(s => {
+              const fullName = [s.first_name, s.last_name].filter(Boolean).join(' ').trim();
+              return <div key={s.id} className="card">{fullName || s.name}</div>;
+            })}
           </div>
         </>
       )}

@@ -5,10 +5,11 @@ import { useAuth } from '@/lib/auth-store';
 type SignInModalProps = { onClose: () => void };
 
 export function SignInModal({ onClose }: SignInModalProps) {
-  const { login } = useAuth();
+  const { login, signup } = useAuth();
   const [email, setEmail] = useState('teacher@school.edu');
   const [password, setPassword] = useState('1234!');
   const [error, setError] = useState<string | null>(null);
+  const [info, setInfo] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
@@ -21,6 +22,7 @@ export function SignInModal({ onClose }: SignInModalProps) {
 
   const attemptLogin = async () => {
     setError(null);
+    setInfo(null);
     setLoading(true);
     try {
       await login(email, password);
@@ -29,7 +31,7 @@ export function SignInModal({ onClose }: SignInModalProps) {
       const message =
         err instanceof Error && err.message
           ? err.message
-          : 'Test mode: use password 1234! to sign in.';
+          : 'Unable to sign in. Check your credentials and try again.';
       setError(message);
     } finally {
       setLoading(false);
@@ -42,7 +44,29 @@ export function SignInModal({ onClose }: SignInModalProps) {
   };
 
   const handleCreateAccount = async () => {
-    await attemptLogin();
+    setError(null);
+    setInfo(null);
+    setLoading(true);
+    try {
+      const { session } = await signup(email, password);
+      if (!session?.access_token) {
+        setInfo('Check your email to confirm your account, then sign in.');
+        return;
+      }
+      await fetch('/api/auth/bootstrap-tenant', {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${session.access_token}` },
+      });
+      onClose();
+    } catch (err) {
+      const message =
+        err instanceof Error && err.message
+          ? err.message
+          : 'Unable to create account. Please try again.';
+      setError(message);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleOverlayClick = (event: MouseEvent<HTMLDivElement>) => {
@@ -101,6 +125,7 @@ export function SignInModal({ onClose }: SignInModalProps) {
             />
           </div>
           {error && <div className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700">{error}</div>}
+          {info && <div className="rounded-lg bg-blue-50 px-3 py-2 text-sm text-blue-700">{info}</div>}
           <button
             type="submit"
             disabled={loading}

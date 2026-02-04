@@ -83,16 +83,16 @@ export default function TopNav(){
           )}
           {isLoggedIn && (
             <div className="flex items-center gap-2 text-sm text-gray-800">
-                <span className="font-semibold text-gray-900">Logged in as {user?.email}</span>
-                <button
-                  type="button"
-                  onClick={logout}
-                  className="text-sm font-semibold text-gray-700 hover:text-gray-900"
-                >
-                  Sign out
-                </button>
-              </div>
-            )}
+              <span className="font-semibold text-gray-900">Logged in as {user?.email ?? 'User'}</span>
+              <button
+                type="button"
+                onClick={logout}
+                className="text-sm font-semibold text-gray-700 hover:text-gray-900"
+              >
+                Sign out
+              </button>
+            </div>
+          )}
           </div>
         </div>
       </nav>

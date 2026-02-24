@@ -21,49 +21,50 @@ export default function AreaPage({ params }:{ params: Promise<{ phase:string; ar
   const [modules,setModules]=useState<ModuleRow[]>([]);
   const { adminMode } = useAdminMode();
   const { mode } = useTeachingMode();
-  const { isLoggedIn, isHydrated } = useAuth();
-  const dataMode = isLoggedIn ? 'live' : 'preview';
+  const { isHydrated } = useAuth();
 
   useEffect(()=>{
     const fetchData=async()=>{
       if (!isHydrated) return;
-      if (dataMode === 'preview') {
-        const previewPhase = previewPhaseByCode[phase];
-        setPhaseRow(previewPhase ? { id: previewPhase.code, code: previewPhase.code, title: previewPhase.title, summary: previewPhase.summary || null } : null);
-        const previewGroups = previewGroupsByPhase[phase] || [];
-        const groupedByMode = mode === 'both' ? previewGroups : previewGroups.filter(g => g.teaching_mode === mode);
-        setGroups(groupedByMode);
-        setModules((previewModulesByGroup[area] || []).filter(m => (mode === 'both' ? true : m.teaching_mode === mode)));
-        return;
-      }
-
       const sb=supabaseClient();
-      const { data: p } = await sb.from('phase').select('id,code,title,summary').eq('code', phase).maybeSingle();
-      if(p) setPhaseRow(p as Phase);
+      const { data: phaseRows } = await sb.rpc('content_get_phase', { p_code: phase });
+      const p = (phaseRows?.[0] as Phase | undefined) || null;
+      const previewPhase = previewPhaseByCode[phase];
+      if (p) {
+        setPhaseRow(p as Phase);
+      } else if (previewPhase) {
+        setPhaseRow({ id: previewPhase.code, code: previewPhase.code, title: previewPhase.title, summary: previewPhase.summary || null });
+      } else {
+        setPhaseRow(null);
+      }
 
-      let groupQuery = sb.from('module_group')
-        .select('id,code,title,description,is_locked,module_count,teaching_mode')
-        .eq('phase_id', p?.id || null);
-      groupQuery = mode === 'both' ? groupQuery.in('teaching_mode', ['group', 'individual']) : groupQuery.eq('teaching_mode', mode);
-      const { data: gs } = await groupQuery.order('display_order');
-      setGroups(gs as Group[] || []);
+      const teachingModeParam = mode === 'both' ? null : mode;
+      const { data: gs } = await sb.rpc('content_get_groups', {
+        p_phase_code: phase,
+        p_teaching_mode: teachingModeParam,
+      });
+      const liveGroups = (gs as Group[] | null) || [];
+      const fallbackGroups = (previewGroupsByPhase[phase] || []).filter(g => (mode === 'both' ? true : g.teaching_mode === mode));
+      const resolvedGroups = liveGroups.length ? liveGroups : fallbackGroups;
+      setGroups(resolvedGroups);
 
-      const activeGroup = (gs as Group[] | null | undefined)?.find((g:Group)=>g.code===area);
+      const activeGroup = resolvedGroups.find((g:Group)=>g.code===area);
       if(!activeGroup){
-        setModules([]);
+        setModules(((previewModulesByGroup[area] || []).filter(m => (mode === 'both' ? true : m.teaching_mode === mode))) as ModuleRow[]);
         return;
       }
 
-      let moduleQuery = sb
-        .from('module_detail')
-        .select('id,code,title,subtitle,summary,is_locked,display_order,teaching_mode')
-        .eq('group_id', activeGroup.id);
-      moduleQuery = mode === 'both' ? moduleQuery.eq('teaching_mode', activeGroup.teaching_mode) : moduleQuery.eq('teaching_mode', mode);
-      const { data: mods } = await moduleQuery.order('display_order');
-      setModules(mods as ModuleRow[] || []);
+      const moduleModeParam = mode === 'both' ? activeGroup.teaching_mode : mode;
+      const { data: mods } = await sb.rpc('content_get_modules', {
+        p_group_code: activeGroup.code,
+        p_teaching_mode: moduleModeParam,
+      });
+      const liveModules = (mods as ModuleRow[] | null) || [];
+      const fallbackModules = (previewModulesByGroup[activeGroup.code] || []).filter(m => (mode === 'both' ? m.teaching_mode === activeGroup.teaching_mode : m.teaching_mode === mode));
+      setModules((liveModules.length ? liveModules : fallbackModules) as ModuleRow[]);
     };
     fetchData();
-  },[phase, area, mode, dataMode, isHydrated]);
+  },[phase, area, mode, isHydrated]);
 
   if (!isHydrated) {
     return <div className="rounded-2xl border border-gray-100 bg-white p-5 shadow-sm text-sm text-gray-700">Loading...</div>;
@@ -95,7 +96,7 @@ export default function AreaPage({ params }:{ params: Promise<{ phase:string; ar
         )}
         <div className="grid gap-3 md:grid-cols-2">
         {filteredGroups.map(g=>{
-            const locked = dataMode === 'live' ? g.is_locked && !adminMode : false;
+            const locked = !!g.is_locked && !adminMode;
             const active = g.code===area;
             return (
               <Link
@@ -134,7 +135,7 @@ export default function AreaPage({ params }:{ params: Promise<{ phase:string; ar
         </div>
         <div className="grid gap-3">
           {sortedModules.map((mod, idx) => {
-            const locked = dataMode === 'preview' ? !!mod.is_locked : mod.is_locked && !adminMode;
+            const locked = !!mod.is_locked && !adminMode;
             return (
               <div key={mod.id} className={clsx('rounded-2xl border p-4 shadow-sm flex items-center justify-between',
                 idx===0 ? 'border-blue-300 bg-blue-50' : 'border-gray-100 bg-white')}>
@@ -153,9 +154,7 @@ export default function AreaPage({ params }:{ params: Promise<{ phase:string; ar
                 </p>
                 <p className="text-xs text-gray-600">{mod.title}</p>
                 <p className="text-xs text-gray-600 mt-1">
-                  {locked && dataMode === 'preview'
-                    ? 'Log in to unlock full lesson sequence'
-                    : mod.summary || (locked ? 'Coming soon' : '')}
+                  {mod.summary || (locked ? 'Coming soon' : '')}
                 </p>
               </div>
                 <Link

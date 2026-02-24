@@ -62,20 +62,23 @@ export default function PhasesPage(){
   const [outcomes, setOutcomes] = useState<Outcome[]>(fallbackOutcomes);
   const { mode } = useTeachingMode();
   const { isLoggedIn, isHydrated } = useAuth();
-  const dataMode = isLoggedIn ? 'live' : 'preview';
 
   useEffect(() => {
     const fetchPhases = async () => {
       if (!isHydrated) return;
-      if (dataMode === 'preview') {
-        setPhases(previewPhases as PhaseRow[]);
-        setOutcomes(fallbackOutcomes);
-        return;
-      }
       const sb = supabaseClient();
-      const { data } = await sb.from('phase').select('id,code,title,description,months,lesson_range,is_locked,outcomes').order('display_order');
+      const { data } = await sb.rpc('content_get_phases');
       if (data?.length) {
-        setPhases(data as PhaseRow[]);
+        const merged = (data as PhaseRow[]).map((phase) => {
+          const preview = previewPhaseByCode[phase.code];
+          return {
+            ...phase,
+            description: phase.description || preview?.description || null,
+            months: phase.months || preview?.months || null,
+            lesson_range: phase.lesson_range || preview?.lesson_range || null,
+          };
+        });
+        setPhases(merged);
         const o = (data.find(p => p.outcomes)?.outcomes || []) as Outcome[];
         setOutcomes(o.length ? o : fallbackOutcomes);
       } else {
@@ -84,7 +87,7 @@ export default function PhasesPage(){
       }
     };
     fetchPhases();
-  }, [dataMode, isHydrated]);
+  }, [isHydrated]);
 
   if (!isHydrated) {
     return <div className="rounded-2xl border border-gray-100 bg-white p-5 shadow-sm text-sm text-gray-700">Loading...</div>;
@@ -107,13 +110,8 @@ export default function PhasesPage(){
         <p className="text-sm text-gray-700">Click on any phase to explore its content</p>
         <div className="grid gap-4 md:grid-cols-3 items-stretch">
           {phases.map(phase => {
-            const previewCopy = dataMode === 'preview' ? previewPhaseByCode[phase.code]?.description : null;
-            const description =
-              dataMode === 'preview'
-                ? previewCopy || phase.description || 'Coming soon'
-                : phase.code === 'K_P1'
-                  ? 'Phase 1 available'
-                  : phase.description || 'Content coming soon';
+            const previewCopy = previewPhaseByCode[phase.code]?.description;
+            const description = phase.description || previewCopy || 'Coming soon';
             return (
               <div key={phase.id || phase.code} className="rounded-2xl border border-gray-100 bg-white p-5 shadow-sm flex flex-col justify-between">
                 <div className="flex items-center justify-between">

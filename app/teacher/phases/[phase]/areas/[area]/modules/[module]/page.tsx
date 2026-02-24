@@ -44,7 +44,6 @@ export default function LessonPage({ params }: { params: Promise<{ phase: string
   const [status, setStatus] = useState<string | null>(null);
   const [needsAuth, setNeedsAuth] = useState(false);
   const { mode } = useTeachingMode();
-  const dataMode = isLoggedIn ? 'live' : 'preview';
   const actionOptions = useMemo(() => {
     if (!isLoggedIn) return [];
     const options: { value: string; label: string }[] = [];
@@ -58,7 +57,23 @@ export default function LessonPage({ params }: { params: Promise<{ phase: string
   useEffect(() => {
     const fetchData = async () => {
       if (!isHydrated) return;
-      if (dataMode === 'preview') {
+      const sb = supabaseClient();
+      const teachingModeParam = mode === 'both' ? null : mode;
+      const { data: moduleRows } = await sb.rpc('content_get_module', {
+        p_module_code: module,
+        p_teaching_mode: teachingModeParam,
+      });
+      let mod = (moduleRows?.[0] as ModuleRow | undefined) || null;
+      if (!mod && mode !== 'both') {
+        const fallback = await sb.rpc('content_get_module', {
+          p_module_code: module,
+          p_teaching_mode: null,
+        });
+        mod = ((fallback.data?.[0] as ModuleRow | undefined) || null);
+      }
+      if (mod) {
+        setModuleRow(mod);
+      } else {
         const previewModule = previewModuleByCode[module];
         setModuleRow(
           previewModule
@@ -69,26 +84,7 @@ export default function LessonPage({ params }: { params: Promise<{ phase: string
               }
             : null
         );
-        setStudents([]);
-        return;
       }
-
-      const sb = supabaseClient();
-      let query = sb
-        .from('module_detail')
-        .select('id,code,title,subtitle,summary,lesson,teaching_mode,is_locked')
-        .eq('code', module);
-      query = mode === 'both' ? query : query.eq('teaching_mode', mode);
-      let { data: mod } = await query.maybeSingle();
-      if (!mod && mode !== 'both') {
-        const fallback = await sb
-          .from('module_detail')
-          .select('id,code,title,subtitle,summary,lesson,teaching_mode')
-          .eq('code', module)
-          .maybeSingle();
-        mod = fallback.data;
-      }
-      if (mod) setModuleRow(mod as ModuleRow);
       if (isLoggedIn) {
         const [studentRes, completionRes, assessmentRes] = await Promise.all([
           sb.from('students').select('id,name').order('name'),
@@ -120,38 +116,10 @@ export default function LessonPage({ params }: { params: Promise<{ phase: string
       }
     };
     fetchData();
-  }, [module, mode, isLoggedIn, isHydrated, dataMode]);
+  }, [module, mode, isLoggedIn, isHydrated]);
 
   if (!isHydrated) {
     return <div className="rounded-2xl border border-gray-100 bg-white p-5 shadow-sm text-sm text-gray-700">Loading...</div>;
-  }
-
-  if (dataMode === 'preview' && (!moduleRow || moduleRow.is_locked)) {
-    return (
-      <div className="space-y-6">
-        <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-gray-100 bg-white p-4 shadow-sm">
-          <div className="flex items-center gap-2">
-            <Link href="/teacher" className="text-sm text-gray-700 hover:text-gray-900" title="Home">
-              🏠
-            </Link>
-            <Link href={`/teacher/phases/${phase}/areas/${area}`} className="text-sm text-gray-700 hover:text-gray-900">
-              ← Back to Modules
-            </Link>
-          </div>
-        <div className="flex items-center gap-2">
-          <TeachingModeToggle disabled />
-          <div className="text-xs text-gray-500">{module}</div>
-        </div>
-        </div>
-        <div className="rounded-2xl border border-amber-200 bg-amber-50 p-5 shadow-sm text-sm text-amber-800 space-y-2">
-          <p className="font-semibold">Lesson locked</p>
-          <p>Log in to unlock the full lesson sequence. One sample lesson is available from the Phase 1 preview.</p>
-          <Link href={`/teacher/phases/${phase}`} className="text-sm font-semibold text-blue-700 hover:underline">
-            Return to phase overview →
-          </Link>
-        </div>
-      </div>
-    );
   }
 
   if (!moduleRow) {

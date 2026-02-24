@@ -34,65 +34,47 @@ export default function PhaseDetail({ params }: { params: Promise<{ phase: strin
   const [groupsByMode, setGroupsByMode] = useState<{ group: Group[]; individual: Group[] }>({ group: [], individual: [] });
   const { adminMode } = useAdminMode();
   const { mode } = useTeachingMode();
-  const { isLoggedIn, isHydrated } = useAuth();
-  const dataMode = isLoggedIn ? 'live' : 'preview';
+  const { isHydrated } = useAuth();
 
   useEffect(() => {
     const fetchPhase = async () => {
       if (!isHydrated) return;
-      if (dataMode === 'preview') {
-        const previewPhase = previewPhaseByCode[phase];
-        setPhaseRow(previewPhase ? { id: previewPhase.code, code: previewPhase.code, title: previewPhase.title, description: previewPhase.description, summary: null } : null);
-        const previewGroups = previewGroupsByPhase[phase] || [];
-        const grouped = {
-          group: previewGroups.filter(g => g.teaching_mode === 'group'),
-          individual: previewGroups.filter(g => g.teaching_mode === 'individual'),
-        };
-        const filtered =
-          mode === 'both'
-            ? grouped
-            : {
-                group: mode === 'group' ? grouped.group : [],
-                individual: mode === 'individual' ? grouped.individual : [],
-              };
-        setGroupsByMode(filtered);
-        return;
-      }
       const sb = supabaseClient();
-      const { data: phaseRow } = await sb
-        .from('phase')
-        .select('id,code,title,description,summary')
-        .eq('code', phase)
-        .maybeSingle();
-      if (phaseRow) {
-        setPhaseRow(phaseRow as Phase);
-        let groupQuery = sb
-          .from('module_group')
-          .select('id,code,title,description,module_count,is_locked,teaching_mode')
-          .eq('phase_id', phaseRow.id)
-          .order('display_order');
-        groupQuery =
-          mode === 'both'
-            ? groupQuery.in('teaching_mode', ['group', 'individual'])
-            : groupQuery.eq('teaching_mode', mode);
-        const { data: groupRows } = await groupQuery;
-        if (groupRows && groupRows.length) {
-          setGroupsByMode({
-            group: (groupRows as Group[]).filter(g => g.teaching_mode === 'group'),
-            individual: (groupRows as Group[]).filter(g => g.teaching_mode === 'individual'),
-          });
-        } else {
-          setGroupsByMode({ group: [], individual: [] });
-        }
-      }
+      const { data: phaseRows } = await sb.rpc('content_get_phase', { p_code: phase });
+      const phaseRow = (phaseRows?.[0] as Phase | undefined) || null;
+      const previewPhase = previewPhaseByCode[phase];
+      const resolvedPhase = phaseRow
+        ? ({
+            ...(phaseRow as Phase),
+            description: phaseRow.description || previewPhase?.description || null,
+          } as Phase)
+        : previewPhase
+          ? { id: previewPhase.code, code: previewPhase.code, title: previewPhase.title, description: previewPhase.description, summary: previewPhase.summary || null }
+          : null;
+      setPhaseRow(resolvedPhase);
+
+      const teachingModeParam = mode === 'both' ? null : mode;
+      const { data: groupRows } = await sb.rpc('content_get_groups', {
+        p_phase_code: phase,
+        p_teaching_mode: teachingModeParam,
+      });
+      const liveGroups = (groupRows as Group[] | null) || [];
+
+      const fallbackGroups = (previewGroupsByPhase[phase] || []).filter((g) =>
+        mode === 'both' ? true : g.teaching_mode === mode
+      );
+      const resolvedGroups = liveGroups.length ? liveGroups : fallbackGroups;
+      setGroupsByMode({
+        group: resolvedGroups.filter(g => g.teaching_mode === 'group'),
+        individual: resolvedGroups.filter(g => g.teaching_mode === 'individual'),
+      });
     };
     fetchPhase();
-  }, [phase, mode, isLoggedIn, isHydrated, dataMode]);
+  }, [phase, mode, isHydrated]);
 
   const renderGroupCard = (g: Group) => {
-    const previewLocked = dataMode === 'preview' && g.is_locked;
-    const locked = dataMode === 'live' ? g.is_locked && !adminMode : false;
-    const ctaLabel = previewLocked ? 'Preview structure' : locked ? 'Coming Soon' : 'View Modules →';
+    const locked = !!g.is_locked && !adminMode;
+    const ctaLabel = locked ? 'Coming Soon' : 'View Modules →';
     return (
       <div key={g.id} className="rounded-2xl border border-gray-100 bg-white p-5 shadow-sm flex flex-col gap-2">
         <div className="flex items-center justify-between">

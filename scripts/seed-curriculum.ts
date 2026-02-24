@@ -262,10 +262,11 @@ const individualCurriculum: Record<string, {
 };
 
 async function run() {
+  const content = supabase.schema('content');
   // seed phases
   const phaseIndex: Record<string, { id: string; is_locked: boolean }> = {};
   for (const p of phases) {
-    const { data: phaseRow, error: phaseErr } = await supabase
+    const { data: phaseRow, error: phaseErr } = await content
       .from('phase')
       .upsert(
         {
@@ -287,7 +288,7 @@ async function run() {
     phaseIndex[p.code] = { id: phaseRow.id, is_locked: !!phaseRow.is_locked };
 
     for (const g of p.groups) {
-      const { data: groupRow, error: groupErr } = await supabase
+      const { data: groupRow, error: groupErr } = await content
         .from('module_group')
         .upsert(
           {
@@ -307,7 +308,7 @@ async function run() {
       if (groupErr) throw groupErr;
 
       for (const m of g.modules) {
-        const { error: moduleErr } = await supabase.from('module_detail').upsert(
+        const { error: moduleErr } = await content.from('module_detail').upsert(
           {
             code: m.code,
             phase_id: phaseRow.id,
@@ -333,7 +334,7 @@ async function run() {
     const phaseMeta = phaseIndex[phaseCode];
     if (!phaseMeta) continue;
     for (const g of groups) {
-      const { data: groupRow, error: groupErr } = await supabase
+      const { data: groupRow, error: groupErr } = await content
         .from('module_group')
         .upsert(
           {
@@ -353,7 +354,7 @@ async function run() {
       if (groupErr) throw groupErr;
 
       for (const m of g.modules) {
-        const { error: moduleErr } = await supabase.from('module_detail').upsert(
+        const { error: moduleErr } = await content.from('module_detail').upsert(
           {
             code: m.code,
             phase_id: phaseMeta.id,

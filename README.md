@@ -57,3 +57,8 @@ This project is a Next.js 15 application that uses Supabase for data storage. It
 - Add more Phase 1 content (Rhyming, Words and Sentences, Syllables, Phonemic Awareness) and Phase 2/3 placeholders.
 - Wire real auth for teachers and enforce uploads/notes per user with RLS.
 - Expand lesson views beyond LS1 and support richer note storage/listing.
+
+## AI Assistant Guides
+- Codex guide: `docs/CODEX_GUIDE.md`
+- Claude Code guide: `docs/CLAUDE_CODE_GUIDE.md`
+- Repo context for Claude: `CLAUDE.md`

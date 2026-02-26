@@ -6,8 +6,8 @@ type SignInModalProps = { onClose: () => void };
 
 export function SignInModal({ onClose }: SignInModalProps) {
   const { login, signup } = useAuth();
-  const [email, setEmail] = useState('teacher@school.edu');
-  const [password, setPassword] = useState('1234!');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [info, setInfo] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
@@ -27,12 +27,8 @@ export function SignInModal({ onClose }: SignInModalProps) {
     try {
       await login(email, password);
       onClose();
-    } catch (err) {
-      const message =
-        err instanceof Error && err.message
-          ? err.message
-          : 'Unable to sign in. Check your credentials and try again.';
-      setError(message);
+    } catch {
+      setError('Incorrect email or password. Please try again.');
     } finally {
       setLoading(false);
     }

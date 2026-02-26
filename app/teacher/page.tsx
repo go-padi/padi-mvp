@@ -241,9 +241,13 @@ export default function TeacherIndexPage() {
             <p className="text-sm font-semibold text-gray-900">Ready for the full workspace?</p>
             <p className="text-xs text-gray-600">Sign in to see your roster, take notes, and track assessments.</p>
           </div>
-          <Link href="/teacher/phases" className="btn btn-primary">
+          <button
+            type="button"
+            onClick={openSignIn}
+            className="btn btn-primary"
+          >
             Log in to unlock
-          </Link>
+          </button>
         </div>
       </div>
     );

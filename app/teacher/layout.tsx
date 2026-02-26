@@ -66,17 +66,6 @@ export default function TeacherLayout({ children }: { children: React.ReactNode 
                 </div>
               </div>
               <div className="flex items-center gap-2">
-                <button
-                  onClick={() => setAdminMode(v => !v)}
-                  className={clsx(
-                    'rounded-xl border px-3 py-2 text-sm',
-                    adminMode ? 'border-blue-600 bg-blue-50 text-blue-700 font-semibold' : 'border-gray-200 bg-white text-gray-700'
-                  )}
-                  title="Toggle admin mode"
-                >
-                  {adminMode ? 'Admin On' : 'Admin Off'}
-                </button>
-                <Link href="/library" className="btn">Upload Content</Link>
                 <Link href="/" className="btn">Home</Link>
               </div>
             </div>

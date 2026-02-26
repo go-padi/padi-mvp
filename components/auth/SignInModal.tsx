@@ -27,8 +27,15 @@ export function SignInModal({ onClose }: SignInModalProps) {
     try {
       await login(email, password);
       onClose();
-    } catch {
-      setError('Incorrect email or password. Please try again.');
+    } catch (err) {
+      const isCredentialError =
+        err instanceof Error &&
+        /invalid|credentials|password|email|not found/i.test(err.message);
+      setError(
+        isCredentialError
+          ? 'Incorrect email or password. Please try again.'
+          : 'Something went wrong. Please try again in a moment.'
+      );
     } finally {
       setLoading(false);
     }
@@ -55,11 +62,14 @@ export function SignInModal({ onClose }: SignInModalProps) {
       });
       onClose();
     } catch (err) {
-      const message =
-        err instanceof Error && err.message
-          ? err.message
-          : 'Unable to create account. Please try again.';
-      setError(message);
+      const isKnownError =
+        err instanceof Error &&
+        /already|exists|email|invalid|password/i.test(err.message);
+      setError(
+        isKnownError
+          ? 'An account with this email may already exist. Try signing in instead.'
+          : 'Unable to create account. Please try again.'
+      );
     } finally {
       setLoading(false);
     }

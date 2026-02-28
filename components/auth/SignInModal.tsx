@@ -33,7 +33,7 @@ export function SignInModal({ onClose }: SignInModalProps) {
         /invalid|credentials|password|email|not found/i.test(err.message);
       setError(
         isCredentialError
-          ? 'Incorrect email or password. Please try again.'
+          ? 'The email or password you entered doesn\u2019t match our records. Please check and try again.'
           : 'Something went wrong. Please try again in a moment.'
       );
     } finally {
@@ -126,7 +126,7 @@ export function SignInModal({ onClose }: SignInModalProps) {
               value={password}
               onChange={e => setPassword(e.target.value)}
               className="w-full rounded-xl border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-100"
-              placeholder="1234!"
+              placeholder="Your password"
               required
             />
           </div>

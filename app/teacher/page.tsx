@@ -244,7 +244,7 @@ export default function TeacherIndexPage() {
           <button
             type="button"
             onClick={openSignIn}
-            className="btn btn-primary"
+            className="rounded-xl bg-blue-600 text-white px-4 py-2 text-sm font-semibold hover:bg-blue-700"
           >
             Log in to unlock
           </button>

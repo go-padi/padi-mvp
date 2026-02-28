@@ -60,9 +60,6 @@ Your job is to help me continue coding from the current state of the repository.
 Paste this immediately *after* the Base Prompt when you start a new task.
 
 ---
-
-## **CODEX TASK WRAPPER**
-
 Using the project context above, complete the following task.
 Follow these rules:
 

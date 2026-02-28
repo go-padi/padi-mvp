@@ -3,7 +3,6 @@ import Link from 'next/link';
 import { use, useEffect, useMemo, useState } from 'react';
 import { supabaseClient } from '@/lib/supabase';
 import clsx from 'clsx';
-import { useAdminMode } from '../../../../layout';
 import { PhaseTabs } from '@/components/PhaseTabs';
 import { useTeachingMode } from '@/lib/teachingModeContext';
 import { TeachingModeToggle } from '@/components/TeachingModeToggle';
@@ -19,7 +18,6 @@ export default function AreaPage({ params }:{ params: Promise<{ phase:string; ar
   const [phaseRow,setPhaseRow]=useState<Phase|null>(null);
   const [groups,setGroups]=useState<Group[]>([]);
   const [modules,setModules]=useState<ModuleRow[]>([]);
-  const { adminMode } = useAdminMode();
   const { mode } = useTeachingMode();
   const { isHydrated } = useAuth();
 
@@ -96,7 +94,7 @@ export default function AreaPage({ params }:{ params: Promise<{ phase:string; ar
         )}
         <div className="grid gap-3 md:grid-cols-2">
         {filteredGroups.map(g=>{
-            const locked = !!g.is_locked && !adminMode;
+            const locked = !!g.is_locked;
             const active = g.code===area;
             return (
               <Link
@@ -135,7 +133,7 @@ export default function AreaPage({ params }:{ params: Promise<{ phase:string; ar
         </div>
         <div className="grid gap-3">
           {sortedModules.map((mod, idx) => {
-            const locked = !!mod.is_locked && !adminMode;
+            const locked = !!mod.is_locked;
             return (
               <div key={mod.id} className={clsx('rounded-2xl border p-4 shadow-sm flex items-center justify-between',
                 idx===0 ? 'border-blue-300 bg-blue-50' : 'border-gray-100 bg-white')}>

@@ -3,7 +3,6 @@ import Link from 'next/link';
 import { use, useEffect, useState } from 'react';
 import { supabaseClient } from '@/lib/supabase';
 import clsx from 'clsx';
-import { useAdminMode } from '../../layout';
 import { PhaseTabs } from '@/components/PhaseTabs';
 import { TeachingModeToggle } from '@/components/TeachingModeToggle';
 import { useTeachingMode } from '@/lib/teachingModeContext';
@@ -32,7 +31,6 @@ export default function PhaseDetail({ params }: { params: Promise<{ phase: strin
   const { phase } = use(params);
   const [phaseRow, setPhaseRow] = useState<Phase | null>(null);
   const [groupsByMode, setGroupsByMode] = useState<{ group: Group[]; individual: Group[] }>({ group: [], individual: [] });
-  const { adminMode } = useAdminMode();
   const { mode } = useTeachingMode();
   const { isHydrated } = useAuth();
 
@@ -73,7 +71,7 @@ export default function PhaseDetail({ params }: { params: Promise<{ phase: strin
   }, [phase, mode, isHydrated]);
 
   const renderGroupCard = (g: Group) => {
-    const locked = !!g.is_locked && !adminMode;
+    const locked = !!g.is_locked;
     const ctaLabel = locked ? 'Coming Soon' : 'View Modules →';
     return (
       <div key={g.id} className="rounded-2xl border border-gray-100 bg-white p-5 shadow-sm flex flex-col gap-2">

@@ -22,7 +22,7 @@ Real backend auth can be added later. For now, state can be local (for example R
 
 ---
 
-# 1. Auth and Global App State
+# 1. Auth and Global App State --> done
 
 ### Goals
 
@@ -35,37 +35,124 @@ This distinction must be visible and persistent across all pages within the sess
 
 ### Requirements
 
-- Introduce a global auth store, for example `AuthContext` or `useAuthStore`
-- Auth state includes:
-  - `isLoggedIn: boolean`
-  - Optional `teacherName: string | null`
-- Add an `AuthStatusIndicator` in the header or navigation that shows:
-  - "Logged out" with a "Log in" button
-  - "Logged in as [Teacher]" with a "Log out" button
-- Actions:
-  - `login()`
-  - `logout()`
-- Logged out users see read only or preview versions of dashboard and tabs  
-- Logged in users see setup or data driven workspace views
+- Global auth store
 
-### Suggested structure (React example)
+- Introduce a global auth store, for example AuthContext or useAuthStore.
+Auth state includes:
 
-- `AuthProvider` that wraps the app
-- `AuthStatusIndicator` component used in the top navigation
-- `useAuth()` hook for reading `isLoggedIn` and calling `login` / `logout`
+`isLoggedIn: boolean
+userEmail?: string | null`
 
----
+Later we can extend this to include tenant id and other profile fields
 
-# 2. Anonymous (Logged Out) Experience
+Auth actions:
+
+`login(email: string, password: string)`
+
+`logout()`
+
+The AuthProvider wraps the app. Use a useAuth() hook to read isLoggedIn and userEmail, and to call login and logout.
+
+For now, implement login with a local stub:
+ -Accept any email
+ -Require password 1234!
+
+On success, set isLoggedIn = true and userEmail = email
+
+On failure, surface a friendly inline error in the modal
+
+Structure the code so it is easy to swap in real API calls later for sign up and sign in that will also create a new tenant space.
+
+Auth indicator in the top navigation
+
+The top right navigation acts as the AuthStatusIndicator.
+
+Logged out state
+- Match the logged_out_state mock.
+(`docs/imgs/logged_out_state.png`))
+
+Top right items:
+- Teacher Dashboard text link
+- Start Teaching primary button
+- Sign in secondary button
+
+Behavior:
+
+Start Teaching is always available and does not require auth
+
+Clicking Sign in opens the sign in modal
+
+Clicking Teacher Dashboard while logged out also opens the sign in modal
+
+Logged in state
+- Match the loggedin_state_12_4 mock.
+(`docs/imgs/loggedin_state_12_4.png`)
+
+Top right items:
+- Teacher Dashboard text link
+- Start Teaching primary button
+- Logged in as {userEmail} label
+
+Sign out text button next to the label
+
+Behavior:
+- Teacher Dashboard now navigates to the teacher dashboard route directly
+- Sign in button is hidden
+- Sign out clears auth state and returns the nav to the logged out layout
+
+Sign in modal
+
+Use the sign_in_modal mock.
+`/docs/imgs/sign_in_modal.png`
+Trigger:
+
+Clicking Sign in in the nav
+
+Clicking Teacher Dashboard while logged out
+
+Content:
+
+Title: Sign In
+
+Subtitle: Sign in to access your teaching dashboard
+
+Fields:
+
+Email
+
+Password
+
+Primary button: Sign In
+
+Text link: Don't have an account? Create one
+
+Behavior:
+
+While in test mode, both Sign In and Create one use the same local login stub
+
+Modal closes on successful login
+
+Modal can be closed by escape, outside click, or close icon
+
+View behavior
+
+Logged out users see read only or preview versions of the dashboard and tabs
+
+Logged in users see the editable, data driven workspace views
+
+# 2. Anonymous (Logged Out) Experience --> HERE (need to uat real quick and move on.)
 
 Anonymous users should be able to explore:
 
 - The method and pedagogy  
-- Phases and sample modules  
-- A single sample lesson  
-- A preview of Start Teaching
+- Phases and sample modules
+   - sample modules do not appear for logged out users when initially click into phases
+   - they do if you click out and then click back in
+   NEED TO FIX
+- A single sample lesson (need to fix; have to click into phase 2 then back to phase 1 right now for it to appead)  
+- A preview of Start Teaching (works)
 
-They must never see real or fake student or group data.
+They must never see real or fake student or group data. -> works
 
 ## 2.1 Home and Dashboard
 

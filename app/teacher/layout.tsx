@@ -2,7 +2,6 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import clsx from 'clsx';
-import { createContext, useContext, useEffect, useMemo, useState } from 'react';
 import { useAuth } from '@/lib/auth-store';
 
 const tabs = [
@@ -13,14 +12,9 @@ const tabs = [
   { id: 'resources', label: 'Resources', href: '/teacher/resources' },
 ];
 
-type AdminContextValue = { adminMode: boolean; toggle: () => void };
-export const AdminContext = createContext<AdminContextValue>({ adminMode: false, toggle: () => {} });
-export const useAdminMode = () => useContext(AdminContext);
-
 export default function TeacherLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const { isLoggedIn } = useAuth();
-  const [adminMode, setAdminMode] = useState(false);
   const isDashboardView =
     pathname.startsWith('/teacher/dashboard') ||
     pathname.startsWith('/teacher/phases') ||
@@ -29,21 +23,7 @@ export default function TeacherLayout({ children }: { children: React.ReactNode 
     pathname.startsWith('/teacher/grouping') ||
     pathname.startsWith('/teacher/resources');
 
-  useEffect(() => {
-    if (typeof window === 'undefined') return;
-    const stored = window.localStorage.getItem('padi_admin_mode');
-    if (stored === 'true') setAdminMode(true);
-  }, []);
-
-  useEffect(() => {
-    if (typeof window === 'undefined') return;
-    window.localStorage.setItem('padi_admin_mode', adminMode ? 'true' : 'false');
-  }, [adminMode]);
-
-  const value = useMemo(() => ({ adminMode, toggle: () => setAdminMode(v => !v) }), [adminMode]);
-
   return (
-    <AdminContext.Provider value={value}>
       <div className="space-y-6">
         {isDashboardView && (
           <>
@@ -93,6 +73,5 @@ export default function TeacherLayout({ children }: { children: React.ReactNode 
         )}
         {children}
       </div>
-    </AdminContext.Provider>
   );
 }

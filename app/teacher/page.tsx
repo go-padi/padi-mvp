@@ -8,6 +8,7 @@ import { useTeachingMode } from '@/lib/teachingModeContext';
 import { useAuth } from '@/lib/auth-store';
 import { demoTeacherData } from '@/lib/demo/demoTeacherData';
 import { useStartTeachingData } from '@/lib/startTeaching/useStartTeachingData';
+import { StartTeachingWizard } from '@/components/StartTeachingWizard';
 
 type StudentCard = { id: string; name: string; phase: string; status: string; focus: string };
 type GroupCard = { id: string; name: string; phase: string; status: string; focus: string };
@@ -44,6 +45,7 @@ export default function TeacherIndexPage() {
   const [tenantId, setTenantId] = useState<string | null>(null);
   const [tenantStatus, setTenantStatus] = useState<'idle' | 'loading' | 'ready'>('idle');
   const [isAddStudentOpen, setAddStudentOpen] = useState(false);
+  const [wizardSkipped, setWizardSkipped] = useState(false);
   const dataMode = isLoggedIn ? 'live' : 'demo';
   const startData = useStartTeachingData();
 
@@ -250,6 +252,20 @@ export default function TeacherIndexPage() {
           </button>
         </div>
       </div>
+    );
+  }
+
+  // Show onboarding wizard for first-time teachers (logged in, tenant ready, 0 students)
+  const showWizard =
+    tenantStatus === 'ready' && tenantId && startData.students.length === 0 && !wizardSkipped;
+
+  if (showWizard) {
+    return (
+      <StartTeachingWizard
+        tenantId={tenantId}
+        onComplete={startData.refetch}
+        onSkip={() => setWizardSkipped(true)}
+      />
     );
   }
 

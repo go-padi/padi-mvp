@@ -291,7 +291,7 @@ export default function StudentModulePage({
             const isCompleted = completedModuleIds.has(mod.code);
             const isCurrent = idx === currentModuleIdx;
             const isUpcoming = !isCompleted && !isCurrent;
-            const lessonHref = `/teacher/phases/${phaseCode}/areas/${groupCode}/modules/${mod.code}`;
+            const lessonHref = `/teacher/phases/${phaseCode}/areas/${groupCode}/modules/${mod.code}?student=${studentId}`;
 
             return (
               <div

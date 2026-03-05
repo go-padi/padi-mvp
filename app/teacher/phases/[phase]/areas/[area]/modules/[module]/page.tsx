@@ -1,7 +1,7 @@
 'use client';
 import Link from 'next/link';
 import { use, useEffect, useMemo, useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { supabaseClient } from '@/lib/supabase';
 import clsx from 'clsx';
 import { useTeachingMode } from '@/lib/teachingModeContext';
@@ -32,32 +32,61 @@ type Student = { id: string; name: string };
 
 export default function LessonPage({ params }: { params: Promise<{ phase: string; area: string; module: string }> }) {
   const { phase, area, module } = use(params);
+  const searchParams = useSearchParams();
+  const contextStudentId = searchParams.get('student');
   const { isLoggedIn, isHydrated } = useAuth();
   const router = useRouter();
   const [moduleRow, setModuleRow] = useState<ModuleRow | null>(null);
   const [notes, setNotes] = useState('');
-  const [teacherId, setTeacherId] = useState('teacher-1');
-  const [studentId, setStudentId] = useState<string | ''>('');
+  const [studentId, setStudentId] = useState<string>(contextStudentId || '');
+  const [contextStudentName, setContextStudentName] = useState<string | null>(null);
   const [students, setStudents] = useState<Student[]>([]);
   const [audioFile, setAudioFile] = useState<File | null>(null);
   const [saving, setSaving] = useState(false);
   const [status, setStatus] = useState<string | null>(null);
   const [needsAuth, setNeedsAuth] = useState(false);
   const { mode } = useTeachingMode();
+
+  const hasStudentContext = Boolean(contextStudentId);
+  const backHref = hasStudentContext
+    ? `/teacher/start-teaching/students/${contextStudentId}`
+    : `/teacher/phases/${phase}/areas/${area}`;
+  const backLabel = hasStudentContext
+    ? `\u2190 Back to ${contextStudentName || 'Student'}`
+    : '\u2190 Back to Modules';
+
   const actionOptions = useMemo(() => {
-    if (!isLoggedIn) return [];
+    if (!isLoggedIn || hasStudentContext) return [];
     const options: { value: string; label: string }[] = [];
     const includeAddStudent = mode === 'individual' || mode === 'both' || students.length === 0;
     const includeAddGroup = mode === 'group' || mode === 'both';
     if (includeAddStudent) options.push({ value: '__action_add_student__', label: 'Add Student' });
     if (includeAddGroup) options.push({ value: '__action_add_group__', label: 'Add Group' });
     return options;
-  }, [isLoggedIn, mode, students.length]);
+  }, [isLoggedIn, mode, students.length, hasStudentContext]);
 
   useEffect(() => {
     const fetchData = async () => {
       if (!isHydrated) return;
       const sb = supabaseClient();
+
+      // Fetch student name if in student context
+      if (contextStudentId) {
+        const { data: studentRow } = await sb
+          .from('students')
+          .select('name,first_name,last_name')
+          .eq('id', contextStudentId)
+          .single();
+        if (studentRow) {
+          const fullName = [studentRow.first_name, studentRow.last_name]
+            .filter(Boolean)
+            .join(' ')
+            .trim();
+          setContextStudentName(fullName || studentRow.name || 'Student');
+        }
+        setStudentId(contextStudentId);
+      }
+
       const teachingModeParam = mode === 'both' ? null : mode;
       const { data: moduleRows } = await sb.rpc('content_get_module', {
         p_module_code: module,
@@ -85,7 +114,7 @@ export default function LessonPage({ params }: { params: Promise<{ phase: string
             : null
         );
       }
-      if (isLoggedIn) {
+      if (isLoggedIn && !contextStudentId) {
         const [studentRes, completionRes, assessmentRes] = await Promise.all([
           sb.from('students').select('id,name').order('name'),
           sb.from('lesson_completions').select('student_id').eq('module_id', module),
@@ -116,7 +145,7 @@ export default function LessonPage({ params }: { params: Promise<{ phase: string
       }
     };
     fetchData();
-  }, [module, mode, isLoggedIn, isHydrated]);
+  }, [module, mode, isLoggedIn, isHydrated, contextStudentId]);
 
   if (!isHydrated) {
     return <div className="rounded-2xl border border-gray-100 bg-white p-5 shadow-sm text-sm text-gray-700">Loading...</div>;
@@ -130,8 +159,8 @@ export default function LessonPage({ params }: { params: Promise<{ phase: string
             <Link href="/teacher" className="text-sm text-gray-700 hover:text-gray-900" title="Home">
               🏠
             </Link>
-            <Link href={`/teacher/phases/${phase}/areas/${area}`} className="text-sm text-gray-700 hover:text-gray-900">
-              ← Back to Modules
+            <Link href={backHref} className="text-sm text-gray-700 hover:text-gray-900">
+              {backLabel}
             </Link>
           </div>
           <TeachingModeToggle />
@@ -189,7 +218,7 @@ export default function LessonPage({ params }: { params: Promise<{ phase: string
 
     const { error } = await sb.from('lesson_note').insert({
       module_detail_id: moduleRow?.id,
-      teacher_id: teacherId || user.id,
+      teacher_id: user.id,
       student_id: studentId || null,
       notes,
       attachment_url,
@@ -204,26 +233,48 @@ export default function LessonPage({ params }: { params: Promise<{ phase: string
       setStatus('Saved.');
       setNotes('');
       setAudioFile(null);
-      setStudentId('');
+      if (!hasStudentContext) setStudentId('');
     }
   };
 
   return (
     <div className="space-y-6">
+      {/* Navigation bar */}
       <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-gray-100 bg-white p-4 shadow-sm">
         <div className="flex items-center gap-2">
           <Link href="/teacher" className="text-sm text-gray-700 hover:text-gray-900" title="Home">
             🏠
           </Link>
-          <Link href={`/teacher/phases/${phase}/areas/${area}`} className="text-sm text-gray-700 hover:text-gray-900">
-            ← Back to Modules
+          <Link href={backHref} className="text-sm text-gray-700 hover:text-gray-900">
+            {backLabel}
           </Link>
         </div>
         <div className="flex items-center gap-2">
-          <TeachingModeToggle disabled />
+          {!hasStudentContext && <TeachingModeToggle disabled />}
           <div className="text-xs text-gray-500">{moduleRow?.code}</div>
         </div>
       </div>
+
+      {/* Student context banner */}
+      {hasStudentContext && contextStudentName && (
+        <div className="rounded-2xl border border-blue-200 bg-blue-50 px-5 py-3 flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-gray-900 text-white text-xs font-semibold">
+              {(contextStudentName || 'S').split(' ').map(p => p[0]).join('').slice(0, 2).toUpperCase()}
+            </div>
+            <div>
+              <p className="text-sm font-semibold text-blue-900">Teaching {contextStudentName}</p>
+              <p className="text-xs text-blue-700">{moduleRow?.title}</p>
+            </div>
+          </div>
+          <Link
+            href={`/teacher/start-teaching/students/${contextStudentId}`}
+            className="text-xs font-semibold text-blue-700 hover:underline"
+          >
+            Back to modules &rarr;
+          </Link>
+        </div>
+      )}
 
       <div className="space-y-2">
         <h2 className="text-3xl font-semibold text-gray-900 flex items-center gap-3">
@@ -291,16 +342,12 @@ export default function LessonPage({ params }: { params: Promise<{ phase: string
 
       {isLoggedIn ? (
         <div className="rounded-2xl border border-gray-100 bg-white p-5 shadow-sm space-y-4">
-          <h3 className="text-lg font-semibold text-gray-900">Teacher Notes & Observations</h3>
-          <div className="grid gap-3 md:grid-cols-2">
-            <div className="space-y-2">
-              <label className="text-sm font-semibold text-gray-800">Teacher ID</label>
-              <input
-                className="w-full rounded-xl border border-gray-200 p-3 text-sm"
-                value={teacherId}
-                onChange={e=>setTeacherId(e.target.value)}
-              />
-            </div>
+          <h3 className="text-lg font-semibold text-gray-900">
+            {hasStudentContext ? `Notes for ${contextStudentName}` : 'Teacher Notes & Observations'}
+          </h3>
+
+          {/* Only show student selector when NOT in student context */}
+          {!hasStudentContext && (
             <div className="space-y-2">
               <label className="text-sm font-semibold text-gray-800">Student (optional)</label>
               <select
@@ -309,17 +356,18 @@ export default function LessonPage({ params }: { params: Promise<{ phase: string
                 onChange={e=>handleStudentChange(e.target.value)}
                 disabled={!students.length && actionOptions.length === 0}
               >
-                <option value="">{students.length ? 'Not selected' : isLoggedIn ? 'Select a student' : 'No active students for this module'}</option>
+                <option value="">{students.length ? 'Not selected' : 'Select a student'}</option>
                 {students.map(student => <option key={student.id} value={student.id}>{student.name}</option>)}
-                {isLoggedIn && actionOptions.map(option => (
+                {actionOptions.map(option => (
                   <option key={option.value} value={option.value}>{option.label}</option>
                 ))}
-                {!students.length && isLoggedIn && (
+                {!students.length && (
                   <option value="" disabled>No active students for this module</option>
                 )}
               </select>
             </div>
-          </div>
+          )}
+
           <div className="space-y-2">
             <label className="text-sm font-semibold text-gray-800">Session Notes</label>
             <textarea
@@ -327,7 +375,9 @@ export default function LessonPage({ params }: { params: Promise<{ phase: string
               rows={4}
               value={notes}
               onChange={e => setNotes(e.target.value)}
-              placeholder="Record observations about student behavior, engagement, and any challenges..."
+              placeholder={hasStudentContext
+                ? `Record observations about ${contextStudentName}'s behavior, engagement, and any challenges...`
+                : 'Record observations about student behavior, engagement, and any challenges...'}
             />
           </div>
           <div className="space-y-2">
@@ -349,7 +399,7 @@ export default function LessonPage({ params }: { params: Promise<{ phase: string
           {status && <p className="text-sm text-gray-700">{status}</p>}
           {needsAuth && (
             <p className="text-sm text-red-600">
-              Sign in to save notes and uploads. (Auth flow not wired here—use a signed-in session in Supabase.)
+              Sign in to save notes and uploads.
             </p>
           )}
         </div>
@@ -361,7 +411,7 @@ export default function LessonPage({ params }: { params: Promise<{ phase: string
             your students and groups.
           </p>
           <Link href="/teacher/phases" className="text-sm font-semibold text-blue-700 hover:underline">
-            Return to phases →
+            Return to phases &rarr;
           </Link>
         </div>
       )}

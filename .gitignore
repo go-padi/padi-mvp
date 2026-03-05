@@ -16,6 +16,9 @@ build
 # Claude Code
 .claude/worktrees/
 
+# Office lock files
+.~lock.*
+
 # Replit
 .replit
 .replit-nix

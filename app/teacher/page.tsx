@@ -41,43 +41,11 @@ const previewHighlights = [
 
 export default function TeacherIndexPage() {
   const { mode } = useTeachingMode();
-  const { isLoggedIn, isHydrated, user } = useAuth();
-  const [tenantId, setTenantId] = useState<string | null>(null);
-  const [tenantStatus, setTenantStatus] = useState<'idle' | 'loading' | 'ready'>('idle');
+  const { isLoggedIn, isHydrated, tenantId } = useAuth();
   const [isAddStudentOpen, setAddStudentOpen] = useState(false);
   const [wizardSkipped, setWizardSkipped] = useState(false);
   const dataMode = isLoggedIn ? 'live' : 'demo';
   const startData = useStartTeachingData();
-
-  useEffect(() => {
-    if (!isLoggedIn || !user?.id) {
-      setTenantId(null);
-      setTenantStatus('idle');
-      return;
-    }
-    let isMounted = true;
-    const loadTenant = async () => {
-      setTenantStatus('loading');
-      const sb = supabaseClient();
-      const { data, error } = await sb
-        .from('profiles')
-        .select('tenant_id')
-        .eq('id', user.id)
-        .maybeSingle();
-      if (!isMounted) return;
-      if (error) {
-        setTenantId(null);
-        setTenantStatus('ready');
-        return;
-      }
-      setTenantId(data?.tenant_id ?? null);
-      setTenantStatus('ready');
-    };
-    loadTenant();
-    return () => {
-      isMounted = false;
-    };
-  }, [isLoggedIn, user?.id]);
 
   const cards = useMemo(() => {
     if (dataMode === 'demo') {
@@ -257,7 +225,7 @@ export default function TeacherIndexPage() {
 
   // Show onboarding wizard for first-time teachers (logged in, tenant ready, 0 students)
   const showWizard =
-    tenantStatus === 'ready' && tenantId && startData.students.length === 0 && !wizardSkipped;
+    isHydrated && tenantId && startData.students.length === 0 && !wizardSkipped;
 
   if (showWizard) {
     return (
@@ -290,7 +258,7 @@ export default function TeacherIndexPage() {
           <TeachingModeToggle />
         </div>
       </div>
-      {isLoggedIn && tenantStatus === 'ready' && !tenantId && (
+      {isLoggedIn && isHydrated && !tenantId && (
         <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
           Tenant not connected. Add a tenant to your profile to create students.
         </div>

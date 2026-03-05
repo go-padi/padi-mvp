@@ -5,10 +5,8 @@ import { useAuth } from '@/lib/auth-store';
 type Student = { id: string; name: string | null; first_name: string | null; last_name: string | null };
 
 export default function StudentsPage(){
-  const { isLoggedIn, user } = useAuth();
+  const { isLoggedIn, isHydrated, tenantId } = useAuth();
   const sb = supabaseClient();
-  const [tenantId, setTenantId] = useState<string | null>(null);
-  const [tenantStatus, setTenantStatus] = useState<'idle' | 'loading' | 'ready'>('idle');
   const [students,setStudents]=useState<Student[]>([]);
   const [name,setName]=useState('');
 
@@ -21,40 +19,12 @@ export default function StudentsPage(){
       .order('name');
     setStudents(data||[]);
   };
-  useEffect(()=>{
-    if (!isLoggedIn || !user?.id) {
-      setStudents([]);
-      setTenantId(null);
-      setTenantStatus('idle');
-      return;
-    }
-    let isMounted = true;
-    const loadTenant = async () => {
-      setTenantStatus('loading');
-      const { data, error } = await sb
-        .from('profiles')
-        .select('tenant_id')
-        .eq('id', user.id)
-        .maybeSingle();
-      if (!isMounted) return;
-      if (error) {
-        setTenantId(null);
-        setTenantStatus('ready');
-        return;
-      }
-      setTenantId(data?.tenant_id ?? null);
-      setTenantStatus('ready');
-    };
-    loadTenant();
-    return () => {
-      isMounted = false;
-    };
-  },[isLoggedIn, user?.id, sb]);
 
   useEffect(() => {
-    if (!tenantId || tenantStatus !== 'ready') return;
+    if (!isLoggedIn) { setStudents([]); return; }
+    if (!isHydrated || !tenantId) return;
     load();
-  }, [tenantId, tenantStatus]);
+  }, [isLoggedIn, isHydrated, tenantId]);
 
   const add = async()=>{
     if(!name || !tenantId) return;
@@ -86,7 +56,7 @@ export default function StudentsPage(){
         </div>
       ) : (
         <>
-          {tenantStatus === 'ready' && !tenantId && (
+          {isHydrated && !tenantId && (
             <div className="card border-amber-200 bg-amber-50 text-amber-800">
               Tenant not connected. Add a tenant to your profile to create students.
             </div>

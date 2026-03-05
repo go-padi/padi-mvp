@@ -56,10 +56,6 @@ export function SignInModal({ onClose }: SignInModalProps) {
         setInfo('Check your email to confirm your account, then sign in.');
         return;
       }
-      await fetch('/api/auth/bootstrap-tenant', {
-        method: 'POST',
-        headers: { Authorization: `Bearer ${session.access_token}` },
-      });
       onClose();
     } catch (err) {
       const isKnownError =

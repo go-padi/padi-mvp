@@ -16,6 +16,7 @@ export type AuthUser = { id: string; email: string | null };
 export type AuthState = {
   isLoggedIn: boolean;
   user: AuthUser | null;
+  tenantId: string | null;
   isHydrated: boolean;
   login: (email: string, password: string) => Promise<void>;
   signup: (email: string, password: string) => Promise<{ session: Session | null; user: AuthUser | null }>;
@@ -24,9 +25,24 @@ export type AuthState = {
 
 const AuthContext = createContext<AuthState | undefined>(undefined);
 
+async function fetchTenantId(accessToken: string): Promise<string | null> {
+  try {
+    const res = await fetch('/api/auth/bootstrap-tenant', {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${accessToken}` },
+    });
+    if (!res.ok) return null;
+    const json = await res.json();
+    return json.tenant_id ?? null;
+  } catch {
+    return null;
+  }
+}
+
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [user, setUser] = useState<AuthUser | null>(null);
+  const [tenantId, setTenantId] = useState<string | null>(null);
   const [isHydrated, setIsHydrated] = useState(false);
 
   useEffect(() => {
@@ -35,10 +51,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const initSession = async () => {
       const { data } = await sb.auth.getSession();
       if (!isMounted) return;
-      const sessionUser = data.session?.user || null;
+      const session = data.session;
+      const sessionUser = session?.user || null;
       setUser(sessionUser ? { id: sessionUser.id, email: sessionUser.email ?? null } : null);
       setIsLoggedIn(Boolean(sessionUser));
-      setIsHydrated(true);
+      if (session?.access_token) {
+        const tid = await fetchTenantId(session.access_token);
+        if (isMounted) setTenantId(tid);
+      }
+      if (isMounted) setIsHydrated(true);
     };
 
     initSession();
@@ -48,21 +69,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED' || event === 'USER_UPDATED') {
         setUser(sessionUser ? { id: sessionUser.id, email: sessionUser.email ?? null } : null);
         setIsLoggedIn(Boolean(sessionUser));
-        setIsHydrated(true);
-        try {
-          if (typeof window !== 'undefined') {
-            window.localStorage.removeItem('padi.tenant_id');
-          }
-        } catch {}
         if (event === 'SIGNED_IN' && session?.access_token) {
-          fetch('/api/auth/bootstrap-tenant', {
-            method: 'POST',
-            headers: { Authorization: `Bearer ${session.access_token}` },
-          }).catch(() => {});
+          fetchTenantId(session.access_token).then(tid => {
+            if (isMounted) setTenantId(tid);
+          });
         }
+        setIsHydrated(true);
       } else if (event === 'SIGNED_OUT') {
         setUser(null);
         setIsLoggedIn(false);
+        setTenantId(null);
         setIsHydrated(true);
       }
     });
@@ -110,12 +126,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     () => ({
       isLoggedIn,
       user,
+      tenantId,
       isHydrated,
       login,
       signup,
       logout,
     }),
-    [isLoggedIn, user, isHydrated, login, signup, logout]
+    [isLoggedIn, user, tenantId, isHydrated, login, signup, logout]
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

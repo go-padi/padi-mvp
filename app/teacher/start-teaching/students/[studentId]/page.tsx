@@ -62,6 +62,8 @@ export default function StudentModulePage({
   } | null>(null);
   const [modules, setModules] = useState<ModuleRow[]>([]);
   const [groupTitle, setGroupTitle] = useState('');
+  const [groupCode, setGroupCode] = useState('');
+  const [phaseCode, setPhaseCode] = useState('');
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -101,7 +103,9 @@ export default function StudentModulePage({
       };
       setStudent(s);
 
-      const phaseCode = PHASE_CODE_MAP[s.phase] || 'K_P1';
+      const pc = PHASE_CODE_MAP[s.phase] || 'K_P1';
+      setPhaseCode(pc);
+      const phaseCode = pc;
 
       const { data: groups } = await sb.rpc('content_get_groups', {
         p_phase_code: phaseCode,
@@ -114,6 +118,7 @@ export default function StudentModulePage({
 
       if (matchingGroup) {
         setGroupTitle(matchingGroup.title);
+        setGroupCode(matchingGroup.code);
 
         const { data: mods } = await sb.rpc('content_get_modules', {
           p_group_code: matchingGroup.code,
@@ -228,9 +233,10 @@ export default function StudentModulePage({
         )}
         <div className="space-y-2">
           {modules.map((mod, idx) => (
-            <div
+            <Link
               key={mod.id}
-              className="rounded-xl border border-gray-100 bg-white p-4 shadow-sm flex items-center justify-between"
+              href={`/teacher/phases/${phaseCode}/areas/${groupCode}/modules/${mod.code}`}
+              className="rounded-xl border border-gray-100 bg-white p-4 shadow-sm flex items-center justify-between hover:border-blue-200"
             >
               <div className="flex items-center gap-3">
                 <div className="flex h-8 w-8 items-center justify-center rounded-full bg-gray-100 text-xs font-semibold text-gray-600">
@@ -248,7 +254,7 @@ export default function StudentModulePage({
               <span className="rounded-full bg-gray-100 px-2 py-0.5 text-[11px] font-semibold text-gray-600">
                 Not started
               </span>
-            </div>
+            </Link>
           ))}
         </div>
       </div>

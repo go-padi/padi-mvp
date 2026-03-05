@@ -13,6 +13,9 @@ build
 .env.*
 !.env.example
 
+# Claude Code
+.claude/worktrees/
+
 # Replit
 .replit
 .replit-nix

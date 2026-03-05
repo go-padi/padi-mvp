@@ -34,7 +34,7 @@ export default function LessonPage({ params }: { params: Promise<{ phase: string
   const { phase, area, module } = use(params);
   const searchParams = useSearchParams();
   const contextStudentId = searchParams.get('student');
-  const { isLoggedIn, isHydrated } = useAuth();
+  const { isLoggedIn, isHydrated, tenantId } = useAuth();
   const router = useRouter();
   const [moduleRow, setModuleRow] = useState<ModuleRow | null>(null);
   const [notes, setNotes] = useState('');
@@ -216,10 +216,16 @@ export default function LessonPage({ params }: { params: Promise<{ phase: string
       }
     }
 
-    const { error } = await sb.from('lesson_note').insert({
-      module_detail_id: moduleRow?.id,
-      teacher_id: user.id,
-      student_id: studentId || null,
+    if (!tenantId || !studentId) {
+      setSaving(false);
+      setStatus(studentId ? 'Tenant not found.' : 'Select a student first.');
+      return;
+    }
+
+    const { error } = await sb.from('teaching_notes').insert({
+      tenant_id: tenantId,
+      student_id: studentId,
+      module_code: moduleRow?.code || module,
       notes,
       attachment_url,
       attachment_name,

@@ -10,19 +10,17 @@ import { demoTeacherData } from '@/lib/demo/demoTeacherData';
 import { useStartTeachingData } from '@/lib/startTeaching/useStartTeachingData';
 import { StartTeachingWizard } from '@/components/StartTeachingWizard';
 
-type StudentCard = { id: string; name: string; phase: string; status: string; focus: string };
-type GroupCard = { id: string; name: string; phase: string; status: string; focus: string };
+type CardData = {
+  id: string;
+  name: string;
+  phase: string;
+  status: string;
+  focus: string;
+  type: 'student' | 'group';
+  progressPercent: number;
+  progressLabel: string | null;
+};
 
-const fallbackStudents: StudentCard[] = [
-  { id: 's-1', name: 'Maya Patel', phase: 'Phase 1', status: 'In progress', focus: 'Learning Sensorially' },
-  { id: 's-2', name: 'Diego Ramos', phase: 'Phase 1', status: 'Not started', focus: 'Sound Awareness' },
-  { id: 's-3', name: 'Ava Chen', phase: 'Phase 1', status: 'In progress', focus: 'Rhyme Practice' },
-];
-
-const fallbackGroups: GroupCard[] = [
-  { id: 'g-1', name: 'Blue Jays', phase: 'Phase 1', status: 'In progress', focus: 'Learning Sensorially' },
-  { id: 'g-2', name: 'Green Owls', phase: 'Phase 1', status: 'Not started', focus: 'Rhyming' },
-];
 
 const previewHighlights = [
   {
@@ -47,36 +45,42 @@ export default function TeacherIndexPage() {
   const dataMode = isLoggedIn ? 'live' : 'demo';
   const startData = useStartTeachingData();
 
-  const cards = useMemo(() => {
+  const cards = useMemo((): CardData[] => {
     if (dataMode === 'demo') {
-      const studentCards = demoTeacherData.students.map(s => ({
+      const studentCards: CardData[] = demoTeacherData.students.map(s => ({
         id: s.id,
         name: s.name,
         phase: s.phase,
         status: s.assessmentStatus,
         focus: s.focusAreas[0],
         type: 'student' as const,
+        progressPercent: s.progressPercent,
+        progressLabel: s.progressLabel,
       }));
-      const groupCards = demoTeacherData.groups.map(g => ({
+      const groupCards: CardData[] = demoTeacherData.groups.map(g => ({
         id: g.id,
         name: g.name,
         phase: g.phase,
         status: g.status,
         focus: g.focus,
         type: 'group' as const,
+        progressPercent: g.progressPercent,
+        progressLabel: g.progressLabel,
       }));
       if (mode === 'individual') return studentCards;
       if (mode === 'group') return groupCards;
       return [...studentCards, ...groupCards];
     }
 
-    const studentCards = startData.students.map(s => ({
+    const studentCards: CardData[] = startData.students.map(s => ({
       id: s.id,
       name: s.name,
       phase: s.phase || 'Phase 1',
       status: s.assessmentStatus || 'Not started',
       focus: s.focusAreas?.[0] || 'Learning Sensorially',
       type: 'student' as const,
+      progressPercent: s.progressPercent ?? 0,
+      progressLabel: s.progressLabel ?? null,
     }));
     if (mode === 'individual') return studentCards;
     if (mode === 'group') return [];
@@ -265,37 +269,93 @@ export default function TeacherIndexPage() {
       )}
 
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-        {cards.map(card => (
-          <div
-            key={card.id}
-            className="rounded-2xl border border-gray-100 bg-white p-5 shadow-sm flex flex-col gap-3"
-          >
-            <div className="flex items-center justify-between">
-              <div className="space-y-1">
-                <p className="text-lg font-semibold text-gray-900">{card.name}</p>
-                <p className="text-xs text-gray-600">{card.phase}</p>
+        {cards.map(card => {
+          const progressMatch = card.progressLabel?.match(/(\d+)\/(\d+)/);
+          const completed = progressMatch ? parseInt(progressMatch[1], 10) : 0;
+          const total = progressMatch ? parseInt(progressMatch[2], 10) : 0;
+          const currentLesson = completed < total ? completed + 1 : total;
+          const allComplete = total > 0 && completed >= total;
+          const noneStarted = card.progressPercent === 0;
+
+          const ctaLabel = allComplete
+            ? 'View Progress'
+            : noneStarted
+              ? 'Start Teaching'
+              : 'Continue Teaching';
+          const ctaIsPrimary = !allComplete;
+
+          const cardHref =
+            card.type === 'student'
+              ? `/teacher/start-teaching/students/${card.id}`
+              : `/teacher/phases/K_P1`;
+
+          const statusBadgeClass = clsx(
+            'rounded-full px-2 py-0.5 text-[11px] font-semibold',
+            card.status === 'Complete' || card.status === 'Ready for review'
+              ? 'bg-green-50 text-green-700'
+              : card.status === 'In progress' || card.status === 'Screening'
+                ? 'bg-blue-50 text-blue-700'
+                : 'bg-gray-100 text-gray-600',
+          );
+
+          return (
+            <Link
+              key={card.id}
+              href={cardHref}
+              className="rounded-2xl border border-gray-100 bg-white p-5 shadow-sm flex flex-col gap-3 hover:border-blue-200 transition-colors"
+            >
+              <div className="flex items-center justify-between">
+                <div className="space-y-1">
+                  <p className="text-lg font-semibold text-gray-900">{card.name}</p>
+                  <p className="text-xs text-gray-600">
+                    {card.phase} · {card.focus}
+                  </p>
+                </div>
+                {mode === 'both' && (
+                  <span
+                    className={clsx(
+                      'rounded-full px-2 py-0.5 text-[11px] font-semibold uppercase tracking-wide',
+                      card.type === 'student'
+                        ? 'bg-purple-50 text-purple-700'
+                        : 'bg-blue-50 text-blue-700',
+                    )}
+                  >
+                    {card.type === 'student' ? 'Student' : 'Group'}
+                  </span>
+                )}
               </div>
+
+              <div className="flex items-center justify-between text-sm">
+                <span className="text-gray-700">
+                  {total > 0
+                    ? allComplete
+                      ? `${total} of ${total} complete`
+                      : `On Lesson ${currentLesson} of ${total}`
+                    : 'Not started'}
+                </span>
+                <span className={statusBadgeClass}>{card.status}</span>
+              </div>
+
+              <div className="h-1.5 w-full rounded-full bg-gray-100 overflow-hidden">
+                <div
+                  className="h-1.5 rounded-full bg-blue-600 transition-all"
+                  style={{ width: `${card.progressPercent}%` }}
+                />
+              </div>
+
               <span
                 className={clsx(
-                  'rounded-full px-3 py-1 text-[11px] font-semibold uppercase tracking-wide',
-                  card.type === 'student' ? 'bg-purple-50 text-purple-700' : 'bg-blue-50 text-blue-700'
+                  'inline-flex items-center justify-center rounded-xl px-4 py-2 text-sm font-semibold',
+                  ctaIsPrimary
+                    ? 'bg-gray-900 text-white'
+                    : 'border border-gray-200 bg-white text-gray-900',
                 )}
               >
-                {card.type === 'student' ? 'Student' : 'Group'}
+                {ctaLabel}
               </span>
-            </div>
-            <div className="flex items-center justify-between text-sm text-gray-700">
-              <span className="font-semibold">{card.status}</span>
-              <span className="text-gray-600">{card.focus}</span>
-            </div>
-            <Link
-              href="/teacher/phases/K_P1"
-              className="inline-flex items-center justify-center rounded-xl px-4 py-2 text-sm font-semibold bg-gray-900 text-white hover:bg-gray-800"
-            >
-              View lessons →
             </Link>
-          </div>
-        ))}
+          );
+        })}
       </div>
 
       <div className="rounded-2xl border border-gray-100 bg-white p-5 shadow-sm flex items-center justify-between">

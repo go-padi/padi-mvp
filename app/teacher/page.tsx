@@ -169,7 +169,7 @@ export default function TeacherIndexPage() {
             </div>
               <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
               {previewStudents.map(student => (
-                <Link key={student.id} href={`/start-teaching/students/${student.id}`} className="rounded-2xl border border-gray-100 bg-white p-4 shadow-sm space-y-2 hover:border-blue-200">
+                <Link key={student.id} href={`/teacher/start-teaching/students/${student.id}`} className="rounded-2xl border border-gray-100 bg-white p-4 shadow-sm space-y-2 hover:border-blue-200">
                   <div className="flex items-center justify-between">
                     <div>
                       <p className="text-sm font-semibold text-gray-900">{student.name}</p>

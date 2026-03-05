@@ -1,9 +1,10 @@
 'use client';
 
-import { use, useEffect, useMemo, useState } from 'react';
+import { use, useCallback, useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { supabaseClient } from '@/lib/supabase';
 import { useAuth } from '@/lib/auth-store';
+import { useDefaultSubject } from '@/lib/startTeaching/useDefaultSubject';
 
 type StudentRow = {
   id: string;
@@ -50,7 +51,8 @@ export default function StudentModulePage({
   params: Promise<{ studentId: string }>;
 }) {
   const { studentId } = use(params);
-  const { isLoggedIn, isHydrated } = useAuth();
+  const { isLoggedIn, isHydrated, tenantId } = useAuth();
+  const { ensureSubject } = useDefaultSubject();
   const [student, setStudent] = useState<{
     id: string;
     name: string;
@@ -64,7 +66,20 @@ export default function StudentModulePage({
   const [groupTitle, setGroupTitle] = useState('');
   const [groupCode, setGroupCode] = useState('');
   const [phaseCode, setPhaseCode] = useState('');
+  const [completedModuleIds, setCompletedModuleIds] = useState<Set<string>>(new Set());
+  const [marking, setMarking] = useState(false);
   const [loading, setLoading] = useState(true);
+
+  const fetchCompletions = useCallback(async (sid: string) => {
+    const sb = supabaseClient();
+    const { data } = await sb
+      .from('module_assessments')
+      .select('module_id')
+      .eq('student_id', sid);
+    const ids = new Set((data || []).map((r: { module_id: string }) => r.module_id));
+    setCompletedModuleIds(ids);
+    return ids;
+  }, []);
 
   useEffect(() => {
     if (!isHydrated || !isLoggedIn) return;
@@ -105,14 +120,16 @@ export default function StudentModulePage({
 
       const pc = PHASE_CODE_MAP[s.phase] || 'K_P1';
       setPhaseCode(pc);
-      const phaseCode = pc;
 
-      const { data: groups } = await sb.rpc('content_get_groups', {
-        p_phase_code: phaseCode,
-        p_teaching_mode: null,
-      });
+      const [groupsRes] = await Promise.all([
+        sb.rpc('content_get_groups', {
+          p_phase_code: pc,
+          p_teaching_mode: null,
+        }),
+        fetchCompletions(studentId),
+      ]);
 
-      const groupRows = (groups as GroupRow[] | null) || [];
+      const groupRows = (groupsRes.data as GroupRow[] | null) || [];
       const matchingGroup =
         groupRows.find((g) => g.title === s.focusAreas[0]) || groupRows[0];
 
@@ -137,7 +154,7 @@ export default function StudentModulePage({
     };
 
     fetchData();
-  }, [studentId, isHydrated, isLoggedIn]);
+  }, [studentId, isHydrated, isLoggedIn, fetchCompletions]);
 
   const avatarInitials = useMemo(() => {
     if (!student) return 'S';
@@ -149,9 +166,39 @@ export default function StudentModulePage({
       .toUpperCase();
   }, [student]);
 
-  const completedCount = 0; // Real tracking comes in KAN-50/52
+  const currentModuleIdx = useMemo(() => {
+    return modules.findIndex((m) => !completedModuleIds.has(m.code));
+  }, [modules, completedModuleIds]);
+
+  const completedCount = useMemo(
+    () => modules.filter((m) => completedModuleIds.has(m.code)).length,
+    [modules, completedModuleIds],
+  );
   const totalCount = modules.length;
   const progressPercent = totalCount > 0 ? Math.round((completedCount / totalCount) * 100) : 0;
+
+  const handleMarkDone = async (moduleCode: string) => {
+    if (!tenantId || marking) return;
+    setMarking(true);
+    try {
+      const subjectId = await ensureSubject(tenantId);
+      if (!subjectId) return;
+      const sb = supabaseClient();
+      await sb.from('module_assessments').upsert(
+        {
+          tenant_id: tenantId,
+          student_id: studentId,
+          subject_id: subjectId,
+          module_id: moduleCode,
+          notes: 'Completed',
+        },
+        { onConflict: 'tenant_id,student_id,subject_id,module_id' },
+      );
+      await fetchCompletions(studentId);
+    } finally {
+      setMarking(false);
+    }
+  };
 
   if (!isHydrated || loading) {
     return (
@@ -168,7 +215,7 @@ export default function StudentModulePage({
           href="/teacher"
           className="text-sm text-gray-700 hover:text-gray-900"
         >
-          ← Back to Start Teaching
+          &larr; Back to Start Teaching
         </Link>
         <div className="rounded-2xl border border-gray-100 bg-white p-5 shadow-sm">
           <p className="text-sm font-semibold text-gray-900">
@@ -179,13 +226,15 @@ export default function StudentModulePage({
     );
   }
 
+  const allComplete = completedCount === totalCount && totalCount > 0;
+
   return (
     <div className="space-y-6">
       <Link
         href="/teacher"
         className="inline-flex items-center gap-1 text-sm text-gray-700 hover:text-gray-900"
       >
-        ← Back to Start Teaching
+        &larr; Back to Start Teaching
       </Link>
 
       {/* Header */}
@@ -199,7 +248,7 @@ export default function StudentModulePage({
               Teaching {student.name}
             </h2>
             <p className="text-sm text-gray-600">
-              {student.phase} — {groupTitle || student.focusAreas[0]}
+              {student.phase} &mdash; {groupTitle || student.focusAreas[0]}
             </p>
           </div>
         </div>
@@ -208,7 +257,7 @@ export default function StudentModulePage({
         <div className="space-y-1">
           <div className="flex items-center justify-between text-sm">
             <span className="text-gray-700">
-              {completedCount} of {totalCount} lessons complete
+              {completedCount} of {totalCount} modules complete
             </span>
             <span className="font-semibold text-gray-900">
               {progressPercent}%
@@ -223,39 +272,100 @@ export default function StudentModulePage({
         </div>
       </div>
 
-      {/* Lesson list */}
+      {allComplete && (
+        <div className="rounded-2xl border border-green-200 bg-green-50 p-5 shadow-sm text-sm text-green-800 font-semibold">
+          All modules complete for {student.name}!
+        </div>
+      )}
+
+      {/* Module list */}
       <div className="space-y-3">
-        <h3 className="text-lg font-semibold text-gray-900">Lessons</h3>
+        <h3 className="text-lg font-semibold text-gray-900">Modules</h3>
         {modules.length === 0 && (
           <div className="rounded-2xl border border-gray-100 bg-white p-5 shadow-sm text-sm text-gray-700">
-            No lessons available for this module yet.
+            No modules available yet.
           </div>
         )}
         <div className="space-y-2">
-          {modules.map((mod, idx) => (
-            <Link
-              key={mod.id}
-              href={`/teacher/phases/${phaseCode}/areas/${groupCode}/modules/${mod.code}`}
-              className="rounded-xl border border-gray-100 bg-white p-4 shadow-sm flex items-center justify-between hover:border-blue-200"
-            >
-              <div className="flex items-center gap-3">
-                <div className="flex h-8 w-8 items-center justify-center rounded-full bg-gray-100 text-xs font-semibold text-gray-600">
-                  {idx + 1}
-                </div>
-                <div>
-                  <p className="text-sm font-semibold text-gray-900">
-                    {mod.title}
-                  </p>
-                  {mod.summary && (
-                    <p className="text-xs text-gray-600">{mod.summary}</p>
-                  )}
+          {modules.map((mod, idx) => {
+            const isCompleted = completedModuleIds.has(mod.code);
+            const isCurrent = idx === currentModuleIdx;
+            const isUpcoming = !isCompleted && !isCurrent;
+            const lessonHref = `/teacher/phases/${phaseCode}/areas/${groupCode}/modules/${mod.code}`;
+
+            return (
+              <div
+                key={mod.id}
+                className={`rounded-xl border p-4 shadow-sm ${
+                  isCurrent
+                    ? 'border-blue-300 bg-blue-50'
+                    : isCompleted
+                      ? 'border-green-200 bg-green-50/50'
+                      : 'border-gray-100 bg-white opacity-60'
+                }`}
+              >
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div
+                      className={`flex h-8 w-8 items-center justify-center rounded-full text-xs font-semibold ${
+                        isCompleted
+                          ? 'bg-green-100 text-green-700'
+                          : isCurrent
+                            ? 'bg-blue-100 text-blue-700'
+                            : 'bg-gray-100 text-gray-400'
+                      }`}
+                    >
+                      {isCompleted ? '\u2713' : idx + 1}
+                    </div>
+                    <div>
+                      <p
+                        className={`text-sm font-semibold ${
+                          isCompleted ? 'text-green-800' : isUpcoming ? 'text-gray-400' : 'text-gray-900'
+                        }`}
+                      >
+                        {mod.title}
+                      </p>
+                      {mod.summary && (
+                        <p className={`text-xs ${isUpcoming ? 'text-gray-300' : 'text-gray-600'}`}>
+                          {mod.summary}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-2">
+                    {isCompleted && (
+                      <span className="rounded-full bg-green-100 px-2 py-0.5 text-[11px] font-semibold text-green-700">
+                        Completed
+                      </span>
+                    )}
+                    {isCurrent && (
+                      <>
+                        <Link
+                          href={lessonHref}
+                          className="rounded-lg bg-blue-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-blue-700"
+                        >
+                          {completedCount === 0 ? 'Start Teaching' : 'Continue Teaching'}
+                        </Link>
+                        <button
+                          onClick={() => handleMarkDone(mod.code)}
+                          disabled={marking}
+                          className="rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-xs font-semibold text-gray-700 hover:bg-gray-50 disabled:opacity-50"
+                        >
+                          {marking ? 'Saving...' : 'Mark Done'}
+                        </button>
+                      </>
+                    )}
+                    {isUpcoming && (
+                      <span className="rounded-full bg-gray-100 px-2 py-0.5 text-[11px] font-semibold text-gray-400">
+                        Upcoming
+                      </span>
+                    )}
+                  </div>
                 </div>
               </div>
-              <span className="rounded-full bg-gray-100 px-2 py-0.5 text-[11px] font-semibold text-gray-600">
-                Not started
-              </span>
-            </Link>
-          ))}
+            );
+          })}
         </div>
       </div>
     </div>

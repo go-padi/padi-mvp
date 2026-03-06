@@ -237,7 +237,6 @@ export default function LessonPage({ params }: { params: Promise<{ phase: string
       setStatus('Failed to save notes.');
     } else {
       setStatus('Saved.');
-      setNotes('');
       setAudioFile(null);
       if (!hasStudentContext) setStudentId('');
     }

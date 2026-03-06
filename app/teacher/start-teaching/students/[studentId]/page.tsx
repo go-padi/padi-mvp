@@ -194,7 +194,20 @@ export default function StudentModulePage({
         },
         { onConflict: 'tenant_id,student_id,subject_id,module_id' },
       );
-      await fetchCompletions(studentId);
+      const updated = await fetchCompletions(studentId);
+      // Update student record with new progress
+      const newCompleted = modules.filter((m) => updated.has(m.code)).length;
+      const total = modules.length;
+      const pct = total > 0 ? Math.round((newCompleted / total) * 100) : 0;
+      const allDone = newCompleted === total && total > 0;
+      await sb
+        .from('students')
+        .update({
+          progress_percent: pct,
+          progress_label: `${newCompleted}/${total} modules`,
+          assessment_status: allDone ? 'Complete' : newCompleted > 0 ? 'In progress' : 'Not started',
+        })
+        .eq('id', studentId);
     } finally {
       setMarking(false);
     }

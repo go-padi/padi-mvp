@@ -38,13 +38,14 @@ export function useStartTeachingData(): StartTeachingData {
   const load = useCallback(async () => {
     if (!isHydrated || !isLoggedIn) return;
     const sb = supabaseClient();
-    const [studentsRes, membershipsRes, groupsRes] = await Promise.all([
+    const [studentsRes, membershipsRes, groupsRes, assessmentsRes] = await Promise.all([
       sb
         .from('students')
         .select('id,name,first_name,last_name,progress_percent,progress_label,focus_areas,phase,assessment_status')
         .order('name'),
       sb.from('student_group_memberships').select('student_id,group_id,active').eq('active', true),
       sb.from('groups').select('id,name').order('name'),
+      sb.from('module_assessments').select('student_id,module_id'),
     ]);
 
     const studentRows =
@@ -63,6 +64,13 @@ export function useStartTeachingData(): StartTeachingData {
       (membershipsRes.data as { student_id: string; group_id: string; active: boolean | null }[] | null) || [];
     const groupRows = (groupsRes.data as { id: string; name: string | null }[] | null) || [];
 
+    // Build per-student completed module counts from module_assessments
+    const assessmentRows = (assessmentsRes.data as { student_id: string; module_id: string }[] | null) || [];
+    const completedByStudent = new Map<string, number>();
+    assessmentRows.forEach(row => {
+      completedByStudent.set(row.student_id, (completedByStudent.get(row.student_id) || 0) + 1);
+    });
+
     const groupNameById = new Map(groupRows.map(group => [group.id, group.name || 'Group']));
     const groupIdsByStudent = new Map<string, string>();
     membershipRows.forEach(membership => {
@@ -78,16 +86,23 @@ export function useStartTeachingData(): StartTeachingData {
         Array.isArray(student.focus_areas) && student.focus_areas.length
           ? student.focus_areas
           : ['Learning Sensorially'];
+      const completedModules = completedByStudent.get(student.id) || 0;
+      const hasProgress = completedModules > 0;
+      const storedPercent = student.progress_percent ?? 0;
+      const storedLabel = student.progress_label ?? null;
+
       return {
         id: student.id,
         name,
         groupId,
         groupName: groupId ? groupNameById.get(groupId) || null : null,
         focusAreas,
-        progressPercent: student.progress_percent ?? 0,
-        progressLabel: student.progress_label ?? null,
+        progressPercent: hasProgress ? Math.max(storedPercent, 1) : storedPercent,
+        progressLabel: hasProgress && !storedLabel ? `${completedModules} module${completedModules === 1 ? '' : 's'} done` : storedLabel,
         phase: student.phase ?? 'Phase 1',
-        assessmentStatus: student.assessment_status ?? 'Not started',
+        assessmentStatus: hasProgress
+          ? (student.assessment_status === 'Complete' ? 'Complete' : 'In progress')
+          : (student.assessment_status ?? 'Not started'),
       };
     });
 

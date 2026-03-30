@@ -6,7 +6,6 @@ export type DemoAssessmentRow = {
   studentName: string;
   groupId?: string | null;
   groupName: string;
-  phase: string;
   status: string;
   focusAreas: string[];
   progressLabel: string;
@@ -17,7 +16,6 @@ export const demoAssessments: DemoAssessmentRow[] = demoStudents.map(s => ({
   studentName: s.name,
   groupId: s.groupId || null,
   groupName: demoGroupIndex[s.groupId]?.name || 'Unassigned',
-  phase: s.phase,
   status: s.assessmentStatus,
   focusAreas: s.focusAreas,
   progressLabel: s.progressLabel,

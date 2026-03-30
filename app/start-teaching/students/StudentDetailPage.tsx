@@ -6,7 +6,7 @@ import { useStartTeachingData } from '@/lib/startTeaching/useStartTeachingData';
 import { getStudentPreviewDetail } from '@/lib/startTeaching/preview/mapDemoToStartTeachingPreview';
 import { demoTeacherData } from '@/lib/demo/demoTeacherData';
 import { parseProgressLabel } from '@/lib/startTeaching/preview/mapDemoToStartTeachingPreview';
-import type { SectionProgress, PhaseProgress, StudentPreviewDetail } from '@/lib/startTeaching/preview/types';
+import type { SectionProgress, ProgressSummary, StudentPreviewDetail } from '@/lib/startTeaching/preview/types';
 import type { StartTeachingStudent } from '@/lib/startTeaching/useStartTeachingData';
 
 const computeCoursePercent = (student: { progressPercent: number; progressLabel?: string | null }) => {
@@ -15,7 +15,7 @@ const computeCoursePercent = (student: { progressPercent: number; progressLabel?
   return Math.round(student.progressPercent || 0);
 };
 
-const buildPhaseProgress = (progressPercent: number, progressLabel?: string | null): PhaseProgress[] => {
+const buildProgressSummaries = (progressPercent: number, progressLabel?: string | null): ProgressSummary[] => {
   const parsed = parseProgressLabel(progressLabel || null);
   const total = parsed?.total ?? 36;
   const completed = parsed?.completed ?? Math.round((progressPercent / 100) * total);
@@ -23,8 +23,8 @@ const buildPhaseProgress = (progressPercent: number, progressLabel?: string | nu
   const notStarted = total - completed - inProgress;
   return [
     {
-      id: 'K_P1',
-      name: 'Phase 1',
+      id: 'curriculum',
+      name: 'Curriculum',
       completed,
       inProgress: Math.max(inProgress, 0),
       notStarted: Math.max(notStarted, 0),
@@ -63,12 +63,12 @@ const buildLiveDetail = (student: StartTeachingStudent): StudentPreviewDetail =>
       .join('')
       .slice(0, 2)
       .toUpperCase(),
-    currentPhase: student.phase || 'Phase 1',
+    currentStage: 'Curriculum',
     currentArea: focusAreas[0] || 'Learning Sensorially',
     progressPercent: student.progressPercent,
     courseProgressPercent: coursePercent,
     lessons: [],
-    phases: buildPhaseProgress(student.progressPercent, student.progressLabel),
+    progressSummaries: buildProgressSummaries(student.progressPercent, student.progressLabel),
     sections: buildSectionProgress(focusAreas, coursePercent),
   };
 };
@@ -120,7 +120,7 @@ export function StudentDetailPage({ studentId }: { studentId: string }) {
       )}
 
       <Link href={backTo} className="text-sm text-gray-700 hover:text-gray-900">
-        ← Back
+        &larr; Back
       </Link>
 
       <div className="rounded-2xl border border-gray-100 bg-white p-5 shadow-sm space-y-2">
@@ -132,7 +132,6 @@ export function StudentDetailPage({ studentId }: { studentId: string }) {
             <div>
               <p className="text-lg font-semibold text-gray-900">{detailModel?.name || liveStudent?.name}</p>
               <p className="text-xs text-gray-600">
-                {detailModel?.currentPhase || liveStudent?.phase || 'Phase 1'} •{' '}
                 {detailModel?.currentArea || liveStudent?.focusAreas?.[0] || 'Learning Sensorially'}
               </p>
             </div>
@@ -150,19 +149,19 @@ export function StudentDetailPage({ studentId }: { studentId: string }) {
       {detailModel && (
         <>
           <div className="rounded-2xl border border-gray-100 bg-white p-5 shadow-sm space-y-3">
-            <h3 className="text-lg font-semibold text-gray-900">Phase progress</h3>
+            <h3 className="text-lg font-semibold text-gray-900">Overall progress</h3>
             <div className="grid gap-3 md:grid-cols-2">
-              {detailModel.phases.map(phase => (
-                <div key={phase.id} className="rounded-xl border border-gray-100 bg-white p-4 shadow-sm space-y-2">
+              {detailModel.progressSummaries.map(summary => (
+                <div key={summary.id} className="rounded-xl border border-gray-100 bg-white p-4 shadow-sm space-y-2">
                   <div className="flex items-center justify-between">
-                    <p className="text-sm font-semibold text-gray-900">{phase.name}</p>
-                    <p className="text-xs text-gray-600">{phase.percent}%</p>
+                    <p className="text-sm font-semibold text-gray-900">{summary.name}</p>
+                    <p className="text-xs text-gray-600">{summary.percent}%</p>
                   </div>
                   <p className="text-xs text-gray-600">
-                    Completed: {phase.completed} · In progress: {phase.inProgress} · Not started: {phase.notStarted}
+                    Completed: {summary.completed} &middot; In progress: {summary.inProgress} &middot; Not started: {summary.notStarted}
                   </p>
                   <div className="h-2 w-full rounded-full bg-gray-100 overflow-hidden">
-                    <div className="h-2 bg-blue-600" style={{ width: `${phase.percent}%` }} />
+                    <div className="h-2 bg-blue-600" style={{ width: `${summary.percent}%` }} />
                   </div>
                 </div>
               ))}
@@ -170,7 +169,7 @@ export function StudentDetailPage({ studentId }: { studentId: string }) {
           </div>
 
           <div className="rounded-2xl border border-gray-100 bg-white p-5 shadow-sm space-y-3">
-            <h3 className="text-lg font-semibold text-gray-900">Phase 1 sections</h3>
+            <h3 className="text-lg font-semibold text-gray-900">Curriculum sections</h3>
             <div className="space-y-3">
               {detailModel.sections.map(section => (
                 <div key={section.id} className="rounded-xl border border-gray-100 bg-white p-4 shadow-sm space-y-2">

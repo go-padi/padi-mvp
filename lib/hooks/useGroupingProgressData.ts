@@ -32,7 +32,7 @@ type UseGroupingProgressDataArgs = {
   tenantId?: string | null;
 };
 
-export function useGroupingProgressData({ enabled, tenantId: _tenantId }: UseGroupingProgressDataArgs) {
+export function useGroupingProgressData({ enabled }: UseGroupingProgressDataArgs) {
   const [data, setData] = useState<GroupingProgressData | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<Error | null>(null);

@@ -5,7 +5,6 @@ export type TeachingMode = 'individual' | 'group' | 'both';
 
 type TeachingModeContextValue = {
   mode: TeachingMode;
-  // eslint-disable-next-line no-unused-vars
   setMode: (value: TeachingMode) => void;
 };
 

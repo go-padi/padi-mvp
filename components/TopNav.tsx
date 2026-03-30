@@ -19,7 +19,7 @@ export default function TopNav(){
   const isMatch = (base: string) => pathname === base || pathname.startsWith(`${base}/`);
   const isDashboardActive =
     isMatch('/teacher/dashboard') ||
-    isMatch('/teacher/phases') ||
+    isMatch('/teacher/curriculum') ||
     isMatch('/teacher/about') ||
     isMatch('/teacher/assessments') ||
     isMatch('/teacher/grouping') ||

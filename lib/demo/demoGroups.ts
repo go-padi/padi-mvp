@@ -3,7 +3,6 @@ import { demoStudents } from './demoStudents';
 export type DemoGroup = {
   id: string;
   name: string;
-  phase: string;
   focus: string;
   status: string;
   progressPercent: number;
@@ -16,7 +15,6 @@ export const demoGroups: DemoGroup[] = [
   {
     id: 'grp-a',
     name: 'Group A',
-    phase: 'Phase 1',
     focus: 'Learning Sensorially',
     status: 'In progress',
     progressPercent: 46,
@@ -27,7 +25,6 @@ export const demoGroups: DemoGroup[] = [
   {
     id: 'grp-b',
     name: 'Group B',
-    phase: 'Phase 1',
     focus: 'Sound Awareness',
     status: 'In progress',
     progressPercent: 22,
@@ -38,7 +35,6 @@ export const demoGroups: DemoGroup[] = [
   {
     id: 'grp-c',
     name: 'Group C',
-    phase: 'Phase 1',
     focus: 'Syllables & Blending',
     status: 'In progress',
     progressPercent: 46,

@@ -28,6 +28,7 @@ export default [
     },
     rules: {
       ...nextPlugin.configs['core-web-vitals'].rules,
+      'no-unused-vars': ['error', { args: 'none' }],
     },
   },
 ];

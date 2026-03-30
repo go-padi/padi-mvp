@@ -7,13 +7,13 @@ import { TeachingModeToggle } from '@/components/TeachingModeToggle';
 import { useTeachingMode } from '@/lib/teachingModeContext';
 import { useAuth } from '@/lib/auth-store';
 import { demoTeacherData } from '@/lib/demo/demoTeacherData';
-import { useStartTeachingData } from '@/lib/startTeaching/useStartTeachingData';
+import { useStartTeachingData, type StartTeachingStudent, type StartTeachingGroup } from '@/lib/startTeaching/useStartTeachingData';
 import { StartTeachingWizard } from '@/components/StartTeachingWizard';
+import { useDefaultSubject } from '@/lib/startTeaching/useDefaultSubject';
 
 type CardData = {
   id: string;
   name: string;
-  phase: string;
   status: string;
   focus: string;
   type: 'student' | 'group';
@@ -29,7 +29,7 @@ const previewHighlights = [
   },
   {
     title: 'Curriculum-first browsing',
-    body: 'Explore phases and modules without needing a roster to get started.',
+    body: 'Explore the curriculum and modules without needing a roster to get started.',
   },
   {
     title: 'Workspace unlocks on sign-in',
@@ -41,6 +41,7 @@ export default function TeacherIndexPage() {
   const { mode } = useTeachingMode();
   const { isLoggedIn, isHydrated, tenantId } = useAuth();
   const [isAddStudentOpen, setAddStudentOpen] = useState(false);
+  const [isAddGroupOpen, setAddGroupOpen] = useState(false);
   const [wizardSkipped, setWizardSkipped] = useState(false);
   const dataMode = isLoggedIn ? 'live' : 'demo';
   const startData = useStartTeachingData();
@@ -50,7 +51,6 @@ export default function TeacherIndexPage() {
       const studentCards: CardData[] = demoTeacherData.students.map(s => ({
         id: s.id,
         name: s.name,
-        phase: s.phase,
         status: s.assessmentStatus,
         focus: s.focusAreas[0],
         type: 'student' as const,
@@ -60,7 +60,6 @@ export default function TeacherIndexPage() {
       const groupCards: CardData[] = demoTeacherData.groups.map(g => ({
         id: g.id,
         name: g.name,
-        phase: g.phase,
         status: g.status,
         focus: g.focus,
         type: 'group' as const,
@@ -75,17 +74,31 @@ export default function TeacherIndexPage() {
     const studentCards: CardData[] = startData.students.map(s => ({
       id: s.id,
       name: s.name,
-      phase: s.phase || 'Phase 1',
       status: s.assessmentStatus || 'Not started',
       focus: s.focusAreas?.[0] || 'Learning Sensorially',
       type: 'student' as const,
       progressPercent: s.progressPercent ?? 0,
       progressLabel: s.progressLabel ?? null,
     }));
+    const groupCards: CardData[] = startData.groups.map(g => {
+      const members = startData.groupStudentsByGroupId[g.id] || [];
+      const avgPercent = members.length
+        ? Math.round(members.reduce((sum, m) => sum + (m.progressPercent ?? 0), 0) / members.length)
+        : 0;
+      return {
+        id: g.id,
+        name: g.name,
+        status: avgPercent > 0 ? 'In progress' : 'Not started',
+        focus: members[0]?.focusAreas?.[0] || 'Learning Sensorially',
+        type: 'group' as const,
+        progressPercent: avgPercent,
+        progressLabel: `${members.length} student${members.length !== 1 ? 's' : ''}`,
+      };
+    });
     if (mode === 'individual') return studentCards;
-    if (mode === 'group') return [];
-    return studentCards;
-  }, [mode, startData.students, dataMode]);
+    if (mode === 'group') return groupCards;
+    return [...studentCards, ...groupCards];
+  }, [mode, startData.students, startData.groups, startData.groupStudentsByGroupId, dataMode]);
 
   if (!isHydrated) {
     return <div className="rounded-2xl border border-gray-100 bg-white p-5 shadow-sm text-sm text-gray-700">Loading...</div>;
@@ -259,6 +272,16 @@ export default function TeacherIndexPage() {
               Add Student
             </button>
           )}
+          {mode !== 'individual' && (
+            <button
+              type="button"
+              onClick={() => setAddGroupOpen(true)}
+              disabled={!tenantId}
+              className="rounded-xl border border-gray-200 bg-white px-4 py-2 text-sm font-semibold text-gray-900 shadow-sm hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-60"
+            >
+              Add Group
+            </button>
+          )}
           <TeachingModeToggle />
         </div>
       </div>
@@ -287,7 +310,7 @@ export default function TeacherIndexPage() {
           const cardHref =
             card.type === 'student'
               ? `/teacher/start-teaching/students/${card.id}`
-              : `/teacher/phases/K_P1`;
+              : `/teacher/curriculum`;
 
           const statusBadgeClass = clsx(
             'rounded-full px-2 py-0.5 text-[11px] font-semibold',
@@ -308,7 +331,7 @@ export default function TeacherIndexPage() {
                 <div className="space-y-1">
                   <p className="text-lg font-semibold text-gray-900">{card.name}</p>
                   <p className="text-xs text-gray-600">
-                    {card.phase} · {card.focus}
+                    {card.focus}
                   </p>
                 </div>
                 {mode === 'both' && (
@@ -331,7 +354,9 @@ export default function TeacherIndexPage() {
                     ? allComplete
                       ? `${total} of ${total} complete`
                       : `On Lesson ${currentLesson} of ${total}`
-                    : 'Not started'}
+                    : noneStarted
+                      ? 'Not started'
+                      : (card.progressLabel || `${card.progressPercent}% complete`)}
                 </span>
                 <span className={statusBadgeClass}>{card.status}</span>
               </div>
@@ -361,9 +386,9 @@ export default function TeacherIndexPage() {
       <div className="rounded-2xl border border-gray-100 bg-white p-5 shadow-sm flex items-center justify-between">
         <div>
           <p className="text-sm font-semibold text-gray-900">Need the full curriculum?</p>
-          <p className="text-xs text-gray-600">Browse every phase and developmental area in the teacher dashboard.</p>
+          <p className="text-xs text-gray-600">Browse every developmental area in the teacher dashboard.</p>
         </div>
-        <Link href="/teacher/phases" className="btn btn-primary">
+        <Link href="/teacher/curriculum" className="btn btn-primary">
           Go to Teacher Dashboard
         </Link>
       </div>
@@ -371,6 +396,14 @@ export default function TeacherIndexPage() {
         open={isAddStudentOpen}
         onClose={() => setAddStudentOpen(false)}
         tenantId={tenantId}
+        onCreated={startData.refetch}
+      />
+      <AddGroupModal
+        open={isAddGroupOpen}
+        onClose={() => setAddGroupOpen(false)}
+        tenantId={tenantId}
+        students={startData.students}
+        existingGroups={startData.groups}
         onCreated={startData.refetch}
       />
     </div>
@@ -433,7 +466,6 @@ function AddStudentModal({
       name: fullName,
       first_name: firstName.trim(),
       last_name: lastName.trim(),
-      phase: 'Phase 1',
       focus_areas: ['Learning Sensorially'],
       progress_percent: 0,
       progress_label: null,
@@ -473,7 +505,7 @@ function AddStudentModal({
         <form className="space-y-4 p-6" onSubmit={handleSubmit}>
           <div className="space-y-1">
             <h2 className="text-xl font-semibold text-gray-900">Add student</h2>
-            <p className="text-sm text-gray-600">Create a new student with initial Phase 1 progress.</p>
+            <p className="text-sm text-gray-600">Create a new student to start tracking progress.</p>
           </div>
           <div className="space-y-2">
             <label className="text-sm font-medium text-gray-800" htmlFor="student-first-name">
@@ -510,6 +542,205 @@ function AddStudentModal({
             className="inline-flex w-full items-center justify-center rounded-xl bg-gray-900 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-gray-800 disabled:opacity-70"
           >
             {saving ? 'Adding...' : 'Add Student'}
+          </button>
+        </form>
+      </div>
+    </div>
+  );
+}
+
+function AddGroupModal({
+  open,
+  onClose,
+  tenantId,
+  students,
+  existingGroups,
+  onCreated,
+}: {
+  open: boolean;
+  onClose: () => void;
+  tenantId: string | null;
+  students: StartTeachingStudent[];
+  existingGroups: StartTeachingGroup[];
+  onCreated: () => Promise<void>;
+}) {
+  const { ensureSubject } = useDefaultSubject();
+  const [groupName, setGroupName] = useState('');
+  const [selectedStudentIds, setSelectedStudentIds] = useState<Set<string>>(new Set());
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!open) {
+      setGroupName('');
+      setSelectedStudentIds(new Set());
+      setError(null);
+      setSaving(false);
+    }
+  }, [open]);
+
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') onClose();
+    };
+    if (open) {
+      window.addEventListener('keydown', handleKeyDown);
+    }
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [open, onClose]);
+
+  if (!open) return null;
+
+  // Students already in a group
+  const assignedIds = new Set(existingGroups.flatMap(g => g.studentIds));
+  const unassignedStudents = students.filter(s => !assignedIds.has(s.id));
+
+  const toggleStudent = (id: string) => {
+    setSelectedStudentIds(prev => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
+
+  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    const name = groupName.trim();
+    if (!name) {
+      setError('Group name is required.');
+      return;
+    }
+    if (selectedStudentIds.size === 0) {
+      setError('Select at least one student for this group.');
+      return;
+    }
+    if (!tenantId) {
+      setError('Missing tenant. Please refresh and try again.');
+      return;
+    }
+
+    setSaving(true);
+    setError(null);
+
+    const subjectId = await ensureSubject(tenantId);
+    if (!subjectId) {
+      setError('Unable to set up subject. Please try again.');
+      setSaving(false);
+      return;
+    }
+
+    const sb = supabaseClient();
+
+    const { data: groupData, error: groupError } = await sb
+      .from('groups')
+      .insert({ tenant_id: tenantId, subject_id: subjectId, name })
+      .select('id')
+      .single();
+
+    if (groupError || !groupData) {
+      setError(
+        groupError?.message?.includes('duplicate')
+          ? 'A group with that name already exists.'
+          : 'Unable to create group. Please try again.',
+      );
+      setSaving(false);
+      return;
+    }
+
+    const membershipRows = Array.from(selectedStudentIds).map(studentId => ({
+      tenant_id: tenantId,
+      student_id: studentId,
+      group_id: groupData.id,
+      subject_id: subjectId,
+      active: true,
+    }));
+
+    const { error: membershipError } = await sb
+      .from('student_group_memberships')
+      .insert(membershipRows);
+
+    if (membershipError) {
+      setError('Group created but some students could not be assigned.');
+      setSaving(false);
+      return;
+    }
+
+    await onCreated();
+    onClose();
+  };
+
+  const handleOverlayClick = (event: MouseEvent<HTMLDivElement>) => {
+    if (event.target === event.currentTarget) {
+      onClose();
+    }
+  };
+
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4"
+      onClick={handleOverlayClick}
+      role="dialog"
+      aria-modal="true"
+    >
+      <div className="relative w-full max-w-md rounded-2xl bg-white shadow-2xl ring-1 ring-black/5">
+        <button
+          type="button"
+          onClick={onClose}
+          className="absolute right-3 top-3 rounded-full p-1 text-gray-500 hover:bg-gray-100"
+          aria-label="Close add group"
+        >
+          X
+        </button>
+        <form className="space-y-4 p-6" onSubmit={handleSubmit}>
+          <div className="space-y-1">
+            <h2 className="text-xl font-semibold text-gray-900">Add group</h2>
+            <p className="text-sm text-gray-600">Create a new group and assign students.</p>
+          </div>
+          <div className="space-y-2">
+            <label className="text-sm font-medium text-gray-800" htmlFor="group-name">
+              Group name
+            </label>
+            <input
+              id="group-name"
+              type="text"
+              value={groupName}
+              onChange={e => setGroupName(e.target.value)}
+              className="w-full rounded-xl border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-100"
+              placeholder="Blue Jays"
+              required
+            />
+          </div>
+          <div className="space-y-2">
+            <p className="text-sm font-medium text-gray-800">Select students</p>
+            {unassignedStudents.length > 0 ? (
+              <div className="max-h-40 overflow-y-auto space-y-1 rounded-xl border border-gray-200 p-2">
+                {unassignedStudents.map(s => (
+                  <label
+                    key={s.id}
+                    className="flex cursor-pointer items-center gap-2 rounded-lg px-2 py-1.5 text-sm hover:bg-gray-50"
+                  >
+                    <input
+                      type="checkbox"
+                      checked={selectedStudentIds.has(s.id)}
+                      onChange={() => toggleStudent(s.id)}
+                      className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                    />
+                    <span className="text-gray-900">{s.name}</span>
+                  </label>
+                ))}
+              </div>
+            ) : (
+              <p className="text-sm text-gray-500">All students are already assigned to groups.</p>
+            )}
+          </div>
+          {error && <div className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700">{error}</div>}
+          <button
+            type="submit"
+            disabled={saving || unassignedStudents.length === 0}
+            className="inline-flex w-full items-center justify-center rounded-xl bg-gray-900 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-gray-800 disabled:opacity-70"
+          >
+            {saving ? 'Creating...' : 'Create Group'}
           </button>
         </form>
       </div>

@@ -7,7 +7,7 @@ import { useStartTeachingData } from '@/lib/startTeaching/useStartTeachingData';
 export default function GroupPreviewPage({ params }: { params: Promise<{ groupId: string }> }) {
   const { groupId } = use(params);
   const { isHydrated } = useAuth();
-  const { mode, students, groups } = useStartTeachingData();
+  const { students, groups } = useStartTeachingData();
 
   const group = groups.find(g => g.id === groupId);
   const groupStudents = students.filter(s => group?.studentIds.includes(s.id));

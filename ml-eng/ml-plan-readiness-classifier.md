@@ -25,7 +25,7 @@ At the **module level**, a parent (or teacher) records the child performing the 
 INPUTS (per student, per module):
   ├── audio_recording: .wav/.m4a file of the child performing the module
   ├── parent_notes: free-text handwritten notes (transcribed via OCR or typed)
-  ├── module_metadata: module code, phase, domain, objective
+  ├── module_metadata: module code, chapter, group, objective
   └── student_metadata: student id, prior module scores (optional)
 
 OUTPUT:
@@ -57,15 +57,18 @@ OUTPUT:
 
 ### 2.1 What Data You Need to Collect from Padi
 
-You need a new table to store ML-ready assessment data. This extends the existing `lesson_note` table:
+You need a new table to store ML-ready assessment data. This replaces the existing simple `module_assessments` notes-only table with a full ML-ready version:
 
 ```sql
 -- New table: module-level readiness assessments
+-- Curriculum hierarchy (post KAN-61): Chapter → Group → Module (no phase layer)
+-- module_detail_id links directly to content.module_detail
 CREATE TABLE module_assessment (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
-  student_id UUID REFERENCES student(id) ON DELETE CASCADE,
-  module_detail_id UUID REFERENCES module_detail(id) ON DELETE CASCADE,
-  teacher_id TEXT,
+  tenant_id UUID NOT NULL REFERENCES tenants(id),
+  student_id UUID NOT NULL REFERENCES students(id) ON DELETE CASCADE,
+  module_detail_id UUID NOT NULL REFERENCES module_detail(id) ON DELETE CASCADE,
+  teacher_id UUID REFERENCES profiles(id),
 
   -- Audio input
   audio_url TEXT,                    -- Supabase Storage URL for the recording
@@ -77,21 +80,36 @@ CREATE TABLE module_assessment (
   notes_source TEXT DEFAULT 'typed', -- 'typed', 'ocr', 'photo'
   notes_photo_url TEXT,              -- original handwritten note image (if applicable)
 
-  -- Label (ground truth, filled by expert)
+  -- ML prediction (written by classifier service)
+  model_prediction TEXT,
+  model_confidence FLOAT,
+  model_version TEXT,
+  model_reasoning TEXT,
+
+  -- Teacher feedback (written by teacher confirmation UI)
   readiness_label TEXT,              -- 'ready', 'intervention', 'sis_therapy'
-  labeled_by TEXT,                   -- who assigned the label
+  labeled_by UUID REFERENCES profiles(id),
   labeled_at TIMESTAMPTZ,
+  teacher_agrees BOOLEAN,
+  teacher_correction TEXT,
+  feedback_at TIMESTAMPTZ,
 
   -- Metadata
-  context JSONB,                     -- device, session info, app version
+  context JSONB DEFAULT '{}',        -- device, session info, app version
   created_at TIMESTAMPTZ DEFAULT now(),
-
-  UNIQUE(student_id, module_detail_id, created_at)
+  updated_at TIMESTAMPTZ DEFAULT now()
 );
 
-CREATE INDEX idx_assessment_label ON module_assessment(readiness_label)
-  WHERE readiness_label IS NOT NULL;
+-- Indexes
+CREATE INDEX idx_assessment_student ON module_assessment(student_id, created_at);
 CREATE INDEX idx_assessment_module ON module_assessment(module_detail_id, created_at);
+CREATE INDEX idx_assessment_label ON module_assessment(readiness_label) WHERE readiness_label IS NOT NULL;
+CREATE INDEX idx_assessment_tenant ON module_assessment(tenant_id);
+
+-- RLS: tenant-scoped
+ALTER TABLE module_assessment ENABLE ROW LEVEL SECURITY;
+CREATE POLICY tenant_isolation ON module_assessment
+  USING (tenant_id = (SELECT tenant_id FROM profiles WHERE id = auth.uid()));
 ```
 
 ### 2.2 Data Collection Instrumentation
@@ -100,7 +118,7 @@ In the Padi app, when a parent completes a module recording session:
 
 1. **Audio**: Upload the recording to Supabase Storage (`audio-recordings` bucket), store the URL
 2. **Notes**: If typed, store directly. If handwritten photo, run OCR (Google Vision API or Tesseract) and store both the image URL and extracted text
-3. **Module context**: Join `module_detail` → `module_group` → `phase` to attach curriculum metadata
+3. **Module context**: Join `module_detail` → `module_group` → `curriculum_chapter` to attach curriculum metadata
 4. **Student context**: Attach student ID and any prior assessment results
 
 ### 2.3 Public Datasets for Pretraining / Transfer Learning
@@ -210,7 +228,8 @@ You are an expert K-level reading specialist assessing a child's readiness
 based on a module observation.
 
 MODULE: {module.title}
-PHASE: {phase.title}
+CHAPTER: {chapter.title}
+GROUP: {group.title}
 OBJECTIVE: {module.objective}
 
 AUDIO TRANSCRIPT OF CHILD:
@@ -288,7 +307,7 @@ Text features (from parent notes, via sentence-transformers):
   - keyword presence: ["struggling", "improving", "fluent", "hesitant", ...]
 
 Module features:
-  - phase_code (ordinal), domain (one-hot), difficulty_level
+  - chapter_code (ordinal), group_code (one-hot), difficulty_level
 
 → Concatenated feature vector (~400 dims)
 → XGBoost with class_weight={0: 1, 1: 1, 2: 3}  (upweight SIS class)
@@ -327,21 +346,21 @@ Module features:
 |--------|-----|
 | Precision on "ready" class | Avoid prematurely advancing children |
 | Confusion between "intervention" and "SIS" | Acceptable to confuse these (both get more support) |
-| Per-phase accuracy | Model should work across all curriculum phases |
-| Per-domain accuracy | Check letter-knowledge vs. phonemic-awareness vs. comprehension modules |
+| Per-chapter accuracy | Model should work across all curriculum chapters |
+| Per-group accuracy | Check letter-knowledge vs. phonemic-awareness vs. comprehension modules |
 
 ### Test Set Design
 
 - **Split by student** (not by assessment): prevent leakage from seeing the same child in train and test
 - **Stratify by label**: ensure all 3 classes represented proportionally in each split
-- **Stratify by phase**: ensure each curriculum phase is represented
+- **Stratify by chapter**: ensure each curriculum chapter is represented
 - **70/15/15 split** for train/validation/test
 - For < 1K samples, use **5-fold cross-validation** stratified by student
 
 ### Error Analysis Plan
 
 1. **Confusion matrix**: Focus on the "SIS → ready" cell (most dangerous error)
-2. **Slice analysis**: Break down accuracy by phase, domain, audio duration, notes length
+2. **Slice analysis**: Break down accuracy by chapter, group, audio duration, notes length
 3. **Failure case review**: Manually review all SIS misclassifications — categorize as label noise, ambiguous, or model error
 4. **Fairness audit**: Check if accuracy varies by student demographics if available
 
@@ -418,7 +437,8 @@ class AssessmentRequest(BaseModel):
     parent_notes: str                 # Transcribed or typed notes
     module_code: str                  # e.g., "P1-L2-M3"
     module_objective: str             # What the child should demonstrate
-    phase_title: str
+    chapter_title: str
+    group_title: str
     student_id: str
     prior_scores: Optional[list] = None  # Previous module classifications
 
@@ -485,7 +505,7 @@ export async function POST(request: NextRequest) {
   const supabase = createClient()
   const { data: module } = await supabase
     .from('module_detail')
-    .select('code, title, summary, phase:phase_id(title, code)')
+    .select('code, title, summary, group:group_id(title, code, chapter:chapter_id(title, code))')
     .eq('id', module_detail_id)
     .single()
 
@@ -498,7 +518,8 @@ export async function POST(request: NextRequest) {
       parent_notes,
       module_code: module.code,
       module_objective: module.summary,
-      phase_title: module.phase.title,
+      chapter_title: module.group.chapter.title,
+      group_title: module.group.title,
       student_id,
     }),
   })
@@ -619,16 +640,10 @@ Teacher provides correct label ────────────────�
 2. If No → "What is the correct classification?" → dropdown with 3 options + optional notes
 3. Store both the model prediction and the teacher correction
 
-```sql
--- Add feedback columns to module_assessment
-ALTER TABLE module_assessment
-  ADD COLUMN model_prediction TEXT,
-  ADD COLUMN model_confidence FLOAT,
-  ADD COLUMN model_version TEXT,
-  ADD COLUMN teacher_agrees BOOLEAN,
-  ADD COLUMN teacher_correction TEXT,  -- if teacher_agrees = false
-  ADD COLUMN feedback_at TIMESTAMPTZ;
-```
+These feedback columns are already included in the `module_assessment` table definition (see Section 2.1):
+- `model_prediction`, `model_confidence`, `model_version`, `model_reasoning` — written by classifier
+- `teacher_agrees`, `teacher_correction`, `feedback_at` — written by teacher confirmation UI
+- `readiness_label`, `labeled_by`, `labeled_at` — the ground truth label
 
 ### Retraining Triggers
 
@@ -638,7 +653,7 @@ ALTER TABLE module_assessment
 | **Accuracy drop** | Rolling 50-sample accuracy drops below 80% | Alert + urgent retrain |
 | **Drift** | PSI > 0.15 on audio feature distributions | Investigate + retrain |
 | **Scheduled** | Monthly | Retrain with all accumulated data |
-| **New phase** | New curriculum phase added to Padi | Collect 50 samples, then retrain |
+| **New chapter** | New curriculum chapter added to Padi | Collect 50 samples, then retrain |
 
 ### Drift Monitoring
 
@@ -648,7 +663,7 @@ Monitor these signals weekly:
 - **Notes length distribution** — are parents writing more or less?
 - **Prediction distribution** — is the model classifying more children as "ready" over time?
 - **Teacher disagreement rate** — is the correction rate increasing?
-- **Per-phase accuracy** — does the model degrade on newer phases?
+- **Per-chapter accuracy** — does the model degrade on newer chapters?
 
 ### Model Registry
 

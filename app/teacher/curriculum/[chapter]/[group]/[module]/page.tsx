@@ -30,8 +30,8 @@ type ModuleRow = {
 
 type Student = { id: string; name: string };
 
-export default function LessonPage({ params }: { params: Promise<{ phase: string; area: string; module: string }> }) {
-  const { phase, area, module } = use(params);
+export default function LessonPage({ params }: { params: Promise<{ chapter: string; group: string; module: string }> }) {
+  const { chapter, group, module } = use(params);
   const searchParams = useSearchParams();
   const contextStudentId = searchParams.get('student');
   const { isLoggedIn, isHydrated, tenantId } = useAuth();
@@ -50,7 +50,7 @@ export default function LessonPage({ params }: { params: Promise<{ phase: string
   const hasStudentContext = Boolean(contextStudentId);
   const backHref = hasStudentContext
     ? `/teacher/start-teaching/students/${contextStudentId}`
-    : `/teacher/phases/${phase}/areas/${area}`;
+    : `/teacher/curriculum/${chapter}/${group}`;
   const backLabel = hasStudentContext
     ? `\u2190 Back to ${contextStudentName || 'Student'}`
     : '\u2190 Back to Modules';
@@ -210,7 +210,7 @@ export default function LessonPage({ params }: { params: Promise<{ phase: string
         attachment_url = signed?.signedUrl || null;
         attachment_name = audioFile.name;
         attachment_type = audioFile.type;
-      } catch (err:any) {
+      } catch (err: any) {
         console.error(err);
         setStatus('Audio upload failed; saving notes without attachment.');
       }
@@ -358,7 +358,7 @@ export default function LessonPage({ params }: { params: Promise<{ phase: string
               <select
                 className="w-full rounded-xl border border-gray-200 p-3 text-sm"
                 value={studentId}
-                onChange={e=>handleStudentChange(e.target.value)}
+                onChange={e => handleStudentChange(e.target.value)}
                 disabled={!students.length && actionOptions.length === 0}
               >
                 <option value="">{students.length ? 'Not selected' : 'Select a student'}</option>
@@ -415,8 +415,8 @@ export default function LessonPage({ params }: { params: Promise<{ phase: string
             This is a read-only preview of the lesson. Sign in to record notes, attach audio, and personalize lessons for
             your students and groups.
           </p>
-          <Link href="/teacher/phases" className="text-sm font-semibold text-blue-700 hover:underline">
-            Return to phases &rarr;
+          <Link href="/teacher/curriculum" className="text-sm font-semibold text-blue-700 hover:underline">
+            Return to curriculum &rarr;
           </Link>
         </div>
       )}

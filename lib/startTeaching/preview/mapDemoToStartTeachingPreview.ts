@@ -7,7 +7,7 @@ import {
   StartTeachingPreviewModel,
   StudentPreviewDetail,
   GroupPreviewDetail,
-  PhaseProgress,
+  ProgressSummary,
   SectionProgress,
 } from './types';
 
@@ -42,7 +42,7 @@ const computeCourseProgressPercent = (student: DemoTeacherData['students'][numbe
   return Math.round(student.progressPercent || 0);
 };
 
-const buildPhaseProgress = (student: DemoTeacherData['students'][number]): PhaseProgress[] => {
+const buildProgressSummaries = (student: DemoTeacherData['students'][number]): ProgressSummary[] => {
   const parsed = parseProgressLabel(student.progressLabel);
   const total = parsed?.total ?? 36;
   const completed = parsed?.completed ?? Math.round((student.progressPercent / 100) * total);
@@ -50,8 +50,8 @@ const buildPhaseProgress = (student: DemoTeacherData['students'][number]): Phase
   const notStarted = total - completed - inProgress;
   return [
     {
-      id: 'K_P1',
-      name: 'Phase 1',
+      id: 'curriculum',
+      name: 'Curriculum',
       completed,
       inProgress: Math.max(inProgress, 0),
       notStarted: Math.max(notStarted, 0),
@@ -72,10 +72,10 @@ const buildSectionProgress = (student: DemoTeacherData['students'][number]): Sec
             ? 'in_progress'
             : 'not_started'
         : 'complete';
-    const modules = (previewModulesByGroup['K_P1_LS'] || []).slice(0, 2).map((mod, modIdx) => ({
+    const modules = (previewModulesByGroup['learning-sensorially'] || []).slice(0, 2).map((mod, modIdx) => ({
       id: mod.id,
       title: mod.title,
-      status: status === 'complete' ? 'complete' : modIdx === 0 ? 'in_progress' : 'not_started',
+      status: (status === 'complete' ? 'complete' : modIdx === 0 ? 'in_progress' : 'not_started') as 'complete' | 'in_progress' | 'not_started',
     }));
     return {
       id: `section-${name}`,
@@ -91,8 +91,8 @@ const toPreviewStudent = (student: DemoTeacherData['students'][number]): Preview
   id: student.id,
   name: student.name,
   avatarInitials: (student.name || 'S').split(' ').map(part => part[0]).join('').slice(0, 2).toUpperCase(),
-  currentPhase: {
-    name: student.phase || 'Phase 1',
+  currentStage: {
+    name: 'Curriculum',
     currentArea: student.focusAreas[0] || 'Learning Sensorially',
     progressPercent: student.progressPercent,
   },
@@ -116,12 +116,12 @@ export const getStudentPreviewDetail = (data: DemoTeacherData, studentId: string
     id: student.id,
     name: student.name,
     avatarInitials: (student.name || 'S').split(' ').map(part => part[0]).join('').slice(0, 2).toUpperCase(),
-    currentPhase: student.phase || 'Phase 1',
+    currentStage: 'Curriculum',
     currentArea: student.focusAreas[0] || 'Learning Sensorially',
     progressPercent: student.progressPercent,
     courseProgressPercent: computeCourseProgressPercent(student),
     lessons: buildLessons(student.focusAreas, student.progressPercent),
-    phases: buildPhaseProgress(student),
+    progressSummaries: buildProgressSummaries(student),
     sections: buildSectionProgress(student),
   };
 };

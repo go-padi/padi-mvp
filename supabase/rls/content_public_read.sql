@@ -1,5 +1,5 @@
 -- Content tables: public read for preview mode (anon)
-create policy "public read phases" on phase
+create policy "public read curriculum chapters" on curriculum_chapter
 for select to anon using (true);
 
 create policy "public read module groups" on module_group

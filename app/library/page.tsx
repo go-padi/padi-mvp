@@ -31,7 +31,7 @@ export default function LibraryPage(){
           <label className="block text-xs text-gray-600">Domain</label>
           <select value={domain} onChange={e=>setDomain(e.target.value)} className="border rounded-lg px-3 py-2">
             <option value="">All</option>
-            <option value="k_reading_phase_1">Phase 1 (K Reading)</option>
+            <option value="k_reading_phase_1">K Reading</option>
             <option value="Phonological Awareness">Phonological Awareness</option>
             <option value="Alphabet">Alphabet</option>
             <option value="Handwriting">Handwriting</option>

@@ -126,7 +126,6 @@ function StepAddStudents({
         name: `${first} ${last}`,
         first_name: first,
         last_name: last,
-        phase: 'Phase 1',
         focus_areas: ['Learning Sensorially'],
         progress_percent: 0,
         progress_label: null,

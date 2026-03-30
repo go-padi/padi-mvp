@@ -12,7 +12,7 @@
 ## Prompt for Lovable
 
 > **Goal:** When a logged-in teacher clicks a student card on Start Teaching, take them directly into that student's current module — not a generic lesson list. The teacher should always know which student they're teaching.
->
+
 > ### Changes to Start Teaching page (logged-in, has students)
 >
 > 1. **Student card redesign.** Each student card should show:

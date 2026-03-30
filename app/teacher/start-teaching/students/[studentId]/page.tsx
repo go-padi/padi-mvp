@@ -5,13 +5,18 @@ import Link from 'next/link';
 import { supabaseClient } from '@/lib/supabase';
 import { useAuth } from '@/lib/auth-store';
 import { useDefaultSubject } from '@/lib/startTeaching/useDefaultSubject';
+import {
+  groupToChapterCode,
+  previewChapters,
+  previewGroups,
+  previewModulesByGroup,
+} from '@/lib/demo/demoCurriculum';
 
 type StudentRow = {
   id: string;
   name: string | null;
   first_name: string | null;
   last_name: string | null;
-  phase: string | null;
   focus_areas: string[] | null;
   progress_percent: number | null;
   progress_label: string | null;
@@ -39,10 +44,20 @@ type GroupRow = {
   teaching_mode: 'group' | 'individual';
 };
 
-const PHASE_CODE_MAP: Record<string, string> = {
-  'Phase 1': 'K_P1',
-  'Phase 2': 'K_P2',
-  'Phase 3': 'K_P3',
+type GroupWithModules = {
+  code: string;
+  title: string;
+  description: string | null;
+  modules: ModuleRow[];
+  completedCount: number;
+  totalCount: number;
+};
+
+type ChapterWithGroups = {
+  code: string;
+  title: string;
+  description: string | null;
+  groups: GroupWithModules[];
 };
 
 export default function StudentModulePage({
@@ -56,17 +71,14 @@ export default function StudentModulePage({
   const [student, setStudent] = useState<{
     id: string;
     name: string;
-    phase: string;
     focusAreas: string[];
     progressPercent: number;
     progressLabel: string | null;
     assessmentStatus: string;
   } | null>(null);
-  const [modules, setModules] = useState<ModuleRow[]>([]);
-  const [groupTitle, setGroupTitle] = useState('');
-  const [groupCode, setGroupCode] = useState('');
-  const [phaseCode, setPhaseCode] = useState('');
+  const [chapters, setChapters] = useState<ChapterWithGroups[]>([]);
   const [completedModuleIds, setCompletedModuleIds] = useState<Set<string>>(new Set());
+  const [expandedChapters, setExpandedChapters] = useState<Set<string>>(new Set());
   const [marking, setMarking] = useState(false);
   const [loading, setLoading] = useState(true);
 
@@ -90,7 +102,7 @@ export default function StudentModulePage({
       const { data: row } = await sb
         .from('students')
         .select(
-          'id,name,first_name,last_name,phase,focus_areas,progress_percent,progress_label,assessment_status',
+          'id,name,first_name,last_name,focus_areas,progress_percent,progress_label,assessment_status',
         )
         .eq('id', studentId)
         .single();
@@ -108,7 +120,6 @@ export default function StudentModulePage({
       const s = {
         id: studentRow.id,
         name: fullName || studentRow.name || 'Student',
-        phase: studentRow.phase || 'Phase 1',
         focusAreas: Array.isArray(studentRow.focus_areas)
           ? studentRow.focus_areas
           : ['Learning Sensorially'],
@@ -118,36 +129,72 @@ export default function StudentModulePage({
       };
       setStudent(s);
 
-      const pc = PHASE_CODE_MAP[s.phase] || 'K_P1';
-      setPhaseCode(pc);
-
-      const [groupsRes] = await Promise.all([
-        sb.rpc('content_get_groups', {
-          p_phase_code: pc,
-          p_teaching_mode: null,
-        }),
+      const [groupsRes, completionIds] = await Promise.all([
+        sb.rpc('content_get_groups', { p_teaching_mode: null }),
         fetchCompletions(studentId),
       ]);
 
       const groupRows = (groupsRes.data as GroupRow[] | null) || [];
-      const matchingGroup =
-        groupRows.find((g) => g.title === s.focusAreas[0]) || groupRows[0];
+      const resolvedGroups = groupRows.length
+        ? groupRows
+        : previewGroups.map((g) => ({ ...g, id: g.id } as GroupRow));
 
-      if (matchingGroup) {
-        setGroupTitle(matchingGroup.title);
-        setGroupCode(matchingGroup.code);
+      // Fetch modules for all groups in parallel
+      const groupModulesEntries = await Promise.all(
+        resolvedGroups.map(async (g) => {
+          if (groupRows.length) {
+            const { data: mods } = await sb.rpc('content_get_modules', {
+              p_group_code: g.code,
+              p_teaching_mode: g.teaching_mode,
+            });
+            const moduleRows = (mods as ModuleRow[] | null) || [];
+            return [g.code, moduleRows.sort((a, b) => (a.display_order || 0) - (b.display_order || 0))] as const;
+          }
+          const fallback = (previewModulesByGroup[g.code] || []).map((m) => ({
+            ...m,
+            is_locked: m.is_locked ?? null,
+            display_order: m.display_order ?? null,
+          })) as ModuleRow[];
+          return [g.code, fallback] as const;
+        }),
+      );
+      const modulesByGroup = new Map(groupModulesEntries);
 
-        const { data: mods } = await sb.rpc('content_get_modules', {
-          p_group_code: matchingGroup.code,
-          p_teaching_mode: matchingGroup.teaching_mode,
-        });
+      // Build chapter structure
+      const chapterGroupMap = new Map<string, GroupWithModules[]>();
+      for (const g of resolvedGroups) {
+        const chCode = groupToChapterCode[g.code];
+        if (!chCode) continue;
+        const mods = modulesByGroup.get(g.code) || [];
+        const gwm: GroupWithModules = {
+          code: g.code,
+          title: g.title,
+          description: g.description,
+          modules: mods,
+          completedCount: mods.filter((m) => completionIds.has(m.code)).length,
+          totalCount: mods.length,
+        };
+        if (!chapterGroupMap.has(chCode)) chapterGroupMap.set(chCode, []);
+        chapterGroupMap.get(chCode)!.push(gwm);
+      }
 
-        const moduleRows = (mods as ModuleRow[] | null) || [];
-        setModules(
-          moduleRows.sort(
-            (a, b) => (a.display_order || 0) - (b.display_order || 0),
-          ),
-        );
+      const builtChapters: ChapterWithGroups[] = previewChapters
+        .filter((ch) => chapterGroupMap.has(ch.code))
+        .map((ch) => ({
+          code: ch.code,
+          title: ch.title,
+          description: ch.description,
+          groups: chapterGroupMap.get(ch.code) || [],
+        }));
+
+      setChapters(builtChapters);
+
+      // Default expand: first chapter with incomplete modules
+      const firstIncomplete = builtChapters.find((ch) =>
+        ch.groups.some((g) => g.completedCount < g.totalCount),
+      );
+      if (firstIncomplete) {
+        setExpandedChapters(new Set([firstIncomplete.code]));
       }
 
       setLoading(false);
@@ -166,16 +213,31 @@ export default function StudentModulePage({
       .toUpperCase();
   }, [student]);
 
-  const currentModuleIdx = useMemo(() => {
-    return modules.findIndex((m) => !completedModuleIds.has(m.code));
-  }, [modules, completedModuleIds]);
-
-  const completedCount = useMemo(
-    () => modules.filter((m) => completedModuleIds.has(m.code)).length,
-    [modules, completedModuleIds],
+  const allModules = useMemo(
+    () => chapters.flatMap((ch) => ch.groups.flatMap((g) => g.modules)),
+    [chapters],
   );
-  const totalCount = modules.length;
+  const completedCount = useMemo(
+    () => allModules.filter((m) => completedModuleIds.has(m.code)).length,
+    [allModules, completedModuleIds],
+  );
+  const totalCount = allModules.length;
   const progressPercent = totalCount > 0 ? Math.round((completedCount / totalCount) * 100) : 0;
+  const allComplete = completedCount === totalCount && totalCount > 0;
+
+  const chaptersStarted = useMemo(
+    () => chapters.filter((ch) => ch.groups.some((g) => g.modules.some((m) => completedModuleIds.has(m.code)))).length,
+    [chapters, completedModuleIds],
+  );
+
+  const toggleChapter = (code: string) => {
+    setExpandedChapters((prev) => {
+      const next = new Set(prev);
+      if (next.has(code)) next.delete(code);
+      else next.add(code);
+      return next;
+    });
+  };
 
   const handleMarkDone = async (moduleCode: string) => {
     if (!tenantId || marking) return;
@@ -195,11 +257,25 @@ export default function StudentModulePage({
         { onConflict: 'tenant_id,student_id,subject_id,module_id' },
       );
       const updated = await fetchCompletions(studentId);
-      // Update student record with new progress
-      const newCompleted = modules.filter((m) => updated.has(m.code)).length;
-      const total = modules.length;
+
+      // Recalculate across all modules
+      const all = chapters.flatMap((ch) => ch.groups.flatMap((g) => g.modules));
+      const newCompleted = all.filter((m) => updated.has(m.code)).length;
+      const total = all.length;
       const pct = total > 0 ? Math.round((newCompleted / total) * 100) : 0;
       const allDone = newCompleted === total && total > 0;
+
+      // Update chapter state with new completion counts
+      setChapters((prev) =>
+        prev.map((ch) => ({
+          ...ch,
+          groups: ch.groups.map((g) => ({
+            ...g,
+            completedCount: g.modules.filter((m) => updated.has(m.code)).length,
+          })),
+        })),
+      );
+
       await sb
         .from('students')
         .update({
@@ -239,8 +315,6 @@ export default function StudentModulePage({
     );
   }
 
-  const allComplete = completedCount === totalCount && totalCount > 0;
-
   return (
     <div className="space-y-6">
       <Link
@@ -261,7 +335,7 @@ export default function StudentModulePage({
               Teaching {student.name}
             </h2>
             <p className="text-sm text-gray-600">
-              {student.phase} &mdash; {groupTitle || student.focusAreas[0]}
+              {chaptersStarted} of {chapters.length} chapters started
             </p>
           </div>
         </div>
@@ -291,95 +365,170 @@ export default function StudentModulePage({
         </div>
       )}
 
-      {/* Module list */}
+      {/* Chapter accordion */}
       <div className="space-y-3">
-        <h3 className="text-lg font-semibold text-gray-900">Modules</h3>
-        {modules.length === 0 && (
+        {chapters.length === 0 && (
           <div className="rounded-2xl border border-gray-100 bg-white p-5 shadow-sm text-sm text-gray-700">
-            No modules available yet.
+            No curriculum available yet.
           </div>
         )}
-        <div className="space-y-2">
-          {modules.map((mod, idx) => {
-            const isCompleted = completedModuleIds.has(mod.code);
-            const isCurrent = idx === currentModuleIdx;
-            const isUpcoming = !isCompleted && !isCurrent;
-            const lessonHref = `/teacher/phases/${phaseCode}/areas/${groupCode}/modules/${mod.code}?student=${studentId}`;
+        {chapters.map((ch) => {
+          const isExpanded = expandedChapters.has(ch.code);
+          const chCompleted = ch.groups.reduce((s, g) => s + g.completedCount, 0);
+          const chTotal = ch.groups.reduce((s, g) => s + g.totalCount, 0);
+          const chAllDone = chCompleted === chTotal && chTotal > 0;
 
-            return (
-              <div
-                key={mod.id}
-                className={`rounded-xl border p-4 shadow-sm ${
-                  isCurrent
-                    ? 'border-blue-300 bg-blue-50'
-                    : isCompleted
-                      ? 'border-green-200 bg-green-50/50'
-                      : 'border-gray-100 bg-white opacity-60'
-                }`}
+          return (
+            <div key={ch.code} className="rounded-2xl border border-gray-100 bg-white shadow-sm overflow-hidden">
+              <button
+                type="button"
+                onClick={() => toggleChapter(ch.code)}
+                className="w-full px-5 py-4 flex items-center justify-between text-left hover:bg-gray-50 transition-colors"
               >
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <div
-                      className={`flex h-8 w-8 items-center justify-center rounded-full text-xs font-semibold ${
-                        isCompleted
-                          ? 'bg-green-100 text-green-700'
-                          : isCurrent
-                            ? 'bg-blue-100 text-blue-700'
-                            : 'bg-gray-100 text-gray-400'
-                      }`}
-                    >
-                      {isCompleted ? '\u2713' : idx + 1}
+                <div className="flex items-center gap-3">
+                  {chAllDone ? (
+                    <div className="flex h-7 w-7 items-center justify-center rounded-full bg-green-100 text-green-700 text-xs font-semibold">
+                      &#10003;
                     </div>
-                    <div>
-                      <p
-                        className={`text-sm font-semibold ${
-                          isCompleted ? 'text-green-800' : isUpcoming ? 'text-gray-400' : 'text-gray-900'
-                        }`}
-                      >
-                        {mod.title}
-                      </p>
-                      {mod.summary && (
-                        <p className={`text-xs ${isUpcoming ? 'text-gray-300' : 'text-gray-600'}`}>
-                          {mod.summary}
-                        </p>
-                      )}
+                  ) : (
+                    <div className="flex h-7 w-7 items-center justify-center rounded-full bg-gray-100 text-gray-500 text-xs font-semibold">
+                      {isExpanded ? '\u25BC' : '\u25B6'}
                     </div>
-                  </div>
-
-                  <div className="flex items-center gap-2">
-                    {isCompleted && (
-                      <span className="rounded-full bg-green-100 px-2 py-0.5 text-[11px] font-semibold text-green-700">
-                        Completed
-                      </span>
-                    )}
-                    {isCurrent && (
-                      <>
-                        <Link
-                          href={lessonHref}
-                          className="rounded-lg bg-blue-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-blue-700"
-                        >
-                          {completedCount === 0 ? 'Start Teaching' : 'Continue Teaching'}
-                        </Link>
-                        <button
-                          onClick={() => handleMarkDone(mod.code)}
-                          disabled={marking}
-                          className="rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-xs font-semibold text-gray-700 hover:bg-gray-50 disabled:opacity-50"
-                        >
-                          {marking ? 'Saving...' : 'Mark Done'}
-                        </button>
-                      </>
-                    )}
-                    {isUpcoming && (
-                      <span className="rounded-full bg-gray-100 px-2 py-0.5 text-[11px] font-semibold text-gray-400">
-                        Upcoming
-                      </span>
-                    )}
+                  )}
+                  <div>
+                    <p className="text-sm font-semibold text-gray-900">{ch.title}</p>
+                    <p className="text-xs text-gray-600">
+                      {chCompleted}/{chTotal} modules complete across {ch.groups.length} group{ch.groups.length !== 1 ? 's' : ''}
+                    </p>
                   </div>
                 </div>
-              </div>
-            );
-          })}
-        </div>
+                <div className="flex items-center gap-2">
+                  <div className="w-20 h-1.5 rounded-full bg-gray-100 overflow-hidden">
+                    <div
+                      className={`h-1.5 rounded-full ${chAllDone ? 'bg-green-500' : 'bg-blue-600'}`}
+                      style={{ width: `${chTotal > 0 ? Math.round((chCompleted / chTotal) * 100) : 0}%` }}
+                    />
+                  </div>
+                  <span className="text-xs text-gray-500 w-8 text-right">
+                    {chTotal > 0 ? Math.round((chCompleted / chTotal) * 100) : 0}%
+                  </span>
+                </div>
+              </button>
+
+              {isExpanded && (
+                <div className="px-5 pb-5 space-y-4">
+                  {ch.groups.map((g) => {
+                    const gAllDone = g.completedCount === g.totalCount && g.totalCount > 0;
+                    const chapterCode = groupToChapterCode[g.code] || ch.code;
+
+                    return (
+                      <div key={g.code} className="space-y-2">
+                        <div className="flex items-center justify-between">
+                          <p className="text-sm font-semibold text-gray-800">{g.title}</p>
+                          <div className="flex items-center gap-2">
+                            <span className="text-xs text-gray-500">
+                              {g.completedCount}/{g.totalCount}
+                            </span>
+                            <div className="w-16 h-1.5 rounded-full bg-gray-100 overflow-hidden">
+                              <div
+                                className={`h-1.5 rounded-full ${gAllDone ? 'bg-green-500' : 'bg-blue-600'}`}
+                                style={{ width: `${g.totalCount > 0 ? Math.round((g.completedCount / g.totalCount) * 100) : 0}%` }}
+                              />
+                            </div>
+                          </div>
+                        </div>
+
+                        <div className="space-y-1.5">
+                          {g.modules.map((mod, idx) => {
+                            const isCompleted = completedModuleIds.has(mod.code);
+                            // Find the first incomplete module across the entire group
+                            const firstIncompleteIdx = g.modules.findIndex((m) => !completedModuleIds.has(m.code));
+                            const isCurrent = idx === firstIncompleteIdx;
+                            const isUpcoming = !isCompleted && !isCurrent;
+                            const lessonHref = `/teacher/curriculum/${chapterCode}/${g.code}/${mod.code}?student=${studentId}`;
+
+                            return (
+                              <div
+                                key={mod.id}
+                                className={`rounded-xl border p-3 ${
+                                  isCurrent
+                                    ? 'border-blue-300 bg-blue-50'
+                                    : isCompleted
+                                      ? 'border-green-200 bg-green-50/50'
+                                      : 'border-gray-100 bg-white opacity-60'
+                                }`}
+                              >
+                                <div className="flex items-center justify-between">
+                                  <div className="flex items-center gap-3">
+                                    <div
+                                      className={`flex h-6 w-6 items-center justify-center rounded-full text-[10px] font-semibold ${
+                                        isCompleted
+                                          ? 'bg-green-100 text-green-700'
+                                          : isCurrent
+                                            ? 'bg-blue-100 text-blue-700'
+                                            : 'bg-gray-100 text-gray-400'
+                                      }`}
+                                    >
+                                      {isCompleted ? '\u2713' : idx + 1}
+                                    </div>
+                                    <div>
+                                      <p
+                                        className={`text-sm font-semibold ${
+                                          isCompleted ? 'text-green-800' : isUpcoming ? 'text-gray-400' : 'text-gray-900'
+                                        }`}
+                                      >
+                                        {mod.title}
+                                      </p>
+                                      {mod.summary && (
+                                        <p className={`text-xs ${isUpcoming ? 'text-gray-300' : 'text-gray-600'}`}>
+                                          {mod.summary}
+                                        </p>
+                                      )}
+                                    </div>
+                                  </div>
+
+                                  <div className="flex items-center gap-2">
+                                    {isCompleted && (
+                                      <span className="rounded-full bg-green-100 px-2 py-0.5 text-[11px] font-semibold text-green-700">
+                                        Completed
+                                      </span>
+                                    )}
+                                    {isCurrent && (
+                                      <>
+                                        <Link
+                                          href={lessonHref}
+                                          className="rounded-lg bg-blue-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-blue-700"
+                                        >
+                                          {completedCount === 0 ? 'Start Teaching' : 'Continue Teaching'}
+                                        </Link>
+                                        <button
+                                          onClick={() => handleMarkDone(mod.code)}
+                                          disabled={marking}
+                                          className="rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-xs font-semibold text-gray-700 hover:bg-gray-50 disabled:opacity-50"
+                                        >
+                                          {marking ? 'Saving...' : 'Mark Done'}
+                                        </button>
+                                      </>
+                                    )}
+                                    {isUpcoming && (
+                                      <span className="rounded-full bg-gray-100 px-2 py-0.5 text-[11px] font-semibold text-gray-400">
+                                        Upcoming
+                                      </span>
+                                    )}
+                                  </div>
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          );
+        })}
       </div>
     </div>
   );

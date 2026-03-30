@@ -44,8 +44,8 @@ const programStructure = [
     tone: 'bg-purple-50',
   },
   {
-    title: 'End-of-Phase Assessments',
-    description: 'After each 3-month phase, assess students to determine readiness for the next phase.',
+    title: 'Periodic Assessments',
+    description: 'Assess students periodically to determine readiness for the next curriculum stage.',
     tone: 'bg-blue-50',
   },
   {
@@ -54,7 +54,7 @@ const programStructure = [
       'Students are regrouped based on assessment results. Groups are dynamic and responsive to individual progress.',
     bullets: [
       'Use app assessments to track mastery',
-      'Regroup students between phases',
+      'Regroup students based on progress',
       'Some students may need to repeat certain lessons',
       'Others may advance more quickly',
     ],
@@ -119,7 +119,7 @@ export default function AboutPage(){
         <div className="rounded-2xl border border-gray-100 bg-white p-5 shadow-sm space-y-3">
           <div>
             <p className="text-sm font-semibold text-gray-900">Program Structure</p>
-            <p className="text-xs text-gray-600">12 months divided into 3 phases, each lasting 3 months</p>
+            <p className="text-xs text-gray-600">12 months of structured curriculum across developmental areas</p>
           </div>
           <div className="space-y-3">
             {programStructure.map(item => (

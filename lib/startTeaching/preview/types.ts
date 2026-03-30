@@ -2,7 +2,7 @@ export type PreviewStudent = {
   id: string;
   name: string;
   avatarInitials: string;
-  currentPhase: {
+  currentStage: {
     name: string;
     currentArea: string;
     progressPercent: number;
@@ -31,12 +31,12 @@ export type StudentPreviewDetail = {
   id: string;
   name: string;
   avatarInitials: string;
-  currentPhase: string;
+  currentStage: string;
   currentArea: string;
   progressPercent: number;
   courseProgressPercent: number;
   lessons: PreviewLesson[];
-  phases: PhaseProgress[];
+  progressSummaries: ProgressSummary[];
   sections: SectionProgress[];
 };
 
@@ -46,7 +46,7 @@ export type GroupPreviewDetail = {
   students: StudentPreviewDetail[];
 };
 
-export type PhaseProgress = {
+export type ProgressSummary = {
   id: string;
   name: string;
   completed: number;

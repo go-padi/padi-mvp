@@ -13,7 +13,6 @@ type AssessmentRow = {
   studentName: string;
   groupId?: string | null;
   groupName?: string | null;
-  phase?: string | null;
   status: string;
   focusAreas: string[];
   progressLabel?: string | null;
@@ -37,7 +36,7 @@ export default function AssessmentsPage() {
       const [studentsRes, membershipsRes, groupsRes] = await Promise.all([
         sb
           .from('students')
-          .select('id,name,first_name,last_name,phase,assessment_status,focus_areas,progress_label')
+          .select('id,name,first_name,last_name,assessment_status,focus_areas,progress_label')
           .order('name'),
         sb.from('student_group_memberships').select('student_id,group_id,active').eq('active', true),
         sb.from('groups').select('id,name'),
@@ -63,7 +62,6 @@ export default function AssessmentsPage() {
             studentName: fullName || row.name || 'Student',
             groupId,
             groupName: groupId ? groupNameById.get(groupId) || null : null,
-            phase: row.phase ?? null,
             status: row.assessment_status ?? 'Not started',
             focusAreas: Array.isArray(row.focus_areas) ? row.focus_areas : [],
             progressLabel: row.progress_label ?? null,
@@ -137,7 +135,7 @@ function renderTable(
       <div className="overflow-hidden rounded-2xl border border-gray-100 bg-white shadow-sm">
         <div className="grid grid-cols-[1.4fr_1fr_1fr_1fr] gap-4 border-b border-gray-100 px-4 py-3 text-xs font-semibold uppercase tracking-wide text-gray-500">
           <span>Student</span>
-          <span>{showGroupName ? 'Group' : 'Phase'}</span>
+          <span>{showGroupName ? 'Group' : 'Progress'}</span>
           <span>Focus areas</span>
           <span>Status</span>
         </div>
@@ -146,9 +144,9 @@ function renderTable(
             <div key={row.id} className="grid grid-cols-[1.4fr_1fr_1fr_1fr] items-center gap-4 px-4 py-4 text-sm">
               <div>
                 <p className="font-semibold text-gray-900">{row.studentName}</p>
-                <p className="text-xs text-gray-600">{row.phase || 'Phase 1'} • {row.progressLabel || 'Not started'}</p>
+                <p className="text-xs text-gray-600">{row.progressLabel || 'Not started'}</p>
               </div>
-              <div className="text-sm text-gray-800">{showGroupName ? (row.groupName || 'Unassigned') : (row.phase || 'Phase')}</div>
+              <div className="text-sm text-gray-800">{showGroupName ? (row.groupName || 'Unassigned') : (row.progressLabel || 'Not started')}</div>
               <div className="flex flex-wrap gap-1">
                 {row.focusAreas.map(tag => (
                   <span key={tag} className="rounded-full bg-gray-100 px-2 py-0.5 text-xs font-semibold text-gray-700">

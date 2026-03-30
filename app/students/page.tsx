@@ -1,5 +1,6 @@
 'use client';
 import { useEffect, useState } from 'react';
+import Link from 'next/link';
 import { supabaseClient } from '@/lib/supabase';
 import { useAuth } from '@/lib/auth-store';
 type Student = { id: string; name: string | null; first_name: string | null; last_name: string | null };
@@ -49,9 +50,9 @@ export default function StudentsPage(){
             explore the curriculum and sample lessons from the Teacher Dashboard.
           </p>
           <div className="text-sm">
-            <a href="/teacher/phases" className="text-blue-700 font-semibold hover:underline">
-              Browse phases and modules →
-            </a>
+            <Link href="/teacher/curriculum" className="text-blue-700 font-semibold hover:underline">
+              Browse curriculum and modules →
+            </Link>
           </div>
         </div>
       ) : (

@@ -77,7 +77,7 @@ export default function GroupingPage() {
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-sm font-semibold text-gray-900">{g.name}</p>
-                    <p className="text-xs text-gray-600">{g.phase}</p>
+                    <p className="text-xs text-gray-600">{g.focus}</p>
                   </div>
                   <span
                     className={clsx(

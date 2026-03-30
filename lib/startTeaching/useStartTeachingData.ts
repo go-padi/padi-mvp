@@ -11,7 +11,6 @@ export type StartTeachingStudent = {
   focusAreas: string[];
   progressPercent: number;
   progressLabel?: string | null;
-  phase?: string | null;
   assessmentStatus?: string | null;
 };
 
@@ -41,7 +40,7 @@ export function useStartTeachingData(): StartTeachingData {
     const [studentsRes, membershipsRes, groupsRes, assessmentsRes] = await Promise.all([
       sb
         .from('students')
-        .select('id,name,first_name,last_name,progress_percent,progress_label,focus_areas,phase,assessment_status')
+        .select('id,name,first_name,last_name,progress_percent,progress_label,focus_areas,assessment_status')
         .order('name'),
       sb.from('student_group_memberships').select('student_id,group_id,active').eq('active', true),
       sb.from('groups').select('id,name').order('name'),
@@ -57,7 +56,6 @@ export function useStartTeachingData(): StartTeachingData {
         progress_percent: number | null;
         progress_label: string | null;
         focus_areas: string[] | null;
-        phase: string | null;
         assessment_status: string | null;
       }[] | null) || [];
     const membershipRows =
@@ -87,9 +85,9 @@ export function useStartTeachingData(): StartTeachingData {
           ? student.focus_areas
           : ['Learning Sensorially'];
       const completedModules = completedByStudent.get(student.id) || 0;
-      const hasProgress = completedModules > 0;
       const storedPercent = student.progress_percent ?? 0;
       const storedLabel = student.progress_label ?? null;
+      const hasProgress = completedModules > 0 || storedPercent > 0;
 
       return {
         id: student.id,
@@ -98,8 +96,11 @@ export function useStartTeachingData(): StartTeachingData {
         groupName: groupId ? groupNameById.get(groupId) || null : null,
         focusAreas,
         progressPercent: hasProgress ? Math.max(storedPercent, 1) : storedPercent,
-        progressLabel: hasProgress && !storedLabel ? `${completedModules} module${completedModules === 1 ? '' : 's'} done` : storedLabel,
-        phase: student.phase ?? 'Phase 1',
+        progressLabel: hasProgress && !storedLabel
+          ? (completedModules > 0
+            ? `${completedModules} module${completedModules === 1 ? '' : 's'} done`
+            : `${storedPercent}% complete`)
+          : storedLabel,
         assessmentStatus: hasProgress
           ? (student.assessment_status === 'Complete' ? 'Complete' : 'In progress')
           : (student.assessment_status ?? 'Not started'),
@@ -148,7 +149,6 @@ export function useStartTeachingData(): StartTeachingData {
         focusAreas: s.focusAreas,
         progressPercent: s.progressPercent,
         progressLabel: s.progressLabel,
-        phase: s.phase,
         assessmentStatus: s.assessmentStatus,
       }));
       const groups = demoTeacherData.groups.map(g => ({

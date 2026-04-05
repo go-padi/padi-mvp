@@ -10,7 +10,7 @@ alter table public.students enable row level security;
 alter table public.groups enable row level security;
 alter table public.student_group_memberships enable row level security;
 alter table public.lesson_completions enable row level security;
-alter table public.module_assessments enable row level security;
+alter table public.module_assessment enable row level security;
 
 -- Profiles: users can read their own profile
 create policy "read own profile"
@@ -90,9 +90,9 @@ using (
   )
 );
 
--- Module assessments
-create policy "module assessments tenant access"
-on public.module_assessments
+-- Module assessment
+create policy "module assessment tenant access"
+on public.module_assessment
 for all
 using (
   tenant_id in (

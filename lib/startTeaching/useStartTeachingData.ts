@@ -62,7 +62,7 @@ export function useStartTeachingData(): StartTeachingData {
       (membershipsRes.data as { student_id: string; group_id: string; active: boolean | null }[] | null) || [];
     const groupRows = (groupsRes.data as { id: string; name: string | null }[] | null) || [];
 
-    // Build per-student completed module counts from module_assessments
+    // Build per-student completed module counts from module_assessment
     const assessmentRows = (assessmentsRes.data as { student_id: string; module_id: string }[] | null) || [];
     const completedByStudent = new Map<string, number>();
     assessmentRows.forEach(row => {

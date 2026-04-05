@@ -8,15 +8,16 @@ create table public.module_assessment (
   id uuid primary key default gen_random_uuid(),
   tenant_id uuid not null references public.tenants(id),
   student_id uuid not null references public.students(id),
+  subject_id uuid not null references public.subjects(id),
   module_id text not null,
-  teacher_notes text,
+  notes text,
   audio_url text,
   prediction_json jsonb,
   teacher_feedback text,
   status text not null default 'in_progress' check (status in ('in_progress', 'completed', 'needs_review')),
   created_at timestamptz default now(),
   updated_at timestamptz default now(),
-  unique (tenant_id, student_id, module_id)
+  unique (tenant_id, student_id, subject_id, module_id)
 );
 
 -- RLS

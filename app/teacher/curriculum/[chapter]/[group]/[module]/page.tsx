@@ -118,7 +118,7 @@ export default function LessonPage({ params }: { params: Promise<{ chapter: stri
         const [studentRes, completionRes, assessmentRes] = await Promise.all([
           sb.from('students').select('id,name').order('name'),
           sb.from('lesson_completions').select('student_id').eq('module_id', module),
-          sb.from('module_assessments').select('student_id').eq('module_id', module),
+          sb.from('module_assessment').select('student_id').eq('module_id', module),
         ]);
 
         const studentRows = (studentRes.data as { id: string; name: string | null }[] | null) || [];

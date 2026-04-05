@@ -85,7 +85,7 @@ export default function StudentModulePage({
   const fetchCompletions = useCallback(async (sid: string) => {
     const sb = supabaseClient();
     const { data } = await sb
-      .from('module_assessments')
+      .from('module_assessment')
       .select('module_id')
       .eq('student_id', sid);
     const ids = new Set((data || []).map((r: { module_id: string }) => r.module_id));
@@ -246,7 +246,7 @@ export default function StudentModulePage({
       const subjectId = await ensureSubject(tenantId);
       if (!subjectId) return;
       const sb = supabaseClient();
-      await sb.from('module_assessments').upsert(
+      await sb.from('module_assessment').upsert(
         {
           tenant_id: tenantId,
           student_id: studentId,
@@ -254,7 +254,7 @@ export default function StudentModulePage({
           module_id: moduleCode,
           notes: 'Completed',
         },
-        { onConflict: 'tenant_id,student_id,subject_id,module_id' },
+        { onConflict: 'tenant_id,student_id,module_id' },
       );
       const updated = await fetchCompletions(studentId);
 

@@ -287,24 +287,25 @@ create table if not exists public.lesson_completions (
 create index if not exists lc_tenant_id_idx on public.lesson_completions(tenant_id);
 create index if not exists lc_student_module_idx on public.lesson_completions(tenant_id, student_id, subject_id, module_id);
 
--- Module assessments
-create table if not exists public.module_assessments (
+-- Module assessment
+create table if not exists public.module_assessment (
   id uuid primary key default gen_random_uuid(),
-  tenant_id uuid not null references public.tenants(id) on delete restrict,
-  student_id uuid not null references public.students(id) on delete cascade,
-  subject_id uuid not null references public.subjects(id) on delete restrict,
+  tenant_id uuid not null references public.tenants(id),
+  student_id uuid not null references public.students(id),
   module_id text not null,
-  notes text not null,
-  created_at timestamptz not null default now(),
-  updated_at timestamptz not null default now(),
-  unique (tenant_id, student_id, subject_id, module_id)
+  teacher_notes text,
+  audio_url text,
+  prediction_json jsonb,
+  teacher_feedback text,
+  status text not null default 'in_progress' check (status in ('in_progress', 'completed', 'needs_review')),
+  created_at timestamptz default now(),
+  updated_at timestamptz default now(),
+  unique (tenant_id, student_id, module_id)
 );
-create index if not exists ma_tenant_id_idx on public.module_assessments(tenant_id);
-create index if not exists ma_student_module_idx on public.module_assessments(tenant_id, student_id, subject_id, module_id);
 
-drop trigger if exists module_assessments_set_updated_at on public.module_assessments;
-create trigger module_assessments_set_updated_at
-before update on public.module_assessments
+drop trigger if exists module_assessment_set_updated_at on public.module_assessment;
+create trigger module_assessment_set_updated_at
+before update on public.module_assessment
 for each row execute function public.set_updated_at();
 
 
@@ -344,7 +345,7 @@ alter table public.students enable row level security;
 alter table public.groups enable row level security;
 alter table public.student_group_memberships enable row level security;
 alter table public.lesson_completions enable row level security;
-alter table public.module_assessments enable row level security;
+alter table public.module_assessment enable row level security;
 
 create policy "read own profile" on public.profiles
   for select using (id = auth.uid());
@@ -367,8 +368,9 @@ create policy "memberships tenant access" on public.student_group_memberships
 create policy "lesson completions tenant access" on public.lesson_completions
   for all using (tenant_id in (select tenant_id from public.profiles where id = auth.uid()));
 
-create policy "module assessments tenant access" on public.module_assessments
-  for all using (tenant_id in (select tenant_id from public.profiles where id = auth.uid()));
+create policy "module assessment tenant access" on public.module_assessment
+  for all using ((auth.jwt() ->> 'tenant_id') = tenant_id::text)
+  with check ((auth.jwt() ->> 'tenant_id') = tenant_id::text);
 
 
 -- =========================

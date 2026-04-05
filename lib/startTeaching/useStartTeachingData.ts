@@ -44,7 +44,7 @@ export function useStartTeachingData(): StartTeachingData {
         .order('name'),
       sb.from('student_group_memberships').select('student_id,group_id,active').eq('active', true),
       sb.from('groups').select('id,name').order('name'),
-      sb.from('module_assessments').select('student_id,module_id'),
+      sb.from('module_assessment').select('student_id,module_id'),
     ]);
 
     const studentRows =

@@ -118,33 +118,18 @@ export default function LessonPage({ params }: { params: Promise<{ chapter: stri
         );
       }
       if (isLoggedIn && !contextStudentId) {
-        const [studentRes, completionRes, assessmentRes] = await Promise.all([
-          sb.from('students').select('id,name').order('name'),
-          sb.from('lesson_completions').select('student_id').eq('module_id', module),
-          sb.from('module_assessment').select('student_id').eq('module_id', module),
-        ]);
+        const { data: studentRes } = await sb
+          .from('students')
+          .select('id,name,first_name,last_name')
+          .order('name');
 
-        const studentRows = (studentRes.data as { id: string; name: string | null }[] | null) || [];
-        const completionRows = (completionRes.data as { student_id: string }[] | null) || [];
-        const assessmentRows = (assessmentRes.data as { student_id: string }[] | null) || [];
-
-        const assignedStudentIds = new Set([
-          ...completionRows.map(row => row.student_id),
-          ...assessmentRows.map(row => row.student_id),
-        ]);
-        const completedStudentIds = new Set(assessmentRows.map(row => row.student_id));
-
-        const eligibleStudents = studentRows
-          .filter(student => assignedStudentIds.has(student.id) && !completedStudentIds.has(student.id))
-          .map(student => ({
-            id: student.id,
-            name: student.name || 'Student',
-          }));
-
-        setStudents(eligibleStudents);
-        if (studentId && !eligibleStudents.find(student => student.id === studentId)) {
-          setStudentId('');
-        }
+        const studentRows = (studentRes || []) as { id: string; name: string | null; first_name: string | null; last_name: string | null }[];
+        setStudents(
+          studentRows.map(s => ({
+            id: s.id,
+            name: [s.first_name, s.last_name].filter(Boolean).join(' ').trim() || s.name || 'Student',
+          }))
+        );
       }
     };
     fetchData();
@@ -201,10 +186,11 @@ export default function LessonPage({ params }: { params: Promise<{ chapter: stri
   const handleStudentChange = (value: string) => {
     if (value === '__action_add_student__' || value === '__action_add_group__') {
       setStudentId('');
-      router.push('/start-teaching');
+      router.push('/teacher');
       return;
     }
-    setStudentId(value);
+    const currentPath = `/teacher/curriculum/${chapter}/${group}/${module}`;
+    router.push(`${currentPath}?student=${value}`);
   };
 
   const saveNotes = async () => {
@@ -429,7 +415,7 @@ export default function LessonPage({ params }: { params: Promise<{ chapter: stri
                   <option key={option.value} value={option.value}>{option.label}</option>
                 ))}
                 {!students.length && (
-                  <option value="" disabled>No active students for this module</option>
+                  <option value="" disabled>No students found</option>
                 )}
               </select>
             </div>
@@ -437,11 +423,15 @@ export default function LessonPage({ params }: { params: Promise<{ chapter: stri
 
           <div className="space-y-2">
             <label className="text-sm font-semibold text-gray-800">Session Notes</label>
+            {!hasStudentContext && !studentId && (
+              <p className="text-xs text-gray-500">Select a student to record observations</p>
+            )}
             <textarea
-              className="w-full rounded-xl border border-gray-200 p-3 text-sm"
+              className={clsx('w-full rounded-xl border border-gray-200 p-3 text-sm', !hasStudentContext && !studentId && 'bg-gray-50')}
               rows={4}
               value={notes}
               onChange={e => setNotes(e.target.value)}
+              disabled={!hasStudentContext && !studentId}
               placeholder={hasStudentContext
                 ? `Record observations about ${contextStudentName}'s behavior, engagement, and any challenges...`
                 : 'Record observations about student behavior, engagement, and any challenges...'}
@@ -454,19 +444,20 @@ export default function LessonPage({ params }: { params: Promise<{ chapter: stri
               accept="audio/*"
               onChange={e => setAudioFile(e.target.files?.[0] || null)}
               className="block w-full text-sm"
+              disabled={!hasStudentContext && !studentId}
             />
           </div>
           <div className="flex gap-3">
             <button
               onClick={saveNotes}
-              disabled={saving || !notes.trim()}
+              disabled={saving || !notes.trim() || (!hasStudentContext && !studentId)}
               className="flex-1 rounded-xl border border-gray-900 px-4 py-3 text-sm font-semibold text-gray-900 hover:bg-gray-50 disabled:opacity-60"
             >
               {saving ? 'Saving...' : 'Save Notes'}
             </button>
             <button
               onClick={markComplete}
-              disabled={saving || (!notes.trim() && !audioFile && !loadedAttachmentUrl)}
+              disabled={saving || (!hasStudentContext && !studentId) || (!notes.trim() && !audioFile && !loadedAttachmentUrl)}
               className="flex-1 rounded-xl bg-gradient-to-r from-blue-600 to-purple-600 px-4 py-3 text-sm font-semibold text-white shadow-sm disabled:opacity-60"
             >
               {saving ? 'Saving...' : 'Mark Lesson Complete'}

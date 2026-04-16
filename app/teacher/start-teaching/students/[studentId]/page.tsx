@@ -4,7 +4,6 @@ import { use, useCallback, useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { supabaseClient } from '@/lib/supabase';
 import { useAuth } from '@/lib/auth-store';
-import { useDefaultSubject } from '@/lib/startTeaching/useDefaultSubject';
 import {
   groupToChapterCode,
   previewChapters,
@@ -66,8 +65,7 @@ export default function StudentModulePage({
   params: Promise<{ studentId: string }>;
 }) {
   const { studentId } = use(params);
-  const { isLoggedIn, isHydrated, tenantId } = useAuth();
-  const { ensureSubject } = useDefaultSubject();
+  const { isLoggedIn, isHydrated } = useAuth();
   const [student, setStudent] = useState<{
     id: string;
     name: string;
@@ -79,7 +77,6 @@ export default function StudentModulePage({
   const [chapters, setChapters] = useState<ChapterWithGroups[]>([]);
   const [completedModuleIds, setCompletedModuleIds] = useState<Set<string>>(new Set());
   const [expandedChapters, setExpandedChapters] = useState<Set<string>>(new Set());
-  const [marking, setMarking] = useState(false);
   const [loading, setLoading] = useState(true);
 
   const fetchCompletions = useCallback(async (sid: string) => {
@@ -237,56 +234,6 @@ export default function StudentModulePage({
       else next.add(code);
       return next;
     });
-  };
-
-  const handleMarkDone = async (moduleCode: string) => {
-    if (!tenantId || marking) return;
-    setMarking(true);
-    try {
-      const subjectId = await ensureSubject(tenantId);
-      if (!subjectId) return;
-      const sb = supabaseClient();
-      await sb.from('module_assessment').upsert(
-        {
-          tenant_id: tenantId,
-          student_id: studentId,
-          subject_id: subjectId,
-          module_id: moduleCode,
-          notes: 'Completed',
-        },
-        { onConflict: 'tenant_id,student_id,module_id' },
-      );
-      const updated = await fetchCompletions(studentId);
-
-      // Recalculate across all modules
-      const all = chapters.flatMap((ch) => ch.groups.flatMap((g) => g.modules));
-      const newCompleted = all.filter((m) => updated.has(m.code)).length;
-      const total = all.length;
-      const pct = total > 0 ? Math.round((newCompleted / total) * 100) : 0;
-      const allDone = newCompleted === total && total > 0;
-
-      // Update chapter state with new completion counts
-      setChapters((prev) =>
-        prev.map((ch) => ({
-          ...ch,
-          groups: ch.groups.map((g) => ({
-            ...g,
-            completedCount: g.modules.filter((m) => updated.has(m.code)).length,
-          })),
-        })),
-      );
-
-      await sb
-        .from('students')
-        .update({
-          progress_percent: pct,
-          progress_label: `${newCompleted}/${total} modules`,
-          assessment_status: allDone ? 'Complete' : newCompleted > 0 ? 'In progress' : 'Not started',
-        })
-        .eq('id', studentId);
-    } finally {
-      setMarking(false);
-    }
   };
 
   if (!isHydrated || loading) {
@@ -494,21 +441,12 @@ export default function StudentModulePage({
                                       </span>
                                     )}
                                     {isCurrent && (
-                                      <>
-                                        <Link
-                                          href={lessonHref}
-                                          className="rounded-lg bg-blue-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-blue-700"
-                                        >
-                                          {completedCount === 0 ? 'Start Teaching' : 'Continue Teaching'}
-                                        </Link>
-                                        <button
-                                          onClick={() => handleMarkDone(mod.code)}
-                                          disabled={marking}
-                                          className="rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-xs font-semibold text-gray-700 hover:bg-gray-50 disabled:opacity-50"
-                                        >
-                                          {marking ? 'Saving...' : 'Mark Done'}
-                                        </button>
-                                      </>
+                                      <Link
+                                        href={lessonHref}
+                                        className="rounded-lg bg-blue-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-blue-700"
+                                      >
+                                        {completedCount === 0 ? 'Start Teaching' : 'Continue Teaching'}
+                                      </Link>
                                     )}
                                     {isUpcoming && (
                                       <span className="rounded-full bg-gray-100 px-2 py-0.5 text-[11px] font-semibold text-gray-400">

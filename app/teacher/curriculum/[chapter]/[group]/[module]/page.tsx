@@ -7,6 +7,7 @@ import clsx from 'clsx';
 import { useTeachingMode } from '@/lib/teachingModeContext';
 import { TeachingModeToggle } from '@/components/TeachingModeToggle';
 import { useAuth } from '@/lib/auth-store';
+import { useDefaultSubject } from '@/lib/startTeaching/useDefaultSubject';
 import { previewModuleByCode } from '@/lib/demo/demoCurriculum';
 
 type Lesson = {
@@ -45,7 +46,9 @@ export default function LessonPage({ params }: { params: Promise<{ chapter: stri
   const [saving, setSaving] = useState(false);
   const [status, setStatus] = useState<string | null>(null);
   const [needsAuth, setNeedsAuth] = useState(false);
+  const [loadedAttachmentUrl, setLoadedAttachmentUrl] = useState<string | null>(null);
   const { mode } = useTeachingMode();
+  const { ensureSubject } = useDefaultSubject();
 
   const hasStudentContext = Boolean(contextStudentId);
   const backHref = hasStudentContext
@@ -147,6 +150,28 @@ export default function LessonPage({ params }: { params: Promise<{ chapter: stri
     fetchData();
   }, [module, mode, isLoggedIn, isHydrated, contextStudentId]);
 
+  // Load previously saved notes when student context is set
+  useEffect(() => {
+    if (!isHydrated || !isLoggedIn || !tenantId || !contextStudentId) return;
+    const loadNotes = async () => {
+      const sb = supabaseClient();
+      const { data } = await sb
+        .from('teaching_notes')
+        .select('notes,attachment_url,attachment_name,attachment_type')
+        .eq('tenant_id', tenantId)
+        .eq('student_id', contextStudentId)
+        .eq('module_code', module)
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .single();
+      if (data) {
+        setNotes(data.notes || '');
+        setLoadedAttachmentUrl(data.attachment_url || null);
+      }
+    };
+    loadNotes();
+  }, [isHydrated, isLoggedIn, tenantId, contextStudentId, module]);
+
   if (!isHydrated) {
     return <div className="rounded-2xl border border-gray-100 bg-white p-5 shadow-sm text-sm text-gray-700">Loading...</div>;
   }
@@ -239,6 +264,43 @@ export default function LessonPage({ params }: { params: Promise<{ chapter: stri
       setStatus('Saved.');
       setAudioFile(null);
       if (!hasStudentContext) setStudentId('');
+    }
+  };
+
+  const markComplete = async () => {
+    if (!tenantId || !studentId || !moduleRow) return;
+    setSaving(true);
+    setStatus(null);
+    try {
+      // Save notes first if there are any
+      if (notes.trim()) {
+        await saveNotes();
+      }
+      const subjectId = await ensureSubject(tenantId);
+      if (!subjectId) {
+        setStatus('Could not resolve subject.');
+        return;
+      }
+      const sb = supabaseClient();
+      const { error } = await sb.from('module_assessment').upsert(
+        {
+          tenant_id: tenantId,
+          student_id: studentId,
+          subject_id: subjectId,
+          module_id: moduleRow.code,
+          notes: notes.trim() || 'Completed',
+          status: 'completed',
+        },
+        { onConflict: 'tenant_id,student_id,subject_id,module_id' },
+      );
+      if (error) {
+        console.error(error);
+        setStatus('Failed to mark complete.');
+      } else {
+        router.push(backHref);
+      }
+    } finally {
+      setSaving(false);
     }
   };
 
@@ -394,13 +456,22 @@ export default function LessonPage({ params }: { params: Promise<{ chapter: stri
               className="block w-full text-sm"
             />
           </div>
-          <button
-            onClick={saveNotes}
-            disabled={saving}
-            className="w-full rounded-xl bg-gradient-to-r from-blue-600 to-purple-600 px-4 py-3 text-sm font-semibold text-white shadow-sm disabled:opacity-60"
-          >
-            {saving ? 'Saving...' : 'Save Notes & Continue'}
-          </button>
+          <div className="flex gap-3">
+            <button
+              onClick={saveNotes}
+              disabled={saving || !notes.trim()}
+              className="flex-1 rounded-xl border border-gray-900 px-4 py-3 text-sm font-semibold text-gray-900 hover:bg-gray-50 disabled:opacity-60"
+            >
+              {saving ? 'Saving...' : 'Save Notes'}
+            </button>
+            <button
+              onClick={markComplete}
+              disabled={saving || (!notes.trim() && !audioFile && !loadedAttachmentUrl)}
+              className="flex-1 rounded-xl bg-gradient-to-r from-blue-600 to-purple-600 px-4 py-3 text-sm font-semibold text-white shadow-sm disabled:opacity-60"
+            >
+              {saving ? 'Saving...' : 'Mark Lesson Complete'}
+            </button>
+          </div>
           {status && <p className="text-sm text-gray-700">{status}</p>}
           {needsAuth && (
             <p className="text-sm text-red-600">

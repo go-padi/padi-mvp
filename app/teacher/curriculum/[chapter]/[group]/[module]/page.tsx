@@ -193,7 +193,7 @@ export default function LessonPage({ params }: { params: Promise<{ chapter: stri
     router.push(`${currentPath}?student=${value}`);
   };
 
-  const saveNotes = async () => {
+  const saveNotes = async (skipNav = false) => {
     setSaving(true);
     setStatus(null);
     const sb = supabaseClient();
@@ -250,6 +250,10 @@ export default function LessonPage({ params }: { params: Promise<{ chapter: stri
       setStatus('Saved.');
       setAudioFile(null);
       if (!hasStudentContext) setStudentId('');
+      if (!skipNav && hasStudentContext) {
+        router.push(backHref);
+        return;
+      }
     }
   };
 
@@ -260,7 +264,7 @@ export default function LessonPage({ params }: { params: Promise<{ chapter: stri
     try {
       // Save notes first if there are any
       if (notes.trim()) {
-        await saveNotes();
+        await saveNotes(true);
       }
       const subjectId = await ensureSubject(tenantId);
       if (!subjectId) {
@@ -447,9 +451,12 @@ export default function LessonPage({ params }: { params: Promise<{ chapter: stri
               disabled={!hasStudentContext && !studentId}
             />
           </div>
+          {(hasStudentContext || studentId) && !notes.trim() && !audioFile && !loadedAttachmentUrl && (
+            <p className="text-xs text-amber-600">Add observations before completing this lesson</p>
+          )}
           <div className="flex gap-3">
             <button
-              onClick={saveNotes}
+              onClick={() => saveNotes()}
               disabled={saving || !notes.trim() || (!hasStudentContext && !studentId)}
               className="flex-1 rounded-xl border border-gray-900 px-4 py-3 text-sm font-semibold text-gray-900 hover:bg-gray-50 disabled:opacity-60"
             >

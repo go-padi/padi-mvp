@@ -256,11 +256,12 @@ export default function LessonPage({ params }: { params: Promise<{ chapter: stri
       console.error(error);
       setStatus('Failed to save notes.');
     } else {
-      setStatus('Saved.');
+      setStatus('Notes saved \u2714');
       setAudioFile(null);
       if (!hasStudentContext) setStudentId('');
       if (!skipNav && hasStudentContext) {
-        router.push(backHref);
+        setStatus('Notes saved \u2014 you can come back anytime');
+        setTimeout(() => router.push(backHref), 1200);
         return;
       }
     }
@@ -409,36 +410,46 @@ export default function LessonPage({ params }: { params: Promise<{ chapter: stri
       {isLoggedIn ? (
         <div className="rounded-2xl border border-gray-100 bg-white p-5 shadow-sm space-y-4">
           <h3 className="text-lg font-semibold text-gray-900">
-            {hasStudentContext ? `Notes for ${contextStudentName}` : 'Teacher Notes & Observations'}
+            {hasStudentContext ? `Notes for ${contextStudentName}` : 'Lesson Preview'}
           </h3>
+          {!hasStudentContext && !studentId && (
+            <p className="text-sm text-gray-600">
+              You&apos;re browsing the curriculum. Select a student below to start teaching this lesson.
+            </p>
+          )}
 
           {/* Only show student selector when NOT in student context */}
           {!hasStudentContext && (
             <div className="space-y-2">
-              <label className="text-sm font-semibold text-gray-800">Student (optional)</label>
-              <select
-                className="w-full rounded-xl border border-gray-200 p-3 text-sm"
-                value={studentId}
-                onChange={e => handleStudentChange(e.target.value)}
-                disabled={!students.length && actionOptions.length === 0}
-              >
-                <option value="">{students.length ? 'Not selected' : 'Select a student'}</option>
-                {students.map(student => <option key={student.id} value={student.id}>{student.name}</option>)}
-                {actionOptions.map(option => (
-                  <option key={option.value} value={option.value}>{option.label}</option>
-                ))}
-                {!students.length && (
-                  <option value="" disabled>No students found</option>
-                )}
-              </select>
+              <label className="text-sm font-semibold text-gray-800">Who are you teaching?</label>
+              {students.length === 0 && actionOptions.length > 0 ? (
+                <div className="rounded-xl border border-dashed border-gray-300 bg-gray-50 p-4 text-center space-y-2">
+                  <p className="text-sm text-gray-700">You haven&apos;t added any students yet.</p>
+                  <button
+                    onClick={() => setShowAddStudentModal(true)}
+                    className="inline-flex items-center rounded-lg bg-gray-900 px-4 py-2 text-sm font-semibold text-white hover:bg-gray-800"
+                  >
+                    Add your first student
+                  </button>
+                </div>
+              ) : (
+                <select
+                  className="w-full rounded-xl border border-gray-200 p-3 text-sm"
+                  value={studentId}
+                  onChange={e => handleStudentChange(e.target.value)}
+                >
+                  <option value="">Select a student to begin...</option>
+                  {students.map(student => <option key={student.id} value={student.id}>{student.name}</option>)}
+                  {actionOptions.map(option => (
+                    <option key={option.value} value={option.value}>{option.label}</option>
+                  ))}
+                </select>
+              )}
             </div>
           )}
 
           <div className="space-y-2">
             <label className="text-sm font-semibold text-gray-800">Session Notes</label>
-            {!hasStudentContext && !studentId && (
-              <p className="text-xs text-gray-500">Select a student to record observations</p>
-            )}
             <textarea
               className={clsx('w-full rounded-xl border border-gray-200 p-3 text-sm', !hasStudentContext && !studentId && 'bg-gray-50')}
               rows={4}
@@ -467,9 +478,9 @@ export default function LessonPage({ params }: { params: Promise<{ chapter: stri
             <button
               onClick={() => saveNotes()}
               disabled={saving || !notes.trim() || (!hasStudentContext && !studentId)}
-              className="flex-1 rounded-xl border border-gray-900 px-4 py-3 text-sm font-semibold text-gray-900 hover:bg-gray-50 disabled:opacity-60"
+              className="flex-1 rounded-xl border border-gray-300 px-4 py-3 text-sm font-semibold text-gray-600 hover:bg-gray-50 disabled:opacity-60"
             >
-              {saving ? 'Saving...' : 'Save Notes'}
+              {saving ? 'Saving...' : 'Save & Continue Later'}
             </button>
             <button
               onClick={markComplete}

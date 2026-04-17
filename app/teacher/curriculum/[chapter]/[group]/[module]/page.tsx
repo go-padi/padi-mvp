@@ -33,6 +33,36 @@ type ModuleRow = {
 
 type Student = { id: string; name: string };
 
+const SIGNAL_OPTIONS = [
+  {
+    value: 'ready',
+    label: 'On Track',
+    description: 'Progressing well, ready to move on',
+    color: 'border-green-300 bg-green-50 text-green-800 hover:bg-green-100',
+    selectedColor: 'border-green-500 bg-green-100 text-green-900 ring-2 ring-green-500',
+    icon: '🟢',
+    confirmation: (name: string) => `Great progress! Next lesson is ready for ${name}.`,
+  },
+  {
+    value: 'needs_help',
+    label: 'Needs Practice',
+    description: 'Getting there, could use more time',
+    color: 'border-amber-300 bg-amber-50 text-amber-800 hover:bg-amber-100',
+    selectedColor: 'border-amber-500 bg-amber-100 text-amber-900 ring-2 ring-amber-500',
+    icon: '🟡',
+    confirmation: (name: string) => `Notes saved. Consider revisiting this lesson or trying the extension activities with ${name}.`,
+  },
+  {
+    value: 'needs_intervention',
+    label: 'Needs Extra Support',
+    description: 'Struggling, may need a different approach',
+    color: 'border-red-200 bg-red-50 text-red-800 hover:bg-red-100',
+    selectedColor: 'border-red-400 bg-red-100 text-red-900 ring-2 ring-red-400',
+    icon: '🔴',
+    confirmation: (name: string) => `Notes saved. You may want to discuss ${name}'s progress with their parent or a reading specialist.`,
+  },
+];
+
 export default function LessonPage({ params }: { params: Promise<{ chapter: string; group: string; module: string }> }) {
   const { chapter, group, module } = use(params);
   const searchParams = useSearchParams();
@@ -51,6 +81,9 @@ export default function LessonPage({ params }: { params: Promise<{ chapter: stri
   const [loadedAttachmentUrl, setLoadedAttachmentUrl] = useState<string | null>(null);
   const [showAddStudentModal, setShowAddStudentModal] = useState(false);
   const [showAddGroupModal, setShowAddGroupModal] = useState(false);
+  const [showSignalStep, setShowSignalStep] = useState(false);
+  const [selectedSignal, setSelectedSignal] = useState<string | null>(null);
+  const [completionMessage, setCompletionMessage] = useState<string | null>(null);
   const { mode } = useTeachingMode();
   const { ensureSubject } = useDefaultSubject();
 
@@ -267,7 +300,7 @@ export default function LessonPage({ params }: { params: Promise<{ chapter: stri
     }
   };
 
-  const markComplete = async () => {
+  const markComplete = async (signal: string) => {
     if (!tenantId || !studentId || !moduleRow) return;
     setSaving(true);
     setStatus(null);
@@ -290,6 +323,7 @@ export default function LessonPage({ params }: { params: Promise<{ chapter: stri
           module_id: moduleRow.code,
           notes: notes.trim() || 'Completed',
           status: 'completed',
+          teacher_feedback: signal,
         },
         { onConflict: 'tenant_id,student_id,subject_id,module_id' },
       );
@@ -297,7 +331,12 @@ export default function LessonPage({ params }: { params: Promise<{ chapter: stri
         console.error(error);
         setStatus('Failed to mark complete.');
       } else {
-        router.push(backHref);
+        const option = SIGNAL_OPTIONS.find(o => o.value === signal);
+        const studentName = contextStudentName || 'this student';
+        const message = option?.confirmation(studentName) || 'Lesson complete!';
+        setCompletionMessage(message);
+        setShowSignalStep(false);
+        setTimeout(() => router.push(backHref), 2500);
       }
     } finally {
       setSaving(false);
@@ -471,25 +510,94 @@ export default function LessonPage({ params }: { params: Promise<{ chapter: stri
               disabled={!hasStudentContext && !studentId}
             />
           </div>
-          {(hasStudentContext || studentId) && !notes.trim() && !audioFile && !loadedAttachmentUrl && (
+          {!completionMessage && (hasStudentContext || studentId) && !notes.trim() && !audioFile && !loadedAttachmentUrl && (
             <p className="text-xs text-amber-600">Add observations before completing this lesson</p>
           )}
-          <div className="flex gap-3">
-            <button
-              onClick={() => saveNotes()}
-              disabled={saving || !notes.trim() || (!hasStudentContext && !studentId)}
-              className="flex-1 rounded-xl border border-gray-300 px-4 py-3 text-sm font-semibold text-gray-600 hover:bg-gray-50 disabled:opacity-60"
-            >
-              {saving ? 'Saving...' : 'Save & Continue Later'}
-            </button>
-            <button
-              onClick={markComplete}
-              disabled={saving || (!hasStudentContext && !studentId) || (!notes.trim() && !audioFile && !loadedAttachmentUrl)}
-              className="flex-1 rounded-xl bg-gradient-to-r from-blue-600 to-purple-600 px-4 py-3 text-sm font-semibold text-white shadow-sm disabled:opacity-60"
-            >
-              {saving ? 'Saving...' : 'Mark Lesson Complete'}
-            </button>
-          </div>
+          {!completionMessage && (
+            <div className="flex gap-3">
+              <button
+                onClick={() => saveNotes()}
+                disabled={saving || !notes.trim() || (!hasStudentContext && !studentId)}
+                className="flex-1 rounded-xl border border-gray-300 px-4 py-3 text-sm font-semibold text-gray-600 hover:bg-gray-50 disabled:opacity-60"
+              >
+                {saving ? 'Saving...' : 'Save & Continue Later'}
+              </button>
+              <button
+                onClick={() => setShowSignalStep(true)}
+                disabled={saving || showSignalStep || (!hasStudentContext && !studentId) || (!notes.trim() && !audioFile && !loadedAttachmentUrl)}
+                className="flex-1 rounded-xl bg-gradient-to-r from-blue-600 to-purple-600 px-4 py-3 text-sm font-semibold text-white shadow-sm disabled:opacity-60"
+              >
+                {saving ? 'Saving...' : 'Mark Lesson Complete'}
+              </button>
+            </div>
+          )}
+
+          {/* Readiness signal step */}
+          {showSignalStep && !completionMessage && (
+            <div className="rounded-2xl border border-blue-200 bg-blue-50 p-5 space-y-4">
+              <div className="space-y-1">
+                <h4 className="text-base font-semibold text-gray-900">
+                  How is {contextStudentName || 'this student'} doing with this lesson?
+                </h4>
+                <p className="text-xs text-gray-600">
+                  This helps you track progress and plan next steps. There are no wrong answers.
+                </p>
+              </div>
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+                {SIGNAL_OPTIONS.map(option => (
+                  <button
+                    key={option.value}
+                    onClick={() => setSelectedSignal(option.value)}
+                    className={clsx(
+                      'rounded-xl border-2 p-4 text-left transition-all',
+                      selectedSignal === option.value ? option.selectedColor : option.color,
+                    )}
+                  >
+                    <div className="flex items-center gap-2">
+                      <span className="text-lg">{option.icon}</span>
+                      <span className="text-sm font-semibold">{option.label}</span>
+                    </div>
+                    <p className="mt-1 text-xs opacity-80">{option.description}</p>
+                  </button>
+                ))}
+              </div>
+              {selectedSignal === 'needs_intervention' && (
+                <p className="text-xs text-gray-600 italic">
+                  It&apos;s okay to select this — it helps you plan the right next steps for {contextStudentName || 'this student'}.
+                </p>
+              )}
+              <div className="flex items-center gap-3">
+                <button
+                  onClick={() => selectedSignal && markComplete(selectedSignal)}
+                  disabled={!selectedSignal || saving}
+                  className="rounded-xl bg-gradient-to-r from-blue-600 to-purple-600 px-6 py-3 text-sm font-semibold text-white shadow-sm disabled:opacity-60"
+                >
+                  {saving ? 'Completing...' : 'Complete Lesson'}
+                </button>
+                <button
+                  onClick={() => {
+                    setShowSignalStep(false);
+                    setSelectedSignal(null);
+                  }}
+                  className="text-sm text-gray-500 hover:text-gray-700"
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* Post-completion confirmation */}
+          {completionMessage && (
+            <div className="rounded-2xl border border-green-200 bg-green-50 p-5 space-y-2">
+              <div className="flex items-center gap-2">
+                <span className="text-lg">✅</span>
+                <h4 className="text-base font-semibold text-green-900">Lesson complete!</h4>
+              </div>
+              <p className="text-sm text-green-800">{completionMessage}</p>
+              <p className="text-xs text-green-600">Redirecting...</p>
+            </div>
+          )}
           {status && <p className="text-sm text-gray-700">{status}</p>}
           {needsAuth && (
             <p className="text-sm text-red-600">

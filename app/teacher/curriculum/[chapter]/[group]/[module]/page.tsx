@@ -8,6 +8,8 @@ import { useTeachingMode } from '@/lib/teachingModeContext';
 import { TeachingModeToggle } from '@/components/TeachingModeToggle';
 import { useAuth } from '@/lib/auth-store';
 import { useDefaultSubject } from '@/lib/startTeaching/useDefaultSubject';
+import { AddStudentModal } from '@/components/AddStudentModal';
+import { AddGroupModal } from '@/components/AddGroupModal';
 import { previewModuleByCode } from '@/lib/demo/demoCurriculum';
 
 type Lesson = {
@@ -47,6 +49,8 @@ export default function LessonPage({ params }: { params: Promise<{ chapter: stri
   const [status, setStatus] = useState<string | null>(null);
   const [needsAuth, setNeedsAuth] = useState(false);
   const [loadedAttachmentUrl, setLoadedAttachmentUrl] = useState<string | null>(null);
+  const [showAddStudentModal, setShowAddStudentModal] = useState(false);
+  const [showAddGroupModal, setShowAddGroupModal] = useState(false);
   const { mode } = useTeachingMode();
   const { ensureSubject } = useDefaultSubject();
 
@@ -184,9 +188,14 @@ export default function LessonPage({ params }: { params: Promise<{ chapter: stri
 
   const lesson = moduleRow?.lesson || {};
   const handleStudentChange = (value: string) => {
-    if (value === '__action_add_student__' || value === '__action_add_group__') {
+    if (value === '__action_add_student__') {
       setStudentId('');
-      router.push('/teacher');
+      setShowAddStudentModal(true);
+      return;
+    }
+    if (value === '__action_add_group__') {
+      setStudentId('');
+      setShowAddGroupModal(true);
       return;
     }
     const currentPath = `/teacher/curriculum/${chapter}/${group}/${module}`;
@@ -489,6 +498,28 @@ export default function LessonPage({ params }: { params: Promise<{ chapter: stri
           </Link>
         </div>
       )}
+      <AddStudentModal
+        open={showAddStudentModal}
+        onClose={() => setShowAddStudentModal(false)}
+        tenantId={tenantId}
+        onCreated={(newStudentId) => {
+          setShowAddStudentModal(false);
+          if (newStudentId) {
+            const currentPath = `/teacher/curriculum/${chapter}/${group}/${module}`;
+            router.push(`${currentPath}?student=${newStudentId}`);
+          }
+        }}
+      />
+      <AddGroupModal
+        open={showAddGroupModal}
+        onClose={() => setShowAddGroupModal(false)}
+        tenantId={tenantId}
+        students={students}
+        existingGroups={[]}
+        onCreated={async () => {
+          setShowAddGroupModal(false);
+        }}
+      />
     </div>
   );
 }

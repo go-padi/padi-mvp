@@ -87,6 +87,20 @@ export const previewGroups: DemoGroup[] = [
   { id: 'fallback-vcf', code: 'vocab-comprehension-fluency', title: 'Vocabulary, Comprehension & Fluency', description: 'Oral language and fluency building', module_count: 9, is_locked: false, teaching_mode: 'group' },
   { id: 'fallback-ind-ls', code: 'ind-learning-sensorially', title: 'Learning Sensorially (Individual)', description: 'One-on-one listening and sound identification activities', module_count: 6, is_locked: false, teaching_mode: 'individual' },
   { id: 'fallback-ind-rmg', code: 'ind-rhyming', title: 'Individual Rhyme Practice', description: 'Personalized rhyme detection and creation', module_count: 19, is_locked: false, teaching_mode: 'individual' },
+  { id: 'fallback-ind-ws', code: 'ind-words-and-sentences', title: 'Words & Sentences (Individual)', description: 'Build word and sentence awareness', module_count: 7, is_locked: false, teaching_mode: 'individual' },
+  { id: 'fallback-ind-syl', code: 'ind-syllables', title: 'Syllables (Individual)', description: 'Clap, segment, and blend syllables', module_count: 15, is_locked: false, teaching_mode: 'individual' },
+  { id: 'fallback-ind-is', code: 'ind-initial-sounds', title: 'Initial Sounds (Individual)', description: 'Identify and manipulate initial sounds in words', module_count: 14, is_locked: false, teaching_mode: 'individual' },
+  { id: 'fallback-ind-fs', code: 'ind-final-sounds', title: 'Final Sounds (Individual)', description: 'Identify and manipulate final sounds in words', module_count: 6, is_locked: false, teaching_mode: 'individual' },
+  { id: 'fallback-ind-ms', code: 'ind-medial-sounds', title: 'Medial Sounds (Individual)', description: 'Identify and manipulate medial sounds in words', module_count: 2, is_locked: false, teaching_mode: 'individual' },
+  { id: 'fallback-ind-cs', code: 'ind-combining-sounds', title: 'Combining Sounds (Individual)', description: 'Blend and segment sounds to form words', module_count: 4, is_locked: false, teaching_mode: 'individual' },
+  { id: 'fallback-ind-al', code: 'ind-alphabet', title: 'Alphabet (Individual)', description: 'Learn letter names, sounds, and formation', module_count: 22, is_locked: false, teaching_mode: 'individual' },
+  { id: 'fallback-ind-p', code: 'ind-phonics', title: 'Phonics (Individual)', description: 'Connect letters to sounds for reading and spelling', module_count: 7, is_locked: false, teaching_mode: 'individual' },
+  { id: 'fallback-ind-r', code: 'ind-reading', title: 'Reading (Individual)', description: 'Develop decoding and reading skills', module_count: 8, is_locked: false, teaching_mode: 'individual' },
+  { id: 'fallback-ind-re', code: 'ind-reading-exercises', title: 'Reading Exercises (Individual)', description: 'Practice reading with guided exercises', module_count: 9, is_locked: false, teaching_mode: 'individual' },
+  { id: 'fallback-ind-hw', code: 'ind-handwriting', title: 'Handwriting (Individual)', description: 'Develop proper letter formation and handwriting skills', module_count: 10, is_locked: false, teaching_mode: 'individual' },
+  { id: 'fallback-ind-s', code: 'ind-spelling', title: 'Spelling (Individual)', description: 'Learn spelling patterns and rules', module_count: 9, is_locked: false, teaching_mode: 'individual' },
+  { id: 'fallback-ind-se', code: 'ind-spelling-exercises', title: 'Spelling Exercises (Individual)', description: 'Practice spelling with guided exercises', module_count: 9, is_locked: false, teaching_mode: 'individual' },
+  { id: 'fallback-ind-vcf', code: 'ind-vocab-comprehension-fluency', title: 'Vocab/Comprehension/Fluency (Individual)', description: 'Build vocabulary, comprehension, and reading fluency', module_count: 9, is_locked: false, teaching_mode: 'individual' },
 ];
 
 export const previewGroupsByChapter: Record<string, DemoGroup[]> = {
@@ -97,7 +111,7 @@ export const previewGroupsByChapter: Record<string, DemoGroup[]> = {
   'handwriting': previewGroups.filter(g => g.teaching_mode === 'group' && g.code === 'handwriting'),
   'spelling': previewGroups.filter(g => g.teaching_mode === 'group' && ['spelling', 'spelling-exercises'].includes(g.code)),
   'vocab-comprehension-fluency': previewGroups.filter(g => g.teaching_mode === 'group' && g.code === 'vocab-comprehension-fluency'),
-  'ind-phonological-awareness': previewGroups.filter(g => g.teaching_mode === 'individual' && ['ind-learning-sensorially', 'ind-rhyming'].includes(g.code)),
+  'ind-phonological-awareness': previewGroups.filter(g => g.teaching_mode === 'individual' && ['ind-learning-sensorially', 'ind-rhyming', 'ind-words-and-sentences', 'ind-syllables', 'ind-initial-sounds', 'ind-final-sounds', 'ind-medial-sounds', 'ind-combining-sounds'].includes(g.code)),
   'ind-alphabet': previewGroups.filter(g => g.teaching_mode === 'individual' && g.code === 'ind-alphabet'),
   'ind-phonics': previewGroups.filter(g => g.teaching_mode === 'individual' && g.code === 'ind-phonics'),
   'ind-reading': previewGroups.filter(g => g.teaching_mode === 'individual' && ['ind-reading', 'ind-reading-exercises'].includes(g.code)),
@@ -127,6 +141,48 @@ export const previewModulesByGroup: Record<string, DemoModule[]> = {
   ],
   'ind-rhyming': [
     { id: 'fallback-ind-rmg-1', code: 'ind-rhyming-1', title: 'Individual Rhyme Practice 1', subtitle: 'ind-rhyming-1', summary: 'Personalized rhyme practice.', is_locked: false, display_order: 1, teaching_mode: 'individual', lesson: null },
+  ],
+  'ind-words-and-sentences': [
+    { id: 'fallback-ind-ws-1', code: 'ind-words-and-sentences-1', title: 'Long and Short Words', subtitle: 'ind-words-and-sentences-1', summary: 'Recognize long/short words auditorily.', is_locked: false, display_order: 1, teaching_mode: 'individual', lesson: null },
+  ],
+  'ind-syllables': [
+    { id: 'fallback-ind-syl-1', code: 'ind-syllables-1', title: 'Clapping Syllables', subtitle: 'ind-syllables-1', summary: 'Clap and count syllables in words.', is_locked: false, display_order: 1, teaching_mode: 'individual', lesson: null },
+  ],
+  'ind-initial-sounds': [
+    { id: 'fallback-ind-is-1', code: 'ind-initial-sounds-1', title: 'What Sound Does It Start With?', subtitle: 'ind-initial-sounds-1', summary: 'Identify and isolate initial sounds in words.', is_locked: false, display_order: 1, teaching_mode: 'individual', lesson: null },
+  ],
+  'ind-final-sounds': [
+    { id: 'fallback-ind-fs-1', code: 'ind-final-sounds-1', title: 'Ending Sound Match', subtitle: 'ind-final-sounds-1', summary: 'Identify and isolate final sounds in words.', is_locked: false, display_order: 1, teaching_mode: 'individual', lesson: null },
+  ],
+  'ind-medial-sounds': [
+    { id: 'fallback-ind-ms-1', code: 'ind-medial-sounds-1', title: 'Middle Sound Detective', subtitle: 'ind-medial-sounds-1', summary: 'Identify medial vowel sounds in CVC words.', is_locked: false, display_order: 1, teaching_mode: 'individual', lesson: null },
+  ],
+  'ind-combining-sounds': [
+    { id: 'fallback-ind-cs-1', code: 'ind-combining-sounds-1', title: 'Blend It Together', subtitle: 'ind-combining-sounds-1', summary: 'Blend individual sounds to form words.', is_locked: false, display_order: 1, teaching_mode: 'individual', lesson: null },
+  ],
+  'ind-alphabet': [
+    { id: 'fallback-ind-al-1', code: 'ind-alphabet-1', title: 'Letter Names A-E', subtitle: 'ind-alphabet-1', summary: 'Learn letter names and recognition for A through E.', is_locked: false, display_order: 1, teaching_mode: 'individual', lesson: null },
+  ],
+  'ind-phonics': [
+    { id: 'fallback-ind-p-1', code: 'ind-phonics-1', title: 'Letter Sounds: m, t, a, s', subtitle: 'ind-phonics-1', summary: 'Connect letters to their sounds.', is_locked: false, display_order: 1, teaching_mode: 'individual', lesson: null },
+  ],
+  'ind-reading': [
+    { id: 'fallback-ind-r-1', code: 'ind-reading-1', title: 'Decoding CVC Words', subtitle: 'ind-reading-1', summary: 'Apply phonics skills to decode simple CVC words.', is_locked: false, display_order: 1, teaching_mode: 'individual', lesson: null },
+  ],
+  'ind-reading-exercises': [
+    { id: 'fallback-ind-re-1', code: 'ind-reading-exercises-1', title: 'Reading Exercise 1', subtitle: 'ind-reading-exercises-1', summary: 'Guided reading practice.', is_locked: false, display_order: 1, teaching_mode: 'individual', lesson: null },
+  ],
+  'ind-handwriting': [
+    { id: 'fallback-ind-hw-1', code: 'ind-handwriting-1', title: 'Pencil Grip and Posture', subtitle: 'ind-handwriting-1', summary: 'Develop proper pencil grip and writing posture.', is_locked: false, display_order: 1, teaching_mode: 'individual', lesson: null },
+  ],
+  'ind-spelling': [
+    { id: 'fallback-ind-s-1', code: 'ind-spelling-1', title: 'Spelling CVC Words', subtitle: 'ind-spelling-1', summary: 'Encode simple CVC words using sound-letter knowledge.', is_locked: false, display_order: 1, teaching_mode: 'individual', lesson: null },
+  ],
+  'ind-spelling-exercises': [
+    { id: 'fallback-ind-se-1', code: 'ind-spelling-exercises-1', title: 'Spelling Exercise 1', subtitle: 'ind-spelling-exercises-1', summary: 'Guided spelling practice.', is_locked: false, display_order: 1, teaching_mode: 'individual', lesson: null },
+  ],
+  'ind-vocab-comprehension-fluency': [
+    { id: 'fallback-ind-vcf-1', code: 'ind-vocab-comprehension-fluency-1', title: 'Building Vocabulary', subtitle: 'ind-vocab-comprehension-fluency-1', summary: 'Build vocabulary through read-alouds and discussion.', is_locked: false, display_order: 1, teaching_mode: 'individual', lesson: null },
   ],
 };
 

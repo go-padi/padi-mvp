@@ -4734,9 +4734,9 @@ const individualGroups: GroupData[] = [
       },
       {
         code: 'ind-rhyming-6',
-        title: 'Books with Rhymes (RMG-6) One ish, two ish, red ish, blue ish by Dr. Seuss Fox in socks by Dr. Seuss Green eggs and ham by Dr. Seuss Goodnight Moon by Brown, M.W. All About Arthur by Carle, E. Jamberry by Degen, B. Where\'s my teddy? by Alborough, J. Henny Penny by Galdone, P. Is your mama a llama? by Guarino, D. Chicka chicka boom boom by Martin, B. Polar bear, polar bear, what do you hear? by Martin, B. Ten cats have hats by Marzollo, J. Here are my hands by Marin B., Archambault J., Rand T. Giraffes can\'t dance by Giles Andrease Llama Llama red pajamas by Anna Dewdney My truck is stuck by Kevin Lewis Each peach pear plum by Allan Ahlberg',
+        title: 'Books with Rhymes',
         subtitle: 'ind-rhyming-6',
-        summary: 'Practice and develop skills through Books with Rhymes (RMG-6) One ish, two ish, red ish, blue ish by Dr. Seuss Fox in socks by Dr. Seuss Green eggs and ham by Dr. Seuss Goodnight Moon by Brown, M.W. All About Arthur by Carle, E. Jamberry by Degen, B. Where\'s my teddy? by Alborough, J. Henny Penny by Galdone, P. Is your mama a llama? by Guarino, D. Chicka chicka boom boom by Martin, B. Polar bear, polar bear, what do you hear? by Martin, B. Ten cats have hats by Marzollo, J. Here are my hands by Marin B., Archambault J., Rand T. Giraffes can\'t dance by Giles Andrease Llama Llama red pajamas by Anna Dewdney My truck is stuck by Kevin Lewis Each peach pear plum by Allan Ahlberg.',
+        summary: 'Read aloud books with rhyming patterns to build phonological awareness.',
         is_locked: false,
         teaching_mode: 'individual' as const,
         display_order: 6,
@@ -4745,7 +4745,7 @@ const individualGroups: GroupData[] = [
             'See curriculum guide',
           ],
           aims: [
-            'Practice and develop skills through Books with Rhymes (RMG-6) One ish, two ish, red ish, blue ish by Dr. Seuss Fox in socks by Dr. Seuss Green eggs and ham by Dr. Seuss Goodnight Moon by Brown, M.W. All About Arthur by Carle, E. Jamberry by Degen, B. Where\'s my teddy? by Alborough, J. Henny Penny by Galdone, P. Is your mama a llama? by Guarino, D. Chicka chicka boom boom by Martin, B. Polar bear, polar bear, what do you hear? by Martin, B. Ten cats have hats by Marzollo, J. Here are my hands by Marin B., Archambault J., Rand T. Giraffes can\'t dance by Giles Andrease Llama Llama red pajamas by Anna Dewdney My truck is stuck by Kevin Lewis Each peach pear plum by Allan Ahlberg.',
+            'Develop phonological awareness through exposure to rhyming books.',
           ],
           presentation_steps: [
             'Follow the curriculum guide for this module.',

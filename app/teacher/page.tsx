@@ -208,7 +208,7 @@ export default function TeacherIndexPage() {
             </div>
             <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
               {previewGroups.map(group => (
-                <Link key={group.id} href={`/start-teaching/groups/${group.id}`} className="rounded-2xl border border-gray-100 bg-white p-4 shadow-sm space-y-2 hover:border-blue-200">
+                <Link key={group.id} href="/teacher/curriculum" className="rounded-2xl border border-gray-100 bg-white p-4 shadow-sm space-y-2 hover:border-blue-200">
                   <div className="flex items-center justify-between">
                     <div>
                       <p className="text-sm font-semibold text-gray-900">{group.name}</p>
@@ -300,11 +300,13 @@ export default function TeacherIndexPage() {
           const allComplete = total > 0 && completed >= total;
           const noneStarted = card.progressPercent === 0;
 
-          const ctaLabel = allComplete
-            ? 'View Progress'
-            : noneStarted
-              ? 'Start Teaching'
-              : 'Continue Teaching';
+          const ctaLabel = card.type === 'group'
+            ? 'Browse Lessons'
+            : allComplete
+              ? 'View Progress'
+              : noneStarted
+                ? 'Start Teaching'
+                : 'Continue Teaching';
           const ctaIsPrimary = !allComplete;
 
           const cardHref =

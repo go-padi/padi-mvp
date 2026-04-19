@@ -370,8 +370,7 @@ create policy "lesson completions tenant access" on public.lesson_completions
   for all using (tenant_id in (select tenant_id from public.profiles where id = auth.uid()));
 
 create policy "module assessment tenant access" on public.module_assessment
-  for all using ((auth.jwt() ->> 'tenant_id') = tenant_id::text)
-  with check ((auth.jwt() ->> 'tenant_id') = tenant_id::text);
+  for all using (tenant_id in (select tenant_id from public.profiles where id = auth.uid()));
 
 
 -- =========================

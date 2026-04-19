@@ -305,9 +305,39 @@ export default function LessonPage({ params }: { params: Promise<{ chapter: stri
     setSaving(true);
     setStatus(null);
     try {
-      // Save notes first if there are any
-      if (notes.trim()) {
-        await saveNotes(true);
+      // Save notes first if there are any (inline to avoid saveNotes state conflict)
+      if (notes.trim() && tenantId && studentId) {
+        const sbNotes = supabaseClient();
+        let attachment_url: string | null = null;
+        let attachment_name: string | null = null;
+        let attachment_type: string | null = null;
+        if (audioFile) {
+          try {
+            const { data: userData } = await sbNotes.auth.getUser();
+            const user = userData?.user;
+            if (user) {
+              const path = `${user.id}/${moduleRow?.code || 'module'}/${Date.now()}_${audioFile.name}`;
+              const { error: uploadErr } = await sbNotes.storage.from('lesson-attachments').upload(path, audioFile, { cacheControl: '3600', upsert: false });
+              if (!uploadErr) {
+                const { data: signed } = await sbNotes.storage.from('lesson-attachments').createSignedUrl(path, 60 * 60 * 24 * 7);
+                attachment_url = signed?.signedUrl || null;
+                attachment_name = audioFile.name;
+                attachment_type = audioFile.type;
+              }
+            }
+          } catch (err) {
+            console.error('Audio upload during completion:', err);
+          }
+        }
+        await sbNotes.from('teaching_notes').insert({
+          tenant_id: tenantId,
+          student_id: studentId,
+          module_code: moduleRow?.code || module,
+          notes,
+          attachment_url,
+          attachment_name,
+          attachment_type,
+        });
       }
       const subjectId = await ensureSubject(tenantId);
       if (!subjectId) {

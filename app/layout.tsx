@@ -2,6 +2,7 @@ import "./globals.css";
 import TopNav from "@/components/TopNav";
 import { AuthProvider } from "@/lib/auth-store";
 import { TeachingModeProvider } from "@/lib/teachingModeContext";
+import { RoleGuard } from "@/components/auth/RoleGuard";
 
 export const metadata = { title: "Padi Teacher App", description: "Plan and run lessons with Padi" };
 
@@ -11,6 +12,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }){
       <body className="bg-gradient-to-b from-[#f4f7ff] via-white to-[#f3f6ff] min-h-screen">
         <AuthProvider>
           <TeachingModeProvider>
+            <RoleGuard />
             <TopNav />
             <main className="container py-8">{children}</main>
           </TeachingModeProvider>

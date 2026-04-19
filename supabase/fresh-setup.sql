@@ -171,7 +171,8 @@ create table if not exists public.profiles (
   id uuid primary key,
   tenant_id uuid references public.tenants(id) on delete restrict,
   email text,
-  role text not null default 'teacher' check (role in ('parent','teacher')),
+  role text not null check (role in ('parent','teacher')),
+  role_set_at timestamptz,
   created_at timestamptz not null default now()
 );
 create index if not exists profiles_tenant_id_idx on public.profiles(tenant_id);

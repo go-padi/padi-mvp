@@ -17,20 +17,26 @@ export type UserRole = 'parent' | 'teacher';
 /**
  * AuthState exposes the authenticated user's role alongside the session.
  *
- * IMPORTANT: Never read `role` before `isHydrated === true`. Before hydration
- * completes, `role` is `null` regardless of the underlying profile value, and
- * gating UI on that `null` will flash the wrong state for role=parent users.
- * Guard with `if (!isHydrated) return null` or equivalent.
+ * IMPORTANT: Never read `role` or `roleSetAt` before `isHydrated === true`.
+ * Before hydration completes, both are `null` regardless of the underlying
+ * profile values, and gating UI on `null` will flash the wrong state for
+ * role=parent users. Guard with `if (!isHydrated) return null` or equivalent.
+ *
+ * `roleSetAt` is the source of truth for "has the user explicitly picked a
+ * role?". `role` is bootstrapped to 'teacher' by the auth trigger, so checking
+ * `role !== null` does NOT reliably answer that question — use `roleSetAt`.
  */
 export type AuthState = {
   isLoggedIn: boolean;
   user: AuthUser | null;
   tenantId: string | null;
   role: UserRole | null;
+  roleSetAt: string | null;
   isHydrated: boolean;
   login: (email: string, password: string) => Promise<void>;
   signup: (email: string, password: string) => Promise<{ session: Session | null; user: AuthUser | null }>;
   logout: () => Promise<void>;
+  refreshRole: () => Promise<void>;
 };
 
 const AuthContext = createContext<AuthState | undefined>(undefined);
@@ -49,19 +55,24 @@ async function fetchTenantId(accessToken: string): Promise<string | null> {
   }
 }
 
-async function fetchRole(userId: string): Promise<UserRole | null> {
+type RoleInfo = { role: UserRole | null; roleSetAt: string | null };
+
+async function fetchRoleInfo(userId: string): Promise<RoleInfo> {
   try {
     const sb = supabaseClient();
     const { data } = await sb
       .from('profiles')
-      .select('role')
+      .select('role, role_set_at')
       .eq('id', userId)
       .single();
-    const role = (data as { role: string } | null)?.role;
-    if (role === 'parent' || role === 'teacher') return role;
-    return null;
+    const row = data as { role: string; role_set_at: string | null } | null;
+    const role = row?.role;
+    return {
+      role: role === 'parent' || role === 'teacher' ? role : null,
+      roleSetAt: row?.role_set_at ?? null,
+    };
   } catch {
-    return null;
+    return { role: null, roleSetAt: null };
   }
 }
 
@@ -70,6 +81,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<AuthUser | null>(null);
   const [tenantId, setTenantId] = useState<string | null>(null);
   const [role, setRole] = useState<UserRole | null>(null);
+  const [roleSetAt, setRoleSetAt] = useState<string | null>(null);
   const [isHydrated, setIsHydrated] = useState(false);
 
   useEffect(() => {
@@ -83,13 +95,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setUser(sessionUser ? { id: sessionUser.id, email: sessionUser.email ?? null } : null);
       setIsLoggedIn(Boolean(sessionUser));
       if (session?.access_token && sessionUser) {
-        const [tid, r] = await Promise.all([
+        const [tid, info] = await Promise.all([
           fetchTenantId(session.access_token),
-          fetchRole(sessionUser.id),
+          fetchRoleInfo(sessionUser.id),
         ]);
         if (isMounted) {
           setTenantId(tid);
-          setRole(r);
+          setRole(info.role);
+          setRoleSetAt(info.roleSetAt);
         }
       }
       if (isMounted) setIsHydrated(true);
@@ -105,11 +118,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         if (event === 'SIGNED_IN' && session?.access_token && sessionUser) {
           Promise.all([
             fetchTenantId(session.access_token),
-            fetchRole(sessionUser.id),
-          ]).then(([tid, r]) => {
+            fetchRoleInfo(sessionUser.id),
+          ]).then(([tid, info]) => {
             if (isMounted) {
               setTenantId(tid);
-              setRole(r);
+              setRole(info.role);
+              setRoleSetAt(info.roleSetAt);
             }
           });
         }
@@ -119,6 +133,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setIsLoggedIn(false);
         setTenantId(null);
         setRole(null);
+        setRoleSetAt(null);
         setIsHydrated(true);
       }
     });
@@ -128,6 +143,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       subscription.subscription?.unsubscribe();
     };
   }, []);
+
+  const refreshRole = useCallback(async () => {
+    if (!user?.id) return;
+    const info = await fetchRoleInfo(user.id);
+    setRole(info.role);
+    setRoleSetAt(info.roleSetAt);
+  }, [user?.id]);
 
   const login = useCallback(async (email: string, password: string) => {
     const sb = supabaseClient();
@@ -162,6 +184,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUser(null);
     setTenantId(null);
     setRole(null);
+    setRoleSetAt(null);
   }, []);
 
   const value = useMemo(
@@ -170,12 +193,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       user,
       tenantId,
       role,
+      roleSetAt,
       isHydrated,
       login,
       signup,
       logout,
+      refreshRole,
     }),
-    [isLoggedIn, user, tenantId, role, isHydrated, login, signup, logout]
+    [isLoggedIn, user, tenantId, role, roleSetAt, isHydrated, login, signup, logout, refreshRole]
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

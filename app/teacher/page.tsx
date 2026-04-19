@@ -24,16 +24,16 @@ type CardData = {
 
 const previewHighlights = [
   {
-    title: 'Lesson structure preview',
-    body: 'See how each lesson is organized with aims, materials, and presentation steps.',
+    title: 'See what your child will learn',
+    body: 'Browse the full curriculum — every lesson, activity, and skill area laid out step by step.',
   },
   {
-    title: 'Curriculum-first browsing',
-    body: 'Explore the curriculum and modules without needing a roster to get started.',
+    title: 'Track how they\'re progressing',
+    body: 'Watch your child move through chapters and see which areas need more practice.',
   },
   {
-    title: 'Workspace unlocks on sign-in',
-    body: 'Log in to add students, form groups, and track progress as you teach.',
+    title: 'Know if they\'re ready for school',
+    body: 'Padi helps you determine if your child is Ready, Needs Help, or Needs Intervention — so you can act early.',
   },
 ];
 
@@ -316,11 +316,15 @@ export default function TeacherIndexPage() {
 
           const statusBadgeClass = clsx(
             'rounded-full px-2 py-0.5 text-[11px] font-semibold',
-            card.status === 'Complete' || card.status === 'Ready for review'
+            card.status === 'Ready'
               ? 'bg-green-50 text-green-700'
-              : card.status === 'In progress' || card.status === 'Screening'
-                ? 'bg-blue-50 text-blue-700'
-                : 'bg-gray-100 text-gray-600',
+              : card.status === 'Needs Help'
+                ? 'bg-amber-50 text-amber-700'
+                : card.status === 'Needs Intervention'
+                  ? 'bg-red-50 text-red-700'
+                  : card.status === 'In progress'
+                    ? 'bg-blue-50 text-blue-700'
+                    : 'bg-gray-100 text-gray-600',
           );
 
           return (

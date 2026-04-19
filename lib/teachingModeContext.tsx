@@ -12,7 +12,7 @@ const TeachingModeContext = createContext<TeachingModeContextValue | undefined>(
 const STORAGE_KEY = 'padi_teaching_mode';
 
 export function TeachingModeProvider({ children }: { children: React.ReactNode }) {
-  const [mode, setModeState] = useState<TeachingMode>('both');
+  const [mode, setModeState] = useState<TeachingMode>('individual');
 
   useEffect(() => {
     if (typeof window === 'undefined') return;

@@ -11,38 +11,7 @@ export type DemoGroup = {
   studentIds: string[];
 };
 
-export const demoGroups: DemoGroup[] = [
-  {
-    id: 'grp-a',
-    name: 'Group A',
-    focus: 'Learning Sensorially',
-    status: 'In progress',
-    progressPercent: 46,
-    progressLabel: 'Avg 17/36 lessons',
-    tags: ['Listening', 'Rhyming'],
-    studentIds: ['stu-1', 'stu-3', 'stu-6'],
-  },
-  {
-    id: 'grp-b',
-    name: 'Group B',
-    focus: 'Sound Awareness',
-    status: 'In progress',
-    progressPercent: 22,
-    progressLabel: 'Avg 8/36 lessons',
-    tags: ['Sound ID', 'Attention'],
-    studentIds: ['stu-2', 'stu-5', 'stu-8'],
-  },
-  {
-    id: 'grp-c',
-    name: 'Group C',
-    focus: 'Syllables & Blending',
-    status: 'In progress',
-    progressPercent: 46,
-    progressLabel: 'Avg 16/36 lessons',
-    tags: ['Syllables', 'Fluency'],
-    studentIds: ['stu-4', 'stu-7', 'stu-9'],
-  },
-];
+export const demoGroups: DemoGroup[] = [];
 
 export const demoGroupIndex = Object.fromEntries(demoGroups.map(g => [g.id, g]));
 

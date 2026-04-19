@@ -171,6 +171,7 @@ create table if not exists public.profiles (
   id uuid primary key,
   tenant_id uuid references public.tenants(id) on delete restrict,
   email text,
+  role text not null default 'teacher' check (role in ('parent','teacher')),
   created_at timestamptz not null default now()
 );
 create index if not exists profiles_tenant_id_idx on public.profiles(tenant_id);
@@ -321,8 +322,8 @@ security definer
 set search_path = public
 as $$
 begin
-  insert into public.profiles (id, tenant_id, email, created_at)
-  values (new.id, null, new.email, now())
+  insert into public.profiles (id, tenant_id, email, role, created_at)
+  values (new.id, null, new.email, 'teacher', now())
   on conflict (id) do update
     set email = excluded.email;
   return new;

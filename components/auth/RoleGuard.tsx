@@ -14,17 +14,20 @@ const PICKER_PATH = '/welcome/role';
  * it. Does nothing until hydration completes to avoid flashing redirects.
  */
 export function RoleGuard() {
-  const { isLoggedIn, isHydrated, roleSetAt } = useAuth();
+  const { isLoggedIn, isHydrated, roleSetAt, profileFetchError } = useAuth();
   const router = useRouter();
   const pathname = usePathname();
 
   useEffect(() => {
     if (!isHydrated) return;
     if (!isLoggedIn) return;
+    // Fail open on fetch errors — redirecting when we couldn't read the
+    // profile creates infinite redirect loops on transient failures.
+    if (profileFetchError) return;
     if (roleSetAt) return;
     if (pathname === PICKER_PATH) return;
     router.replace(PICKER_PATH);
-  }, [isHydrated, isLoggedIn, roleSetAt, pathname, router]);
+  }, [isHydrated, isLoggedIn, roleSetAt, profileFetchError, pathname, router]);
 
   return null;
 }

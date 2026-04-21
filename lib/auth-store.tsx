@@ -32,6 +32,13 @@ export type AuthState = {
   tenantId: string | null;
   role: UserRole | null;
   roleSetAt: string | null;
+  /**
+   * True when the most recent profile fetch errored at the network/DB layer
+   * (as opposed to returning a row with role=null). Use this to fail open in
+   * role-gated UI — never redirect to the picker if the fetch itself failed,
+   * or we create infinite redirect loops on future regressions.
+   */
+  profileFetchError: boolean;
   isHydrated: boolean;
   login: (email: string, password: string) => Promise<void>;
   signup: (email: string, password: string) => Promise<{ session: Session | null; user: AuthUser | null }>;
@@ -55,24 +62,36 @@ async function fetchTenantId(accessToken: string): Promise<string | null> {
   }
 }
 
-type RoleInfo = { role: UserRole | null; roleSetAt: string | null };
+type RoleInfo = { role: UserRole | null; roleSetAt: string | null; fetchError: boolean };
 
 async function fetchRoleInfo(userId: string): Promise<RoleInfo> {
   try {
     const sb = supabaseClient();
-    const { data } = await sb
+    const { data, error } = await sb
       .from('profiles')
       .select('role, role_set_at')
       .eq('id', userId)
       .single();
+    if (error) {
+      // PGRST116 ("Results contain 0 rows") is treated as missing-row, not
+      // a transport failure — the picker/upsert path will create one.
+      const isMissingRow = error.code === 'PGRST116';
+      if (!isMissingRow) {
+        console.error('fetchRoleInfo error:', error);
+        return { role: null, roleSetAt: null, fetchError: true };
+      }
+      return { role: null, roleSetAt: null, fetchError: false };
+    }
     const row = data as { role: string; role_set_at: string | null } | null;
     const role = row?.role;
     return {
       role: role === 'parent' || role === 'teacher' ? role : null,
       roleSetAt: row?.role_set_at ?? null,
+      fetchError: false,
     };
-  } catch {
-    return { role: null, roleSetAt: null };
+  } catch (err) {
+    console.error('fetchRoleInfo threw:', err);
+    return { role: null, roleSetAt: null, fetchError: true };
   }
 }
 
@@ -82,6 +101,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [tenantId, setTenantId] = useState<string | null>(null);
   const [role, setRole] = useState<UserRole | null>(null);
   const [roleSetAt, setRoleSetAt] = useState<string | null>(null);
+  const [profileFetchError, setProfileFetchError] = useState(false);
   const [isHydrated, setIsHydrated] = useState(false);
 
   useEffect(() => {
@@ -103,6 +123,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           setTenantId(tid);
           setRole(info.role);
           setRoleSetAt(info.roleSetAt);
+          setProfileFetchError(info.fetchError);
         }
       }
       if (isMounted) setIsHydrated(true);
@@ -124,6 +145,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
               setTenantId(tid);
               setRole(info.role);
               setRoleSetAt(info.roleSetAt);
+              setProfileFetchError(info.fetchError);
             }
           });
         }
@@ -134,6 +156,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setTenantId(null);
         setRole(null);
         setRoleSetAt(null);
+        setProfileFetchError(false);
         setIsHydrated(true);
       }
     });
@@ -149,6 +172,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const info = await fetchRoleInfo(user.id);
     setRole(info.role);
     setRoleSetAt(info.roleSetAt);
+    setProfileFetchError(info.fetchError);
   }, [user?.id]);
 
   const login = useCallback(async (email: string, password: string) => {
@@ -185,6 +209,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setTenantId(null);
     setRole(null);
     setRoleSetAt(null);
+    setProfileFetchError(false);
   }, []);
 
   const value = useMemo(
@@ -194,13 +219,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       tenantId,
       role,
       roleSetAt,
+      profileFetchError,
       isHydrated,
       login,
       signup,
       logout,
       refreshRole,
     }),
-    [isLoggedIn, user, tenantId, role, roleSetAt, isHydrated, login, signup, logout, refreshRole]
+    [isLoggedIn, user, tenantId, role, roleSetAt, profileFetchError, isHydrated, login, signup, logout, refreshRole]
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

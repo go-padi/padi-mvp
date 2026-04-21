@@ -353,6 +353,12 @@ alter table public.module_assessment enable row level security;
 create policy "read own profile" on public.profiles
   for select using (id = auth.uid());
 
+create policy "insert own profile" on public.profiles
+  for insert with check (id = auth.uid());
+
+create policy "update own profile" on public.profiles
+  for update using (id = auth.uid()) with check (id = auth.uid());
+
 create policy "tenant read access" on public.tenants
   for select using (id in (select tenant_id from public.profiles where id = auth.uid()));
 

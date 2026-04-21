@@ -45,13 +45,20 @@ export default function RolePickerPage() {
     setSaving(true);
     setError(null);
     const sb = supabaseClient();
-    const { error: updateError } = await sb
+    // Upsert (not update) — protects against the edge case where the
+    // profile row doesn't exist yet (pre-trigger users, trigger hiccups).
+    const { error: upsertError } = await sb
       .from('profiles')
-      .update({ role: selected, role_set_at: new Date().toISOString() })
-      .eq('id', user.id);
-    if (updateError) {
-      console.error(updateError);
-      setError('Could not save your choice. Please try again.');
+      .upsert(
+        { id: user.id, role: selected, role_set_at: new Date().toISOString() },
+        { onConflict: 'id' },
+      );
+    if (upsertError) {
+      console.error('Role upsert failed:', upsertError.code, upsertError.message);
+      const friendly = upsertError.code === '42501' || /rls|policy/i.test(upsertError.message)
+        ? 'We don\u2019t have permission to save your choice. Please contact support.'
+        : 'Could not save your choice. Please try again.';
+      setError(friendly);
       setSaving(false);
       return;
     }

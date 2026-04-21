@@ -12,6 +12,7 @@ import {
   previewModulesByGroup,
   groupToChapterCode,
 } from '@/lib/demo/demoCurriculum';
+import { stripIndividualSuffix } from '@/lib/curriculum/formatting';
 
 type GroupRow = {
   id: string;
@@ -55,7 +56,20 @@ export default function CurriculumPage() {
   const [expandedChapters, setExpandedChapters] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(true);
   const { mode } = useTeachingMode();
-  const { isLoggedIn, isHydrated } = useAuth();
+  const { isLoggedIn, isHydrated, role } = useAuth();
+
+  // Parent gating (KAN-131): role comes from useAuth after hydration.
+  // effectiveMode forces 'individual' for parents without mutating context.
+  // An unknown role falls through to teacher view with a single warn.
+  const isParent = isHydrated && role === 'parent';
+  const effectiveMode = isParent ? 'individual' : mode;
+
+  useEffect(() => {
+    if (!isHydrated || !isLoggedIn) return;
+    if (role !== 'parent' && role !== 'teacher') {
+      console.warn(`Unknown role: ${role} — defaulting to teacher view`);
+    }
+  }, [isHydrated, isLoggedIn, role]);
 
   const toggleChapter = (code: string) => {
     setExpandedChapters(prev => {
@@ -72,7 +86,7 @@ export default function CurriculumPage() {
       setLoading(true);
 
       const sb = supabaseClient();
-      const teachingModeParam = mode === 'both' ? null : mode;
+      const teachingModeParam = effectiveMode === 'both' ? null : effectiveMode;
 
       const { data: groupRows } = await sb.rpc('content_get_groups', {
         p_teaching_mode: teachingModeParam,
@@ -83,7 +97,7 @@ export default function CurriculumPage() {
       const resolvedGroups: GroupRow[] = usingLive
         ? liveGroups
         : (previewGroups.filter(g =>
-            mode === 'both' ? true : g.teaching_mode === mode
+            effectiveMode === 'both' ? true : g.teaching_mode === effectiveMode
           ) as GroupRow[]);
 
       const groupModulesEntries = await Promise.all(
@@ -97,7 +111,7 @@ export default function CurriculumPage() {
             return [g.code, moduleRows.slice().sort((a, b) => (a.display_order || 0) - (b.display_order || 0))] as const;
           }
           const fallback = (previewModulesByGroup[g.code] || [])
-            .filter(m => mode === 'both' ? true : m.teaching_mode === mode)
+            .filter(m => effectiveMode === 'both' ? true : m.teaching_mode === effectiveMode)
             .map(m => ({
               ...m,
               is_locked: m.is_locked ?? null,
@@ -125,7 +139,7 @@ export default function CurriculumPage() {
       }
 
       const filteredPreviewChapters = previewChapters.filter(ch =>
-        mode === 'both' ? true : ch.teaching_mode === mode
+        effectiveMode === 'both' ? true : ch.teaching_mode === effectiveMode
       );
 
       const builtChapters: ChapterWithGroups[] = filteredPreviewChapters
@@ -148,7 +162,7 @@ export default function CurriculumPage() {
     };
 
     fetchAll();
-  }, [mode, isHydrated]);
+  }, [effectiveMode, isHydrated]);
 
   if (!isHydrated || loading) {
     return (
@@ -204,7 +218,7 @@ export default function CurriculumPage() {
     <div key={g.code} className="space-y-2">
       <div className="flex items-center justify-between">
         <div>
-          <p className="text-sm font-semibold text-gray-800">{g.title}</p>
+          <p className="text-sm font-semibold text-gray-800">{isParent ? stripIndividualSuffix(g.title) : g.title}</p>
           {g.description && <p className="text-xs text-gray-600">{g.description}</p>}
         </div>
         <span className="text-xs text-gray-500">{g.modules.length} module{g.modules.length !== 1 ? 's' : ''}</span>
@@ -236,7 +250,7 @@ export default function CurriculumPage() {
               {isExpanded ? '▼' : '▶'}
             </div>
             <div>
-              <p className="text-sm font-semibold text-gray-900">{ch.title}</p>
+              <p className="text-sm font-semibold text-gray-900">{isParent ? stripIndividualSuffix(ch.title) : ch.title}</p>
               <p className="text-xs text-gray-600">
                 {totalModules} module{totalModules !== 1 ? 's' : ''} across {ch.groups.length} group{ch.groups.length !== 1 ? 's' : ''}
               </p>
@@ -255,9 +269,11 @@ export default function CurriculumPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <TeachingModeToggle />
-      </div>
+      {!isParent && (
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <TeachingModeToggle />
+        </div>
+      )}
 
       {!isLoggedIn && (
         <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-xs text-amber-800">
@@ -276,7 +292,7 @@ export default function CurriculumPage() {
         </div>
       )}
 
-      {mode === 'both' ? (
+      {effectiveMode === 'both' ? (
         <div className="space-y-6">
           {groupChapters.length > 0 && (
             <div className="space-y-3">

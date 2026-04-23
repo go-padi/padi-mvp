@@ -101,9 +101,11 @@ export function useStartTeachingData(): StartTeachingData {
             ? `${completedModules} module${completedModules === 1 ? '' : 's'} done`
             : `${storedPercent}% complete`)
           : storedLabel,
-        assessmentStatus: hasProgress
-          ? (student.assessment_status === 'Complete' ? 'Complete' : 'In progress')
-          : (student.assessment_status ?? 'Not started'),
+        assessmentStatus: ['Ready', 'Needs Help', 'Needs Intervention'].includes(student.assessment_status ?? '')
+          ? student.assessment_status!
+          : hasProgress
+            ? 'In progress'
+            : (student.assessment_status ?? 'Not started'),
       };
     });
 

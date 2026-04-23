@@ -64,19 +64,19 @@ const programStructure = [
 
 const outcomes = [
   {
-    label: 'Ready for Grade 1',
-    description: 'Students who have mastered all core skills',
+    label: 'Ready',
+    description: 'On track for first grade — has mastered all core skills',
     tone: 'bg-green-50 text-green-800 border-green-100',
   },
   {
-    label: 'Remedial Support',
-    description: 'Students who need continued practice in specific areas',
-    tone: 'bg-yellow-50 text-yellow-900 border-yellow-100',
+    label: 'Needs Help',
+    description: 'Requires targeted support in specific areas before progressing',
+    tone: 'bg-amber-50 text-amber-900 border-amber-100',
   },
   {
-    label: 'SIS Therapy',
-    description: 'Students requiring specialized intervention support',
-    tone: 'bg-orange-50 text-orange-900 border-orange-100',
+    label: 'Needs Intervention',
+    description: 'Requires serious, immediate specialist support',
+    tone: 'bg-red-50 text-red-900 border-red-100',
   },
 ];
 

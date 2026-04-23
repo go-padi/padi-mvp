@@ -17,7 +17,7 @@ export default function Page(){
               Help Every Child <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-purple-600">Love Reading</span>
             </h1>
             <p className="max-w-2xl text-lg text-gray-700">
-              Structured, interactive reading lessons designed for struggling readers ages 3-5.
+              Structured, interactive reading lessons designed for struggling readers ages 3-4.
               Based on proven curriculum with AI-powered personalization.
             </p>
             <div className="flex flex-wrap gap-3">
@@ -59,7 +59,7 @@ export default function Page(){
                 {
                   title: "Targeted Support",
                   bullet: [
-                    "Ages 5-7 focus",
+                    "Ages 3-4 focus",
                     "Systematic phonics approach",
                     "Multi-sensory learning",
                     "Confidence building",

@@ -158,11 +158,15 @@ function renderTable(
                 <span
                   className={clsx(
                     'rounded-full px-3 py-1 text-xs font-semibold',
-                    row.status === 'Ready for review'
+                    row.status === 'Ready'
                       ? 'bg-green-100 text-green-800'
-                      : row.status === 'Not started'
-                        ? 'bg-gray-100 text-gray-700'
-                        : 'bg-blue-100 text-blue-800'
+                      : row.status === 'Needs Help'
+                        ? 'bg-amber-100 text-amber-800'
+                        : row.status === 'Needs Intervention'
+                          ? 'bg-red-100 text-red-800'
+                          : row.status === 'Not started'
+                            ? 'bg-gray-100 text-gray-700'
+                            : 'bg-blue-100 text-blue-800'
                   )}
                 >
                   {row.status}

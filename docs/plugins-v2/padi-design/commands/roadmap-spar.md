@@ -6,7 +6,7 @@ Load the pm-sparring and north-star skills. The board is a file tree at `padi-ap
 
 ## Step 1: Pull the current board
 
-Walk `padi-app-starter/docs/features/` and build the same mental picture the old `searchJiraIssuesUsingJql` gave you:
+Walk `padi-app-starter/docs/features/` and build a current picture of the board:
 - List every feature folder and its `epic.md`.
 - For each folder, enumerate tickets (non-epic, non-UAT `.md` files) with their frontmatter `status` and `priority`.
 - Read `docs/features/_review.md` for anything flagged stale.

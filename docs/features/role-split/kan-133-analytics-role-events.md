@@ -3,11 +3,15 @@ id: KAN-133
 title: "[Analytics] Track role at signup and on key activation events"
 type: task
 status: backlog
-priority: medium
+priority: low
 feature: role-split
 jira_ref: https://go-padi.atlassian.net/browse/KAN-133
-updated: 2026-04-19
+updated: 2026-04-22
+defer_until: pre-launch
 ---
+
+> **Deferred 2026-04-22.** Analytics not needed for the role-split release. Re-queue after all critical features (sign-in-flow, start-teaching-flow gaps, before-go-live) are done but before public launch.
+
 
 ### Goal
 Emit three analytics events tagged with `role` so we can segment activation by parent vs teacher.

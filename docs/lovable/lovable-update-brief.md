@@ -21,7 +21,7 @@ The Lovable prototype is broadly aligned on structure (nav, teacher dashboard ta
 | Element | Codebase | Lovable |
 |---------|----------|---------|
 | Headline | "Help Every Child **Love Reading**" | "Teach reading with Padi, **one student or group at a time**" |
-| Subtext | "Structured, interactive reading lessons designed for struggling readers ages 3-5. Based on proven curriculum with AI-powered personalization." | "Diagnose, plan, and run evidence-based lessons without taking a separate training course." |
+| Subtext | "Structured, interactive reading lessons designed for struggling readers ages 3-4. Based on proven curriculum with AI-powered personalization." | "Diagnose, plan, and run evidence-based lessons without taking a separate training course." |
 | CTA buttons | "Start Teaching" → `/teacher`, "Teacher Dashboard" → `/teacher/phases` | "Start Teaching" → `/start-teaching`, "Teacher Dashboard" → `/teacher` |
 | Feature cards | 2x2 grid inside a white card on the right column | 3 standalone cards in separate row |
 | CTA banner text | "Join teachers and parents helping children build confidence and reading skills" | "Join thousands of teachers helping children build confidence and reading skills" |
@@ -29,7 +29,7 @@ The Lovable prototype is broadly aligned on structure (nav, teacher dashboard ta
 
 ### Changes Needed
 1. Change headline to: **"Help Every Child Love Reading"** with "Love Reading" in gradient text (blue-600 to purple-600)
-2. Change subtext to: "Structured, interactive reading lessons designed for struggling readers ages 3-5. Based on proven curriculum with AI-powered personalization."
+2. Change subtext to: "Structured, interactive reading lessons designed for struggling readers ages 3-4. Based on proven curriculum with AI-powered personalization."
 3. Restructure hero into **2-column layout** (md breakpoint): left column = badge + headline + subtext + CTAs; right column = white card containing feature grid
 4. Move feature cards into the right-column card as a **2x2 grid** (not 3 separate full-width cards)
 5. Update "Start Teaching" button to link to `/teacher` (not `/start-teaching`)

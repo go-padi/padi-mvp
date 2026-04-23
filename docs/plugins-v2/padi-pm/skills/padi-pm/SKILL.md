@@ -36,7 +36,7 @@ padi-app-starter/docs/features/
 
 Every ticket file has YAML frontmatter with at minimum: `id`, `title`, `type` (epic|story|task|bug|uat|feature), `status` (backlog|in-progress|review|done), `priority`, `feature`, and `updated` (YYYY-MM-DD). See `docs/features/SCHEMA.md` for the full contract.
 
-Former KAN IDs are preserved in the `id` and `jira_ref` fields so old references keep working — but nothing writes back to Jira anymore.
+The `KAN-NNN` id prefix is a historical artifact preserved so old references keep working. Nothing calls out to any external tracker.
 
 ## Session Start Protocol
 

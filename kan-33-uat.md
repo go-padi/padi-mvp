@@ -23,7 +23,7 @@ Status: ✅
 **UAT-03** — Subtext matches codebase
 Given I am on the homepage
 When I read the subtext
-Then it says "Structured, interactive reading lessons designed for struggling readers ages 3-5. Based on proven curriculum with AI-powered personalization."
+Then it says "Structured, interactive reading lessons designed for struggling readers ages 3-4. Based on proven curriculum with AI-powered personalization."
 Status: ✅
 
 **UAT-04** — Feature cards in right-column card

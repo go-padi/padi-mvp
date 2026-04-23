@@ -260,7 +260,7 @@ Change the homepage hero section from single-column centered layout to a **2-col
 **Left column** (slightly wider, about 55% width):
 - Keep the "AI-Enhanced Reading Support" badge at the top
 - Change headline from "Teach reading with Padi, one student or group at a time" to: **"Help Every Child Love Reading"** — where "Love Reading" is styled with a gradient text effect (bg-gradient-to-r from-blue-600 to-purple-600, bg-clip-text, text-transparent)
-- Change subtitle from "Diagnose, plan, and run evidence-based lessons without taking a separate training course." to: **"Structured, interactive reading lessons designed for struggling readers ages 3-5. Based on proven curriculum with AI-powered personalization."**
+- Change subtitle from "Diagnose, plan, and run evidence-based lessons without taking a separate training course." to: **"Structured, interactive reading lessons designed for struggling readers ages 3-4. Based on proven curriculum with AI-powered personalization."**
 - Keep the two CTA buttons: "Start Teaching" (purple/primary) and "Teacher Dashboard" (outline)
 - Change "Start Teaching" button to link to `/teacher` instead of `/start-teaching`
 - Change "Teacher Dashboard" button to link to `/teacher/phases` instead of `/teacher`

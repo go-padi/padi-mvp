@@ -36,7 +36,6 @@ type: story|task|bug|epic|feature
 status: backlog
 priority: low|medium|high
 feature: <folder>
-jira_ref: https://go-padi.atlassian.net/browse/KAN-NNN   # optional; omit for new tickets
 updated: YYYY-MM-DD
 ---
 

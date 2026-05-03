@@ -6,7 +6,7 @@ feature: role-split
 parent: KAN-127
 related: KAN-131, KAN-135
 priority: high
-status: review
+status: done
 discovered_during: UAT KAN-135 (2026-04-21)
 updated: 2026-05-03
 ---

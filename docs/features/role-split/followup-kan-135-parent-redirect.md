@@ -6,10 +6,30 @@ feature: role-split
 parent: KAN-131
 related: KAN-135
 severity: medium
-status: open
+status: review
 discovered_during: UAT KAN-135 (2026-04-21)
-updated: 2026-04-21
+updated: 2026-05-03
 ---
+
+### Resolution (2026-05-03) — no code change
+
+Investigation found no `role === 'parent'`-conditional redirect away from `/teacher/curriculum`. The only role-aware redirect in the app is `components/auth/RoleGuard.tsx`, which redirects logged-in users to `/welcome/role` when `roleSetAt === null` — already narrowed per Option A's "redirect only on null-role" guidance. (`roleSetAt` is the correct narrowing key, not `role`: the auth trigger bootstraps `role='teacher'`, so `role !== null` does not reliably indicate the user has picked — see comment in `lib/auth-store.tsx`.)
+
+Verification grep `rg "teacher/curriculum" app middleware.ts lib` returns only:
+- `app/teacher/layout.tsx:20` — `pathname.startsWith('/teacher/curriculum')` inside the `isDashboardView` check (renders dashboard chrome; not a redirect).
+- `app/teacher/dashboard/page.tsx:4` — `redirect('/teacher/curriculum')` redirects *into* the page from the legacy `/teacher/dashboard` slug (unrelated).
+
+All five ACs are met as-is by current code:
+- Parent deep-link with `roleSetAt` set → RoleGuard returns early at the `roleSetAt` check; gated parent view renders.
+- Parent in-app tab → unchanged.
+- Teacher deep-link → unchanged.
+- Logged-out preview → unchanged (no auth checks fire).
+- `role === null` (i.e. `roleSetAt === null`) → RoleGuard still redirects to `/welcome/role`.
+
+The UAT-observed "parent ends up on /teacher" symptom is most likely the picker handoff path: a parent with `roleSetAt === null` deep-linking to `/teacher/curriculum` is sent to `/welcome/role`, picks "parent", and `app/welcome/role/page.tsx:66` then `router.push('/teacher')`s them. The deep-link target is lost. That is a returnTo-handling issue in the picker, not a parent-specific guard, and is out of scope for this ticket — file a separate follow-up if we want to preserve the original target across the picker.
+
+Flipping to `review` for human confirmation. If the original UAT repro can still be reproduced with `roleSetAt` set, reopen with the steps and the network/route trace.
+
 
 ### Goal
 Preserve deep-link / bookmark access to `/teacher/curriculum` for parent-role users. Today, direct navigation to `/teacher/curriculum` under `role === 'parent'` is redirected to `/teacher`; the curriculum page is only reachable via the in-app "Teacher Dashboard → Curriculum" tab. This partly undermines KAN-131 (and UAT-01 / UAT-02 in KAN-135) for any user who arrives via a saved URL, email link, or shared link.

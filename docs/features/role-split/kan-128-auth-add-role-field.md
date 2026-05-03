@@ -2,7 +2,7 @@
 id: KAN-128
 title: "[Auth] Add role field to user profile schema"
 type: story
-status: done
+status: done; validated
 priority: high
 feature: role-split
 jira_ref: https://go-padi.atlassian.net/browse/KAN-128

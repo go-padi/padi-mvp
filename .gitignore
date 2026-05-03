@@ -8,6 +8,12 @@ build
 .vite
 .DS_Store
 
+# TypeScript incremental build info
+*.tsbuildinfo
+
+# Supabase CLI local state
+supabase/.temp/
+
 # Env & local config
 .env
 .env.*

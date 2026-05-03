@@ -12,13 +12,46 @@ import { AddStudentModal } from '@/components/AddStudentModal';
 import { AddGroupModal } from '@/components/AddGroupModal';
 import { previewModuleByCode } from '@/lib/demo/demoCurriculum';
 
+type LessonStep = string | { text: string };
+
 type Lesson = {
   materials?: string[];
   aims?: string[];
-  presentation_steps?: string[];
+  presentation_steps?: LessonStep[];
   examples?: string[];
   extension?: string[];
 };
+
+const stepText = (s: LessonStep): string => (typeof s === 'string' ? s : s?.text || '');
+
+// Backwards-compat: older modules store every teaching move jammed into
+// presentation_steps[0] as one paragraph. Split into discrete steps.
+const normalizeSteps = (raw: LessonStep[] | undefined): string[] => {
+  if (!raw?.length) return [];
+  const texts = raw.map(stepText).map(s => s.trim()).filter(Boolean);
+  if (texts.length >= 2) return texts;
+  return texts[0]
+    .split(/(?<=[.!?])\s+(?=[A-Z])/)
+    .map(s => s.trim())
+    .filter(Boolean);
+};
+
+// Older modules store multiple goals comma- or run-on-spliced into aims[0].
+const normalizeAims = (raw: string[] | undefined): string[] => {
+  if (!raw?.length) return [];
+  if (raw.length > 1) return raw.map(s => s.trim()).filter(Boolean);
+  return raw[0]
+    .split(/(?<=[a-z])\s+(?=[A-Z])|\.\s+/)
+    .map(s => s.trim().replace(/\.$/, ''))
+    .filter(Boolean);
+};
+
+const formatSlug = (slug: string): string =>
+  slug
+    .replace(/^ind-/, '')
+    .split('-')
+    .map(w => (w ? w[0].toUpperCase() + w.slice(1) : ''))
+    .join(' ');
 
 type ModuleRow = {
   id: string;
@@ -220,6 +253,14 @@ export default function LessonPage({ params }: { params: Promise<{ chapter: stri
   }
 
   const lesson = moduleRow?.lesson || {};
+  const normalizedSteps = normalizeSteps(lesson.presentation_steps);
+  const normalizedAims = normalizeAims(lesson.aims);
+  const hasAnyLessonContent = !!(
+    (lesson.materials && lesson.materials.length) ||
+    normalizedAims.length ||
+    normalizedSteps.length ||
+    (lesson.extension && lesson.extension.length)
+  );
   const handleStudentChange = (value: string) => {
     if (value === '__action_add_student__') {
       setStudentId('');
@@ -412,70 +453,86 @@ export default function LessonPage({ params }: { params: Promise<{ chapter: stri
         </div>
       )}
 
-      <div className="space-y-2">
-        <h2 className="text-3xl font-semibold text-gray-900 flex items-center gap-3">
-          {moduleRow?.subtitle ? `Module ${moduleRow.subtitle}` : moduleRow?.title || 'Module'}
-          {moduleRow?.teaching_mode && (
-            <span className={clsx(
-              'rounded-full px-3 py-1 text-xs font-semibold uppercase tracking-wide',
-              moduleRow.teaching_mode === 'individual' ? 'bg-purple-50 text-purple-700' : 'bg-blue-50 text-blue-700'
-            )}>
-              {moduleRow.teaching_mode === 'individual' ? 'Individual' : 'Group'}
-            </span>
-          )}
-        </h2>
-        <p className="text-sm text-gray-700">{moduleRow?.summary}</p>
-      </div>
-
-      {lesson.materials && lesson.materials.length > 0 && (
-        <div className="rounded-2xl border border-gray-100 bg-white p-5 shadow-sm">
-          <h3 className="text-lg font-semibold text-gray-900">Materials</h3>
-          <ul className="mt-2 space-y-1 text-sm text-gray-700 list-disc list-inside">
-            {lesson.materials.map(item => <li key={item}>{item}</li>)}
-          </ul>
-        </div>
-      )}
-
-      {lesson.aims && lesson.aims.length > 0 && (
-        <div className="rounded-2xl border border-purple-100 bg-purple-50 p-5 shadow-sm">
-          <h3 className="text-lg font-semibold text-gray-900">Aim</h3>
-          <ul className="mt-2 space-y-1 text-sm text-gray-700 list-disc list-inside">
-            {lesson.aims.map(item => <li key={item}>{item}</li>)}
-          </ul>
-        </div>
-      )}
-
-      {lesson.presentation_steps && lesson.presentation_steps.length > 0 && (
-        <div className="rounded-2xl border border-green-100 bg-green-50 p-5 shadow-sm">
-          <h3 className="text-lg font-semibold text-gray-900">Presentation</h3>
-          <p className="text-xs text-gray-600">Follow these steps to conduct the activity</p>
-          <ol className="mt-3 space-y-2 text-sm text-gray-800 list-decimal list-inside">
-            {lesson.presentation_steps.map((step, idx) => <li key={idx}>{step}</li>)}
-          </ol>
-          {lesson.examples && lesson.examples.length > 0 && (
-            <div className="mt-4 rounded-xl bg-white/80 border border-green-100 p-4">
-              <p className="text-xs font-semibold text-gray-800">Examples of sounds students might identify:</p>
-              <div className="mt-2 columns-2 text-sm text-gray-700">
-                {lesson.examples.map(ex => <div key={ex}>{ex}</div>)}
+      <div className={clsx(hasStudentContext && 'lg:grid lg:grid-cols-[minmax(0,1fr)_22rem] lg:items-start lg:gap-6')}>
+        <div className="space-y-6 min-w-0">
+          <div className="space-y-2">
+            <p className="text-xs font-medium uppercase tracking-wide text-gray-500">
+              {formatSlug(chapter)} <span className="text-gray-300">·</span> {formatSlug(group)}
+            </p>
+            <h2 className="text-3xl font-semibold text-gray-900 flex flex-wrap items-center gap-3">
+              {moduleRow?.title || 'Module'}
+              {moduleRow?.teaching_mode && (
+                <span className={clsx(
+                  'rounded-full px-3 py-1 text-xs font-semibold uppercase tracking-wide',
+                  moduleRow.teaching_mode === 'individual' ? 'bg-purple-50 text-purple-700' : 'bg-blue-50 text-blue-700'
+                )}>
+                  {moduleRow.teaching_mode === 'individual' ? 'Individual' : 'Group'}
+                </span>
+              )}
+            </h2>
+            {normalizedAims.length > 0 && (
+              <p className="text-sm text-gray-600">
+                <span className="font-medium text-gray-700">Aim:</span> {normalizedAims.join(', ')}
+              </p>
+            )}
+            {lesson.materials && lesson.materials.length > 0 && (
+              <div className="flex flex-wrap items-center gap-2 pt-1">
+                <span aria-hidden className="text-base">📦</span>
+                {lesson.materials.map(item => (
+                  <span
+                    key={item}
+                    className="rounded-full bg-gray-100 px-2.5 py-1 text-xs text-gray-700"
+                  >
+                    {item}
+                  </span>
+                ))}
               </div>
-            </div>
+            )}
+          </div>
+
+          {normalizedSteps.length > 0 && (
+            <section className="rounded-2xl border border-gray-100 bg-white p-5 shadow-sm border-l-4 border-l-blue-600">
+              <h3 className="text-lg font-semibold text-gray-900">Presentation</h3>
+              <p className="text-xs text-gray-500">Follow these steps to conduct the activity</p>
+              <ol className="mt-4 space-y-4">
+                {normalizedSteps.map((step, idx) => (
+                  <li key={idx} className="flex gap-4">
+                    <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-blue-600 text-xs font-semibold text-white">
+                      {idx + 1}
+                    </span>
+                    <span className="pt-0.5 text-sm leading-relaxed text-gray-800">{step}</span>
+                  </li>
+                ))}
+              </ol>
+              {lesson.examples && lesson.examples.length > 0 && (
+                <div className="mt-5 border-t border-gray-100 pt-4">
+                  <p className="text-xs font-semibold text-gray-600">Examples of sounds students might identify</p>
+                  <div className="mt-2 columns-2 text-sm text-gray-500">
+                    {lesson.examples.map(ex => <div key={ex}>{ex}</div>)}
+                  </div>
+                </div>
+              )}
+            </section>
+          )}
+
+          {lesson.extension && lesson.extension.length > 0 && (
+            <details className="group rounded-2xl border border-gray-100 bg-white p-5 shadow-sm">
+              <summary className="flex cursor-pointer items-center justify-between text-sm font-semibold text-gray-800 list-none [&::-webkit-details-marker]:hidden">
+                <span>Extension Activities <span className="font-normal text-gray-500">(optional)</span></span>
+                <span className="text-gray-400 transition-transform group-open:rotate-180">▾</span>
+              </summary>
+              <ul className="mt-3 space-y-2 text-sm text-gray-700 list-disc pl-5">
+                {lesson.extension.map(item => <li key={item}>{item}</li>)}
+              </ul>
+            </details>
+          )}
+
+          {!hasAnyLessonContent && (
+            <div className="rounded-2xl border border-gray-100 bg-white p-5 shadow-sm text-sm text-gray-700">Content coming soon.</div>
           )}
         </div>
-      )}
 
-      {lesson.extension && lesson.extension.length > 0 && (
-        <div className="rounded-2xl border border-amber-100 bg-amber-50 p-5 shadow-sm">
-          <h3 className="text-lg font-semibold text-gray-900">Extension Activities</h3>
-          <ul className="mt-2 space-y-1 text-sm text-gray-700 list-disc list-inside">
-            {lesson.extension.map(item => <li key={item}>{item}</li>)}
-          </ul>
-        </div>
-      )}
-
-      {(!lesson.materials || lesson.materials.length === 0) && (
-        <div className="rounded-2xl border border-gray-100 bg-white p-5 shadow-sm text-sm text-gray-700">Content coming soon.</div>
-      )}
-
+        <aside className={clsx(hasStudentContext && 'mt-6 lg:mt-0 lg:sticky lg:top-6 lg:self-start')}>
       {isLoggedIn ? (
         <div className="rounded-2xl border border-gray-100 bg-white p-5 shadow-sm space-y-4">
           <h3 className="text-lg font-semibold text-gray-900">
@@ -555,7 +612,7 @@ export default function LessonPage({ params }: { params: Promise<{ chapter: stri
               <button
                 onClick={() => setShowSignalStep(true)}
                 disabled={saving || showSignalStep || (!hasStudentContext && !studentId) || (!notes.trim() && !audioFile && !loadedAttachmentUrl)}
-                className="flex-1 rounded-xl bg-gradient-to-r from-blue-600 to-purple-600 px-4 py-3 text-sm font-semibold text-white shadow-sm disabled:opacity-60"
+                className="flex-1 rounded-xl bg-blue-600 hover:bg-blue-700 px-4 py-3 text-sm font-semibold text-white shadow-sm disabled:opacity-60"
               >
                 {saving ? 'Saving...' : 'Mark Lesson Complete'}
               </button>
@@ -600,7 +657,7 @@ export default function LessonPage({ params }: { params: Promise<{ chapter: stri
                 <button
                   onClick={() => selectedSignal && markComplete(selectedSignal)}
                   disabled={!selectedSignal || saving}
-                  className="rounded-xl bg-gradient-to-r from-blue-600 to-purple-600 px-6 py-3 text-sm font-semibold text-white shadow-sm disabled:opacity-60"
+                  className="rounded-xl bg-blue-600 hover:bg-blue-700 px-6 py-3 text-sm font-semibold text-white shadow-sm disabled:opacity-60"
                 >
                   {saving ? 'Completing...' : 'Complete Lesson'}
                 </button>
@@ -647,6 +704,8 @@ export default function LessonPage({ params }: { params: Promise<{ chapter: stri
           </Link>
         </div>
       )}
+        </aside>
+      </div>
       <AddStudentModal
         open={showAddStudentModal}
         onClose={() => setShowAddStudentModal(false)}

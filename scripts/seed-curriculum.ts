@@ -24,6 +24,36 @@ type ModuleData = {
   };
 };
 
+// Source data jams every teaching move into presentation_steps[0] as one
+// paragraph and run-on aims into aims[0]. Split into discrete entries so
+// the lesson page can render a numbered timeline / one aim per line.
+function splitSteps(raw: string[]): string[] {
+  if (!raw?.length) return [];
+  const cleaned = raw.map(s => s.trim()).filter(Boolean);
+  if (cleaned.length >= 2) return cleaned;
+  return cleaned[0]
+    .split(/(?<=[.!?])\s+(?=[A-Z])/)
+    .map(s => s.trim())
+    .filter(Boolean);
+}
+
+function splitAims(raw: string[]): string[] {
+  if (!raw?.length) return [];
+  if (raw.length > 1) return raw.map(s => s.trim()).filter(Boolean);
+  return raw[0]
+    .split(/(?<=[a-z])\s+(?=[A-Z])|\.\s+/)
+    .map(s => s.trim().replace(/\.$/, ''))
+    .filter(Boolean);
+}
+
+function normalizeLesson(lesson: ModuleData['lesson']): ModuleData['lesson'] {
+  return {
+    ...lesson,
+    aims: splitAims(lesson.aims || []),
+    presentation_steps: splitSteps(lesson.presentation_steps || []),
+  };
+}
+
 type GroupData = {
   code: string;
   title: string;
@@ -9971,7 +10001,7 @@ async function run() {
           is_locked: m.is_locked,
           teaching_mode: m.teaching_mode,
           display_order: m.display_order,
-          lesson: m.lesson || null,
+          lesson: m.lesson ? normalizeLesson(m.lesson) : null,
           metadata: {},
         },
         { onConflict: 'code' }

@@ -1,5 +1,5 @@
 'use client';
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import clsx from 'clsx';
 import { TeachingModeToggle } from '@/components/TeachingModeToggle';
@@ -10,6 +10,7 @@ import { useStartTeachingData } from '@/lib/startTeaching/useStartTeachingData';
 import { StartTeachingWizard } from '@/components/StartTeachingWizard';
 import { AddStudentModal } from '@/components/AddStudentModal';
 import { AddGroupModal } from '@/components/AddGroupModal';
+import { stripIndividualSuffix } from '@/lib/curriculum/formatting';
 
 type CardData = {
   id: string;
@@ -39,12 +40,24 @@ const previewHighlights = [
 
 export default function TeacherIndexPage() {
   const { mode } = useTeachingMode();
-  const { isLoggedIn, isHydrated, tenantId } = useAuth();
+  const { isLoggedIn, isHydrated, tenantId, role } = useAuth();
   const [isAddStudentOpen, setAddStudentOpen] = useState(false);
   const [isAddGroupOpen, setAddGroupOpen] = useState(false);
   const [wizardSkipped, setWizardSkipped] = useState(false);
   const dataMode = isLoggedIn ? 'live' : 'demo';
   const startData = useStartTeachingData();
+
+  // Parent gating (mirrors KAN-131): derive effectiveMode locally, do not
+  // mutate teaching-mode context. Unknown role falls through to teacher view.
+  const isParent = isHydrated && role === 'parent';
+  const effectiveMode = isParent ? 'individual' : mode;
+
+  useEffect(() => {
+    if (!isHydrated || !isLoggedIn) return;
+    if (role !== 'parent' && role !== 'teacher') {
+      console.warn(`Unknown role: ${role} — defaulting to teacher view`);
+    }
+  }, [isHydrated, isLoggedIn, role]);
 
   const cards = useMemo((): CardData[] => {
     if (dataMode === 'demo') {
@@ -66,8 +79,8 @@ export default function TeacherIndexPage() {
         progressPercent: g.progressPercent,
         progressLabel: g.progressLabel,
       }));
-      if (mode === 'individual') return studentCards;
-      if (mode === 'group') return groupCards;
+      if (effectiveMode === 'individual') return studentCards;
+      if (effectiveMode === 'group') return groupCards;
       return [...studentCards, ...groupCards];
     }
 
@@ -95,14 +108,15 @@ export default function TeacherIndexPage() {
         progressLabel: `${members.length} student${members.length !== 1 ? 's' : ''}`,
       };
     });
-    if (mode === 'individual') return studentCards;
-    if (mode === 'group') return groupCards;
+    if (effectiveMode === 'individual') return studentCards;
+    if (effectiveMode === 'group') return groupCards;
     return [...studentCards, ...groupCards];
-  }, [mode, startData.students, startData.groups, startData.groupStudentsByGroupId, dataMode]);
+  }, [effectiveMode, startData.students, startData.groups, startData.groupStudentsByGroupId, dataMode]);
 
-  if (!isHydrated) {
-    return <div className="rounded-2xl border border-gray-100 bg-white p-5 shadow-sm text-sm text-gray-700">Loading...</div>;
-  }
+  // Pre-hydration falls through to the teacher view (KAN-131 pattern). The
+  // demo branch carries the toggle + Add Group affordances, so a teacher mid-
+  // hydration sees the same controls they will after hydration. Parent gating
+  // only engages once isHydrated && role === 'parent'.
 
   if (dataMode === 'demo') {
     const previewStudents =
@@ -240,9 +254,10 @@ export default function TeacherIndexPage() {
     );
   }
 
-  // Show onboarding wizard for first-time teachers (logged in, tenant ready, 0 students)
+  // Show onboarding wizard for first-time teachers (logged in, tenant ready, 0 students).
+  // Parents skip the wizard — its second step is group creation, which is not part of the parent flow.
   const showWizard =
-    isHydrated && tenantId && startData.students.length === 0 && !wizardSkipped;
+    isHydrated && tenantId && startData.students.length === 0 && !wizardSkipped && !isParent;
 
   if (showWizard) {
     return (
@@ -259,20 +274,24 @@ export default function TeacherIndexPage() {
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <h2 className="text-2xl font-semibold text-gray-900">Start teaching</h2>
-          <p className="text-sm text-gray-700">Jump into your current students or groups and launch lessons.</p>
+          <p className="text-sm text-gray-700">
+            {isParent
+              ? "Jump into your child's lessons and track progress."
+              : 'Jump into your current students or groups and launch lessons.'}
+          </p>
         </div>
         <div className="flex items-center gap-3">
-          {mode !== 'group' && (
+          {effectiveMode !== 'group' && (
             <button
               type="button"
               onClick={() => setAddStudentOpen(true)}
               disabled={!tenantId}
               className="rounded-xl bg-gray-900 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-gray-800 disabled:cursor-not-allowed disabled:opacity-60"
             >
-              Add Student
+              {isParent ? 'Add Child' : 'Add Student'}
             </button>
           )}
-          {mode !== 'individual' && (
+          {!isParent && effectiveMode !== 'individual' && (
             <button
               type="button"
               onClick={() => setAddGroupOpen(true)}
@@ -282,12 +301,19 @@ export default function TeacherIndexPage() {
               Add Group
             </button>
           )}
-          <TeachingModeToggle />
+          {!isParent && <TeachingModeToggle />}
         </div>
       </div>
       {isLoggedIn && isHydrated && !tenantId && (
         <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
           Tenant not connected. Add a tenant to your profile to create students.
+        </div>
+      )}
+
+      {isParent && cards.length === 0 && (
+        <div className="rounded-2xl border border-gray-100 bg-white p-5 shadow-sm space-y-2">
+          <p className="text-sm font-semibold text-gray-900">Add your child to get started</p>
+          <p className="text-xs text-gray-600">Use the Add Child button above to create a profile and unlock the curriculum.</p>
         </div>
       )}
 
@@ -335,12 +361,12 @@ export default function TeacherIndexPage() {
             >
               <div className="flex items-center justify-between">
                 <div className="space-y-1">
-                  <p className="text-lg font-semibold text-gray-900">{card.name}</p>
+                  <p className="text-lg font-semibold text-gray-900">{isParent ? stripIndividualSuffix(card.name) : card.name}</p>
                   <p className="text-xs text-gray-600">
                     {card.focus}
                   </p>
                 </div>
-                {mode === 'both' && (
+                {effectiveMode === 'both' && (
                   <span
                     className={clsx(
                       'rounded-full px-2 py-0.5 text-[11px] font-semibold uppercase tracking-wide',

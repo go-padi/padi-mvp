@@ -21,6 +21,9 @@ type ModuleData = {
     presentation_steps: string[];
     examples: string[];
     extension: string[];
+    intro_video_url?: string | null;
+    intro_video_thumbnail_url?: string | null;
+    intro_captions_url?: string | null;
   };
 };
 
@@ -107,6 +110,10 @@ const groups: GroupData[] = [
             'This game can be played in a different room or outdoors.',
             'Use tape recordings of birds, or other animals and ask to guess the animal.',
           ],
+          // Pilot intro video — fill in once Mama records and uploads to lesson-videos bucket.
+          intro_video_url: null,
+          intro_video_thumbnail_url: null,
+          intro_captions_url: null,
         },
       },
       {
@@ -131,6 +138,9 @@ const groups: GroupData[] = [
           extension: [
             'Have three instruments. Ask the students to close their eyes and listen to the one sound you make. Ask one student to come and play the instrument you played. This game can be done with several other instruments or two sounds at a time and follow the same procedure as above.',
           ],
+          intro_video_url: null,
+          intro_video_thumbnail_url: null,
+          intro_captions_url: null,
         },
       },
       {
@@ -160,6 +170,9 @@ const groups: GroupData[] = [
           extension: [
             'Give three different sounds, ask the students to repeat the sequence. Now omit one sound and see if the student can identify the omitted sound. Ask students to make noises and ask their friends to guess.',
           ],
+          intro_video_url: null,
+          intro_video_thumbnail_url: null,
+          intro_captions_url: null,
         },
       },
       {
@@ -185,6 +198,9 @@ const groups: GroupData[] = [
           extension: [
             'Students can use musical instruments to repeat the same game.',
           ],
+          intro_video_url: null,
+          intro_video_thumbnail_url: null,
+          intro_captions_url: null,
         },
       },
       {
@@ -210,6 +226,9 @@ const groups: GroupData[] = [
           extension: [
             'Have small food jars each filled with rice, pennies, beans, sand, tacks, and paper clips. Cover the jars with paper so that the students cannot see the objects in the jars. Each student can shake the jar and guess what the sound is.',
           ],
+          intro_video_url: null,
+          intro_video_thumbnail_url: null,
+          intro_captions_url: null,
         },
       },
       {

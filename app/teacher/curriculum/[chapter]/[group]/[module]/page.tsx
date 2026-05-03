@@ -11,8 +11,18 @@ import { useDefaultSubject } from '@/lib/startTeaching/useDefaultSubject';
 import { AddStudentModal } from '@/components/AddStudentModal';
 import { AddGroupModal } from '@/components/AddGroupModal';
 import { previewModuleByCode } from '@/lib/demo/demoCurriculum';
+import { LessonVideoPlayer, LessonVideoModal, type LessonVideoSource } from '@/components/LessonVideoPlayer';
 
-type LessonStep = string | { text: string };
+type LessonStep =
+  | string
+  | { text: string; video_url?: string | null; thumbnail_url?: string | null; captions_url?: string | null };
+
+type NormalizedStep = {
+  text: string;
+  video_url?: string | null;
+  thumbnail_url?: string | null;
+  captions_url?: string | null;
+};
 
 type Lesson = {
   materials?: string[];
@@ -20,20 +30,36 @@ type Lesson = {
   presentation_steps?: LessonStep[];
   examples?: string[];
   extension?: string[];
+  intro_video_url?: string | null;
+  intro_video_thumbnail_url?: string | null;
+  intro_captions_url?: string | null;
 };
 
-const stepText = (s: LessonStep): string => (typeof s === 'string' ? s : s?.text || '');
-
 // Backwards-compat: older modules store every teaching move jammed into
-// presentation_steps[0] as one paragraph. Split into discrete steps.
-const normalizeSteps = (raw: LessonStep[] | undefined): string[] => {
+// presentation_steps[0] as one paragraph. Split into discrete steps and
+// preserve any per-step video metadata on the matching object.
+const normalizeSteps = (raw: LessonStep[] | undefined): NormalizedStep[] => {
   if (!raw?.length) return [];
-  const texts = raw.map(stepText).map(s => s.trim()).filter(Boolean);
-  if (texts.length >= 2) return texts;
-  return texts[0]
+  if (raw.length >= 2) {
+    return raw
+      .map(s => (typeof s === 'string' ? { text: s.trim() } : { ...s, text: s.text?.trim() || '' }))
+      .filter(s => s.text);
+  }
+  const single = raw[0];
+  const text = (typeof single === 'string' ? single : single.text) || '';
+  const sentences = text
     .split(/(?<=[.!?])\s+(?=[A-Z])/)
     .map(s => s.trim())
     .filter(Boolean);
+  // Legacy paragraph: video metadata (if any) attaches to the first sentence.
+  if (typeof single !== 'string' && single.video_url) {
+    return sentences.map((t, i) =>
+      i === 0
+        ? { text: t, video_url: single.video_url, thumbnail_url: single.thumbnail_url, captions_url: single.captions_url }
+        : { text: t },
+    );
+  }
+  return sentences.map(t => ({ text: t }));
 };
 
 // Older modules store multiple goals comma- or run-on-spliced into aims[0].
@@ -117,6 +143,7 @@ export default function LessonPage({ params }: { params: Promise<{ chapter: stri
   const [showSignalStep, setShowSignalStep] = useState(false);
   const [selectedSignal, setSelectedSignal] = useState<string | null>(null);
   const [completionMessage, setCompletionMessage] = useState<string | null>(null);
+  const [activeStepVideo, setActiveStepVideo] = useState<LessonVideoSource | null>(null);
   const { mode } = useTeachingMode();
   const { ensureSubject } = useDefaultSubject();
 
@@ -490,17 +517,38 @@ export default function LessonPage({ params }: { params: Promise<{ chapter: stri
             )}
           </div>
 
+          <LessonVideoPlayer
+            src={lesson.intro_video_url}
+            poster={lesson.intro_video_thumbnail_url}
+            captionsSrc={lesson.intro_captions_url}
+            label="Watch Mama introduce this lesson"
+          />
+
           {normalizedSteps.length > 0 && (
             <section className="rounded-2xl border border-gray-100 bg-white p-5 shadow-sm border-l-4 border-l-blue-600">
               <h3 className="text-lg font-semibold text-gray-900">Presentation</h3>
               <p className="text-xs text-gray-500">Follow these steps to conduct the activity</p>
               <ol className="mt-4 space-y-4">
                 {normalizedSteps.map((step, idx) => (
-                  <li key={idx} className="flex gap-4">
+                  <li key={idx} className="flex gap-4 items-start">
                     <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-blue-600 text-xs font-semibold text-white">
                       {idx + 1}
                     </span>
-                    <span className="pt-0.5 text-sm leading-relaxed text-gray-800">{step}</span>
+                    <span className="flex-1 pt-0.5 text-sm leading-relaxed text-gray-800">{step.text}</span>
+                    {step.video_url && (
+                      <button
+                        type="button"
+                        onClick={() => setActiveStepVideo({
+                          src: step.video_url!,
+                          poster: step.thumbnail_url,
+                          captionsSrc: step.captions_url,
+                          label: `Step ${idx + 1}`,
+                        })}
+                        className="shrink-0 self-start rounded-full border border-blue-200 bg-blue-50 px-3 py-1 text-xs font-medium text-blue-700 hover:bg-blue-100"
+                      >
+                        ▶ Watch this step
+                      </button>
+                    )}
                   </li>
                 ))}
               </ol>
@@ -728,6 +776,7 @@ export default function LessonPage({ params }: { params: Promise<{ chapter: stri
           setShowAddGroupModal(false);
         }}
       />
+      <LessonVideoModal source={activeStepVideo} onClose={() => setActiveStepVideo(null)} />
     </div>
   );
 }

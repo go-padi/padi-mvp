@@ -1,10 +1,10 @@
 'use client';
 import { FormEvent, MouseEvent, useEffect, useState } from 'react';
-import { useAuth } from '@/lib/auth-store';
+import { AccountAlreadyExistsError, useAuth } from '@/lib/auth-store';
 
 type SignInModalProps = { onClose: () => void };
 
-type Mode = 'signin' | 'signup';
+type Mode = 'signin' | 'signup' | 'forgot';
 
 function EyeIcon({ open }: { open: boolean }) {
   if (open) {
@@ -28,7 +28,7 @@ function EyeIcon({ open }: { open: boolean }) {
 }
 
 export function SignInModal({ onClose }: SignInModalProps) {
-  const { login, signup } = useAuth();
+  const { login, signup, resetPassword } = useAuth();
   const [mode, setMode] = useState<Mode>('signin');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -37,6 +37,7 @@ export function SignInModal({ onClose }: SignInModalProps) {
   const [showConfirm, setShowConfirm] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [info, setInfo] = useState<string | null>(null);
+  const [duplicateEmail, setDuplicateEmail] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
@@ -51,6 +52,7 @@ export function SignInModal({ onClose }: SignInModalProps) {
     setMode(next);
     setError(null);
     setInfo(null);
+    setDuplicateEmail(null);
     setPassword('');
     setConfirmPassword('');
     setShowPassword(false);
@@ -81,6 +83,7 @@ export function SignInModal({ onClose }: SignInModalProps) {
   const attemptSignup = async () => {
     setError(null);
     setInfo(null);
+    setDuplicateEmail(null);
     if (password.length < 8) {
       setError('Password must be at least 8 characters.');
       return;
@@ -105,14 +108,25 @@ export function SignInModal({ onClose }: SignInModalProps) {
       }
       onClose();
     } catch (err) {
-      const isKnownError =
-        err instanceof Error &&
-        /already|exists|email|invalid|password/i.test(err.message);
-      setError(
-        isKnownError
-          ? 'An account with this email may already exist. Try signing in instead.'
-          : 'Unable to create account. Please try again.'
-      );
+      if (err instanceof AccountAlreadyExistsError) {
+        setDuplicateEmail(email.trim());
+        return;
+      }
+      setError('Unable to create account. Please try again.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const attemptForgot = async () => {
+    setError(null);
+    setInfo(null);
+    setLoading(true);
+    try {
+      await resetPassword(email);
+      setInfo('If an account exists for that email, a password reset link is on its way. Check your inbox.');
+    } catch {
+      setError('Could not send reset email. Please try again in a moment.');
     } finally {
       setLoading(false);
     }
@@ -121,7 +135,29 @@ export function SignInModal({ onClose }: SignInModalProps) {
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     if (mode === 'signin') await attemptLogin();
-    else await attemptSignup();
+    else if (mode === 'signup') await attemptSignup();
+    else await attemptForgot();
+  };
+
+  const startForgotFromDuplicate = async () => {
+    if (!duplicateEmail) return;
+    const target = duplicateEmail;
+    setEmail(target);
+    setMode('forgot');
+    setPassword('');
+    setConfirmPassword('');
+    setError(null);
+    setInfo(null);
+    setDuplicateEmail(null);
+    setLoading(true);
+    try {
+      await resetPassword(target);
+      setInfo('Password reset link sent. Check your email to set a new password.');
+    } catch {
+      setError('Could not send reset email. Please try again in a moment.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleOverlayClick = (event: MouseEvent<HTMLDivElement>) => {
@@ -131,14 +167,22 @@ export function SignInModal({ onClose }: SignInModalProps) {
   };
 
   const isSignup = mode === 'signup';
-  const title = isSignup ? 'Create Account' : 'Sign In';
-  const subtitle = isSignup
-    ? 'Create an account to save your students and lessons'
-    : 'Sign in to access your teaching dashboard';
-  const primaryLabel = isSignup
-    ? (loading ? 'Creating account...' : 'Create Account')
-    : (loading ? 'Signing in...' : 'Sign In');
-  const primaryDisabled = loading || (isSignup && (!password || !confirmPassword));
+  const isForgot = mode === 'forgot';
+  const title = isForgot ? 'Reset Password' : isSignup ? 'Create Account' : 'Sign In';
+  const subtitle = isForgot
+    ? 'Enter your email and we will send you a link to reset your password.'
+    : isSignup
+      ? 'Create an account to save your students and lessons'
+      : 'Sign in to access your teaching dashboard';
+  const primaryLabel = isForgot
+    ? (loading ? 'Sending...' : 'Send reset link')
+    : isSignup
+      ? (loading ? 'Creating account...' : 'Create Account')
+      : (loading ? 'Signing in...' : 'Sign In');
+  const primaryDisabled =
+    loading ||
+    (isSignup && (!password || !confirmPassword)) ||
+    (isForgot && !email);
 
   return (
     <div
@@ -175,32 +219,43 @@ export function SignInModal({ onClose }: SignInModalProps) {
               required
             />
           </div>
-          <div className="space-y-2">
-            <label className="text-sm font-medium text-gray-800" htmlFor="password">
-              Password
-            </label>
-            <div className="relative">
-              <input
-                id="password"
-                type={showPassword ? 'text' : 'password'}
-                value={password}
-                onChange={e => setPassword(e.target.value)}
-                className="w-full rounded-xl border border-gray-300 px-3 py-2 pr-10 text-sm shadow-sm focus:border-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-100"
-                placeholder="Your password"
-                required
-                minLength={isSignup ? 8 : undefined}
-              />
-              <button
-                type="button"
-                onClick={() => setShowPassword(prev => !prev)}
-                className="absolute right-2 top-1/2 -translate-y-1/2 rounded-md p-1 text-gray-500 hover:text-gray-700"
-                aria-label={showPassword ? 'Hide password' : 'Show password'}
-                aria-pressed={showPassword}
-              >
-                <EyeIcon open={showPassword} />
-              </button>
+          {!isForgot && (
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-gray-800" htmlFor="password">
+                Password
+              </label>
+              <div className="relative">
+                <input
+                  id="password"
+                  type={showPassword ? 'text' : 'password'}
+                  value={password}
+                  onChange={e => setPassword(e.target.value)}
+                  className="w-full rounded-xl border border-gray-300 px-3 py-2 pr-10 text-sm shadow-sm focus:border-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-100"
+                  placeholder="Your password"
+                  required
+                  minLength={isSignup ? 8 : undefined}
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(prev => !prev)}
+                  className="absolute right-2 top-1/2 -translate-y-1/2 rounded-md p-1 text-gray-500 hover:text-gray-700"
+                  aria-label={showPassword ? 'Hide password' : 'Show password'}
+                  aria-pressed={showPassword}
+                >
+                  <EyeIcon open={showPassword} />
+                </button>
+              </div>
+              {mode === 'signin' && (
+                <button
+                  type="button"
+                  onClick={() => switchMode('forgot')}
+                  className="text-xs font-semibold text-blue-700 underline underline-offset-2 hover:text-blue-900"
+                >
+                  Forgot password?
+                </button>
+              )}
             </div>
-          </div>
+          )}
           {isSignup && (
             <div className="space-y-2">
               <label className="text-sm font-medium text-gray-800" htmlFor="confirm-password">
@@ -229,6 +284,21 @@ export function SignInModal({ onClose }: SignInModalProps) {
               </div>
             </div>
           )}
+          {duplicateEmail && (
+            <div className="rounded-lg bg-amber-50 px-3 py-2 text-sm text-amber-900">
+              <p className="font-medium">This account already exists.</p>
+              <p className="mt-1">
+                An account for <span className="font-semibold">{duplicateEmail}</span> is already registered.{' '}
+                <button
+                  type="button"
+                  onClick={startForgotFromDuplicate}
+                  className="font-semibold text-amber-900 underline underline-offset-2 hover:text-amber-950"
+                >
+                  Forgot password?
+                </button>
+              </p>
+            </div>
+          )}
           {error && <div className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700">{error}</div>}
           {info && <div className="rounded-lg bg-blue-50 px-3 py-2 text-sm text-blue-700">{info}</div>}
           <button
@@ -240,10 +310,14 @@ export function SignInModal({ onClose }: SignInModalProps) {
           </button>
           <button
             type="button"
-            onClick={() => switchMode(isSignup ? 'signin' : 'signup')}
+            onClick={() => switchMode(isSignup || isForgot ? 'signin' : 'signup')}
             className="w-full text-center text-sm font-semibold text-gray-700 underline underline-offset-2"
           >
-            {isSignup ? 'Already have an account? Sign in' : 'Don\u2019t have an account? Create one'}
+            {isForgot
+              ? 'Back to sign in'
+              : isSignup
+                ? 'Already have an account? Sign in'
+                : 'Don\u2019t have an account? Create one'}
           </button>
         </form>
       </div>

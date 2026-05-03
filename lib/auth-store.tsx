@@ -42,9 +42,17 @@ export type AuthState = {
   isHydrated: boolean;
   login: (email: string, password: string) => Promise<void>;
   signup: (email: string, password: string) => Promise<{ session: Session | null; user: AuthUser | null }>;
+  resetPassword: (email: string) => Promise<void>;
   logout: () => Promise<void>;
   refreshRole: () => Promise<void>;
 };
+
+export class AccountAlreadyExistsError extends Error {
+  constructor() {
+    super('An account with this email already exists.');
+    this.name = 'AccountAlreadyExistsError';
+  }
+}
 
 const AuthContext = createContext<AuthState | undefined>(undefined);
 
@@ -193,12 +201,31 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       password,
     });
     if (error) {
+      if (/already.*registered|already.*exists|user already/i.test(error.message)) {
+        throw new AccountAlreadyExistsError();
+      }
       throw error;
+    }
+    // When email confirmations are required and the email is already taken,
+    // Supabase returns a fake user with an empty identities array (and no error)
+    // to prevent email enumeration. Detect that here so we can surface a helpful
+    // "account already exists" message instead of leaving the user stuck.
+    if (data.user && (data.user.identities?.length ?? 0) === 0) {
+      throw new AccountAlreadyExistsError();
     }
     return {
       session: data.session,
       user: data.user ? { id: data.user.id, email: data.user.email ?? null } : null,
     };
+  }, []);
+
+  const resetPassword = useCallback(async (email: string) => {
+    const sb = supabaseClient();
+    const redirectTo = `${window.location.origin}/auth/reset-password`;
+    const { error } = await sb.auth.resetPasswordForEmail(email.trim(), { redirectTo });
+    if (error) {
+      throw error;
+    }
   }, []);
 
   const logout = useCallback(async () => {
@@ -223,10 +250,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       isHydrated,
       login,
       signup,
+      resetPassword,
       logout,
       refreshRole,
     }),
-    [isLoggedIn, user, tenantId, role, roleSetAt, profileFetchError, isHydrated, login, signup, logout, refreshRole]
+    [isLoggedIn, user, tenantId, role, roleSetAt, profileFetchError, isHydrated, login, signup, resetPassword, logout, refreshRole]
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

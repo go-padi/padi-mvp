@@ -16,6 +16,10 @@ build
 # Claude Code
 .claude/worktrees/
 
+# BuildLoop orchestrator state (per-iteration artifacts not committed)
+# Note: docs/features/SHIPPED.md IS committed — that's the public ship log.
+.buildloop/
+
 # Office lock files
 .~lock.*
 

@@ -2,13 +2,19 @@
 id: SIGNIN-1
 title: "[Sign-in] Split Sign In and Create Account modes with confirm password + show/hide"
 type: story
-status: backlog
+status: done
 priority: highest
 feature: sign-in-flow
 uat: ./signin-1-uat.md
+shipped_in: 10eecf9
+shipped_at: 2026-04-22
+followup: ./signin-2-polish.md
 created: 2026-04-22
-updated: 2026-04-22
+updated: 2026-05-08
 ---
+
+> **Status updated 2026-05-08 by BuildLoop iteration 1.** Shipped on `main` as commit `10eecf9 SIGNIN-1: Split Sign In and Create Account modes in SignInModal` (2026-04-22). The board frontmatter had drifted (`status: backlog`); BuildLoop's eng_scope phase caught it by checking `git log -- components/auth/SignInModal.tsx`. Polish gaps (eye-button a11y, mobile autofill, activation-telemetry marker) are tracked in [`signin-2-polish.md`](./signin-2-polish.md). The forgot-password link (originally AC-15 of SIGNIN-1's spar refinement) is deferred until the `/auth/reset-password` route reaches main.
+
 
 ### Goal
 

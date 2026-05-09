@@ -103,6 +103,7 @@ export function SignInModal({ onClose }: SignInModalProps) {
         setInfo('Check your email to confirm your account, then sign in.');
         return;
       }
+      // TODO(activation-telemetry): emit signup_completed event here when telemetry plumbing lands
       onClose();
     } catch (err) {
       const isKnownError =
@@ -173,6 +174,9 @@ export function SignInModal({ onClose }: SignInModalProps) {
               className="w-full rounded-xl border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-100"
               placeholder="teacher@school.edu"
               required
+              autoComplete="email"
+              autoCapitalize="off"
+              inputMode="email"
             />
           </div>
           <div className="space-y-2">
@@ -185,15 +189,16 @@ export function SignInModal({ onClose }: SignInModalProps) {
                 type={showPassword ? 'text' : 'password'}
                 value={password}
                 onChange={e => setPassword(e.target.value)}
-                className="w-full rounded-xl border border-gray-300 px-3 py-2 pr-10 text-sm shadow-sm focus:border-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-100"
+                className="w-full rounded-xl border border-gray-300 px-3 py-2 pr-14 text-sm shadow-sm focus:border-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-100"
                 placeholder="Your password"
                 required
                 minLength={isSignup ? 8 : undefined}
+                autoComplete={isSignup ? 'new-password' : 'current-password'}
               />
               <button
                 type="button"
                 onClick={() => setShowPassword(prev => !prev)}
-                className="absolute right-2 top-1/2 -translate-y-1/2 rounded-md p-1 text-gray-500 hover:text-gray-700"
+                className="absolute right-2 top-1/2 -translate-y-1/2 rounded-md p-3 text-gray-600 hover:text-gray-700"
                 aria-label={showPassword ? 'Hide password' : 'Show password'}
                 aria-pressed={showPassword}
               >
@@ -212,15 +217,16 @@ export function SignInModal({ onClose }: SignInModalProps) {
                   type={showConfirm ? 'text' : 'password'}
                   value={confirmPassword}
                   onChange={e => setConfirmPassword(e.target.value)}
-                  className="w-full rounded-xl border border-gray-300 px-3 py-2 pr-10 text-sm shadow-sm focus:border-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-100"
+                  className="w-full rounded-xl border border-gray-300 px-3 py-2 pr-14 text-sm shadow-sm focus:border-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-100"
                   placeholder="Re-enter your password"
                   required
                   minLength={8}
+                  autoComplete="new-password"
                 />
                 <button
                   type="button"
                   onClick={() => setShowConfirm(prev => !prev)}
-                  className="absolute right-2 top-1/2 -translate-y-1/2 rounded-md p-1 text-gray-500 hover:text-gray-700"
+                  className="absolute right-2 top-1/2 -translate-y-1/2 rounded-md p-3 text-gray-600 hover:text-gray-700"
                   aria-label={showConfirm ? 'Hide password' : 'Show password'}
                   aria-pressed={showConfirm}
                 >

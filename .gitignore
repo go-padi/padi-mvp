@@ -20,6 +20,12 @@ build
 # Note: docs/features/SHIPPED.md IS committed — that's the public ship log.
 .buildloop/
 
+# TypeScript incremental build cache
+*.tsbuildinfo
+
+# Local-only setup helper scripts (never committed)
+STAGED-*.sh
+
 # Office lock files
 .~lock.*
 

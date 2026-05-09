@@ -2,11 +2,16 @@
 id: SIGNIN-2-uat
 title: "SIGNIN-2 polish — eye-button a11y + autofill + telemetry marker UAT"
 type: uat
-status: in-progress
+status: passed
 priority: high
 feature: sign-in-flow
 parent: SIGNIN-2
 buildloop_iteration: 1
+final_verdict: PASS
+verdict_attempt: 2
+total_attempts: 2
+bugs_filed: 2
+bugs_fixed: 2
 created: 2026-05-08
 updated: 2026-05-09
 ---

@@ -2,14 +2,18 @@
 id: SIGNIN-2
 title: "[Sign-in] SIGNIN-1 polish — eye-button a11y + mobile autofill + telemetry marker"
 type: task
-status: in-progress
+status: done
 priority: high
 feature: sign-in-flow
 parent: SIGNIN-1
 buildloop_iteration: 1
 buildloop_loop_id: 2026-05-08T21:29:47Z-13de
+shipped_in: ef2dd71
+shipped_at: 2026-05-09
+uat_result: passed
+uat_bugs_found_and_fixed: 2
 created: 2026-05-08
-updated: 2026-05-08
+updated: 2026-05-09
 ---
 
 # SIGNIN-2 — SIGNIN-1 polish

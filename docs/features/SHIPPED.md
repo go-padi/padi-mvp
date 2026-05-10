@@ -67,3 +67,10 @@ Log of features shipped by BuildLoop.
 - Branch: buildloop/lr-06-role-aware-nav
 - UAT bugs found and fixed: 0
 - Build retries: 0
+
+## LR-07
+- Iteration: 8
+- Shipped: 2026-05-10T19:31:12+00:00
+- Branch: buildloop/lr-07-resources-hide
+- UAT bugs found and fixed: 0
+- Build retries: 0

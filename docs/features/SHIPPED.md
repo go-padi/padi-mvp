@@ -18,3 +18,10 @@ Log of features shipped by BuildLoop.
 - UAT bugs found and fixed: 1 (P2 — AddStudentModal sub-heading miss; fixed in same iteration)
 - Build retries: 0
 - Notes: parent now sees "Add Child" / "your child" copy on EmptyStateStartTeachingCTA, AddStudentModal, StartTeachingWizard, and the lesson-page logged-out preview. Teacher copy unchanged. New `lib/copy/roleCopy.ts` helper. Tab visibility, /teacher/grouping copy, and analytics deferred to follow-ups per the eng brief.
+
+## LR-01
+- Iteration: 1
+- Shipped: 2026-05-10T17:55:33+00:00
+- Branch: buildloop/lr-01-fix-marketing-copy
+- UAT bugs found and fixed: 1
+- Build retries: 0

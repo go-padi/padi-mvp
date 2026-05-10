@@ -2,7 +2,7 @@
 id: LR-01
 title: "[Marketing] Fix homepage copy — target age range + remove AI claims"
 type: story
-status: backlog
+status: done
 priority: highest
 feature: launch-readiness
 launch_blocker: true

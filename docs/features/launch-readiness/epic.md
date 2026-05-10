@@ -22,7 +22,9 @@ the prioritized tickets to ship before the app goes live.
 See sibling files in this folder. Each child ticket has its own .md with
 frontmatter. Order roughly by priority (highest first):
 
-1. LR-01 — Fix marketing copy: target audience age + AI claim
+**From the surface-area audit (2026-05-10):**
+
+1. LR-01 — Fix marketing copy: target audience age + AI claim ✅ done
 2. LR-02 — Add legal pages (privacy, terms, 404, error)
 3. LR-03 — Retire `/teacher/assessments` route per redundancy audit
 4. LR-04 — Delete orphan / placeholder routes
@@ -30,6 +32,17 @@ frontmatter. Order roughly by priority (highest first):
 6. LR-06 — Role-aware navigation (parent vs teacher entry experience)
 7. LR-07 — Wire `/teacher/resources` links or hide the page
 8. LR-08 — Demo-data exposure review
+
+**From the teacher walkthrough audit (2026-05-10):**
+
+9. LR-09 — Fix progress-number data integrity (BLOCKER — broken numbers destroy trust)
+10. LR-10 — Allow re-entry to completed lessons (Montessori repetition)
+11. LR-11 — Surface curriculum sequencing — make 'next module' obvious
+12. LR-12 — Disambiguate "Continue Teaching" CTA
+13. LR-13 — Student progress view (replaces `/teacher/assessments`)
+14. LR-14 — Audio recording at module level (deferrable to v1.1 if needed)
+
+**Pending parent walkthrough audit** — TBD findings.
 
 ## Status
 

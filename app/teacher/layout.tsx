@@ -16,7 +16,6 @@ export default function TeacherLayout({ children }: { children: React.ReactNode 
   const pathname = usePathname();
   const { isLoggedIn } = useAuth();
   const isDashboardView =
-    pathname.startsWith('/teacher/dashboard') ||
     pathname.startsWith('/teacher/curriculum') ||
     pathname.startsWith('/teacher/about') ||
     pathname.startsWith('/teacher/grouping') ||

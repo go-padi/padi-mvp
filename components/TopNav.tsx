@@ -1,6 +1,6 @@
 'use client';
 import Link from 'next/link';
-import { usePathname, useRouter } from 'next/navigation';
+import { usePathname } from 'next/navigation';
 import clsx from 'clsx';
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/lib/auth-store';
@@ -8,17 +8,11 @@ import { SignInModal } from './auth/SignInModal';
 
 export default function TopNav(){
   const pathname = usePathname();
-  const router = useRouter();
   const { isLoggedIn, user, logout } = useAuth();
   const [isSignInOpen, setSignInOpen] = useState(false);
 
-  const goToDashboard = () => {
-    router.push('/teacher/dashboard');
-  };
-
   const isMatch = (base: string) => pathname === base || pathname.startsWith(`${base}/`);
   const isDashboardActive =
-    isMatch('/teacher/dashboard') ||
     isMatch('/teacher/curriculum') ||
     isMatch('/teacher/about') ||
     isMatch('/teacher/grouping') ||
@@ -44,9 +38,8 @@ export default function TopNav(){
             <span>Padi</span>
           </Link>
           <div className="flex items-center gap-3">
-            <button
-              type="button"
-              onClick={goToDashboard}
+            <Link
+              href="/teacher/curriculum"
               className={clsx(
                 'rounded-lg px-3 py-2 text-sm font-semibold',
                 isDashboardActive
@@ -55,8 +48,8 @@ export default function TopNav(){
               )}
               aria-current={isDashboardActive ? 'page' : undefined}
             >
-              Teacher Dashboard
-            </button>
+              Curriculum
+            </Link>
             <Link
               href="/teacher"
               className={clsx(

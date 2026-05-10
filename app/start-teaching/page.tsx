@@ -1,1 +1,5 @@
-export { default } from '../teacher/page';
+import { permanentRedirect } from "next/navigation";
+
+export default function Page() {
+  permanentRedirect("/teacher");
+}

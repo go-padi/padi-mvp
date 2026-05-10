@@ -2,11 +2,12 @@
 id: KAN-82
 title: "Teaching Mode toggle needs explanation — new teachers don't know Individual vs Group"
 type: story
-status: review
+status: done
 priority: high
 feature: start-teaching-flow
 jira_ref: https://go-padi.atlassian.net/browse/KAN-82
-updated: 2026-04-19
+shipped_in: 65ad712
+updated: 2026-05-10
 ---
 
 ### Goal

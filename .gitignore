@@ -33,3 +33,4 @@ STAGED-*.sh
 .replit
 .replit-nix
 *.replit
+.plugins/

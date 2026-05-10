@@ -2,11 +2,12 @@
 id: KAN-48
 title: "Teacher knows they are logging observations for that specific student throughout the lesson"
 type: story
-status: backlog
+status: done
 priority: medium
 feature: _orphaned
 jira_ref: https://go-padi.atlassian.net/browse/KAN-48
-updated: 2026-04-19
+shipped_in: d922536
+updated: 2026-05-10
 ---
 
 ### Goal

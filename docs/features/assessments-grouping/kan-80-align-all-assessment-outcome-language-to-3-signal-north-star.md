@@ -2,11 +2,12 @@
 id: KAN-80
 title: "Align all assessment/outcome language to 3-signal north star (Ready / Needs Help / Needs Intervention)"
 type: story
-status: review
+status: done
 priority: high
 feature: assessments-grouping
 jira_ref: https://go-padi.atlassian.net/browse/KAN-80
-updated: 2026-04-19
+shipped_in: 65ad712
+updated: 2026-05-10
 ---
 
 ### Goal

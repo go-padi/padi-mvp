@@ -2,7 +2,7 @@
 id: LR-02
 title: "[Legal] Add privacy policy, terms, 404, and error pages"
 type: story
-status: backlog
+status: done
 priority: highest
 feature: launch-readiness
 launch_blocker: true

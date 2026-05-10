@@ -2,7 +2,7 @@
 id: LR-04
 title: "[Routes] Delete orphan and placeholder routes before launch"
 type: task
-status: backlog
+status: done
 priority: highest
 feature: launch-readiness
 launch_blocker: true

@@ -2,7 +2,7 @@
 id: LR-05
 title: "[Routes] Resolve `/library` vs `/teacher/curriculum` redundancy"
 type: story
-status: backlog
+status: done
 priority: high
 feature: launch-readiness
 launch_blocker: true

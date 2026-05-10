@@ -2,7 +2,7 @@
 id: LR-03
 title: "[Routes] Retire `/teacher/assessments` route per redundancy audit"
 type: story
-status: backlog
+status: done
 priority: highest
 feature: launch-readiness
 launch_blocker: true

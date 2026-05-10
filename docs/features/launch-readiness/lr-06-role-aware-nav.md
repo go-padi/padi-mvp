@@ -2,7 +2,7 @@
 id: LR-06
 title: "[Nav] Role-aware navigation — parent vs teacher entry experience"
 type: story
-status: backlog
+status: done
 priority: high
 feature: launch-readiness
 launch_blocker: true

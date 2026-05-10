@@ -2,7 +2,7 @@
 id: LR-07
 title: "[Resources] Wire `/teacher/resources` links or hide the page"
 type: task
-status: backlog
+status: done
 priority: high
 feature: launch-readiness
 launch_blocker: true

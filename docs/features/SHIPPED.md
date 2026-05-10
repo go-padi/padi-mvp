@@ -60,3 +60,10 @@ Log of features shipped by BuildLoop.
 - Branch: buildloop/lr-04-orphan-routes
 - UAT bugs found and fixed: 0
 - Build retries: 0
+
+## LR-06
+- Iteration: 7
+- Shipped: 2026-05-10T19:26:23+00:00
+- Branch: buildloop/lr-06-role-aware-nav
+- UAT bugs found and fixed: 0
+- Build retries: 0

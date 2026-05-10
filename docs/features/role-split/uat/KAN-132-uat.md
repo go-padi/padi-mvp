@@ -5,7 +5,7 @@ buildloop_iteration: 2
 feature: role-split
 final_verdict: PASS
 type: uat-run
-status: complete
+status: pass
 priority: medium
 related: KAN-136
 updated: 2026-05-10

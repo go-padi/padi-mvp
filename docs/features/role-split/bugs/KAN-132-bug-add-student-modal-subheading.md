@@ -2,7 +2,7 @@
 id: KAN-132-bug-add-student-modal-subheading
 title: "AddStudentModal sub-heading not role-aware (still says 'student' for parents)"
 type: bug
-status: fixed
+status: closed
 severity: P2
 parent: KAN-132-uat
 related: KAN-132

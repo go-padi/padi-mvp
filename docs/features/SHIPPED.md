@@ -9,3 +9,12 @@ Log of features shipped by BuildLoop.
 - Branch: buildloop/signin-2-polish
 - UAT bugs found and fixed: 0
 - Build retries: 0
+
+## KAN-132: Role-neutral copy on shared parent surfaces
+- Iteration: 2
+- Shipped: 2026-05-10
+- Branch: buildloop/kan-132-role-neutral-copy
+- Commit: 66a48f9
+- UAT bugs found and fixed: 1 (P2 — AddStudentModal sub-heading miss; fixed in same iteration)
+- Build retries: 0
+- Notes: parent now sees "Add Child" / "your child" copy on EmptyStateStartTeachingCTA, AddStudentModal, StartTeachingWizard, and the lesson-page logged-out preview. Teacher copy unchanged. New `lib/copy/roleCopy.ts` helper. Tab visibility, /teacher/grouping copy, and analytics deferred to follow-ups per the eng brief.

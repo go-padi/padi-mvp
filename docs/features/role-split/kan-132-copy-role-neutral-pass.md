@@ -2,11 +2,13 @@
 id: KAN-132
 title: "[Copy] Role-neutral language pass on shared surfaces"
 type: task
-status: backlog
+status: done
 priority: medium
 feature: role-split
 jira_ref: https://go-padi.atlassian.net/browse/KAN-132
-updated: 2026-04-19
+shipped_in: 66a48f9
+buildloop_iteration: 2
+updated: 2026-05-10
 ---
 
 ### Goal

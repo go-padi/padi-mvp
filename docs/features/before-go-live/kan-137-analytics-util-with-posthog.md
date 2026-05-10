@@ -3,9 +3,10 @@ id: KAN-137
 title: "[Analytics] Add lib/analytics.ts util with PostHog so BuildLoop features can ship instrumented"
 type: story
 status: backlog
-priority: highest
+priority: medium
 feature: before-go-live
 launch_blocker: true
+not_before: pre-launch
 created: 2026-05-09
 updated: 2026-05-10
 created_by: human-scoped-via-buildloop

@@ -16,8 +16,7 @@ export default function TopNav(){
   const isDashboardActive =
     isMatch('/teacher/curriculum') ||
     isMatch('/teacher/about') ||
-    isMatch('/teacher/grouping') ||
-    isMatch('/teacher/resources');
+    isMatch('/teacher/grouping');
 
   const isStartTeachingRoute = pathname === '/teacher' || pathname === '/start-teaching' || isMatch('/teacher/start-teaching') || isMatch('/start-teaching');
   const startTeachingHighlight = isStartTeachingRoute || pathname === '/';

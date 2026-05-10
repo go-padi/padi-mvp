@@ -9,7 +9,6 @@ const allTabs = [
   { id: 'about', label: 'About Method', href: '/teacher/about' },
   { id: 'curriculum', label: 'Curriculum', href: '/teacher/curriculum' },
   { id: 'grouping', label: 'Grouping & Progress', href: '/teacher/grouping' },
-  { id: 'resources', label: 'Resources', href: '/teacher/resources' },
 ];
 
 export default function TeacherLayout({ children }: { children: React.ReactNode }) {
@@ -19,8 +18,7 @@ export default function TeacherLayout({ children }: { children: React.ReactNode 
   const isDashboardView =
     pathname.startsWith('/teacher/curriculum') ||
     pathname.startsWith('/teacher/about') ||
-    pathname.startsWith('/teacher/grouping') ||
-    pathname.startsWith('/teacher/resources');
+    pathname.startsWith('/teacher/grouping');
 
   return (
       <div className="space-y-6">

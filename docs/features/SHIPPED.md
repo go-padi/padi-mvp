@@ -25,3 +25,10 @@ Log of features shipped by BuildLoop.
 - Branch: buildloop/lr-01-fix-marketing-copy
 - UAT bugs found and fixed: 1
 - Build retries: 0
+
+## LR-02
+- Iteration: 2
+- Shipped: 2026-05-10T18:07:12+00:00
+- Branch: buildloop/lr-02-legal-pages
+- UAT bugs found and fixed: 0
+- Build retries: 0

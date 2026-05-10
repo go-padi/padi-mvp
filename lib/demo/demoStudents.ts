@@ -11,7 +11,7 @@ export type DemoStudent = {
 export const demoStudents: DemoStudent[] = [
   {
     id: 'stu-1',
-    name: 'Maya P.',
+    name: 'Sparky M.',
     groupId: '',
     progressPercent: 32,
     progressLabel: 'Chapter 1 of 7 — Listening',
@@ -20,7 +20,7 @@ export const demoStudents: DemoStudent[] = [
   },
   {
     id: 'stu-5',
-    name: 'Nia S.',
+    name: 'Pixel R.',
     groupId: '',
     progressPercent: 27,
     progressLabel: 'Chapter 1 of 7 — Recognizing Sounds',
@@ -29,7 +29,7 @@ export const demoStudents: DemoStudent[] = [
   },
   {
     id: 'stu-6',
-    name: 'Eli J.',
+    name: 'Comet T.',
     groupId: '',
     progressPercent: 61,
     progressLabel: 'Chapter 3 of 7 — Sounding Out Words',

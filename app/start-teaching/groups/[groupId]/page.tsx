@@ -3,6 +3,7 @@ import { use } from 'react';
 import Link from 'next/link';
 import { useAuth } from '@/lib/auth-store';
 import { useStartTeachingData } from '@/lib/startTeaching/useStartTeachingData';
+import { PREVIEW_BANNER } from '@/lib/copy/previewCopy';
 
 export default function GroupPreviewPage({ params }: { params: Promise<{ groupId: string }> }) {
   const { groupId } = use(params);
@@ -38,7 +39,7 @@ export default function GroupPreviewPage({ params }: { params: Promise<{ groupId
   return (
     <div className="space-y-6">
       <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-xs text-amber-800">
-        This is demo data. Sign in to manage your own students and groups.
+        {PREVIEW_BANNER}
       </div>
 
       <Link href="/start-teaching" className="text-sm text-gray-700 hover:text-gray-900">

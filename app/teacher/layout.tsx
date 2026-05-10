@@ -3,6 +3,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import clsx from 'clsx';
 import { useAuth } from '@/lib/auth-store';
+import { PREVIEW_BANNER } from '@/lib/copy/previewCopy';
 
 const tabs = [
   { id: 'about', label: 'About Method', href: '/teacher/about' },
@@ -36,7 +37,7 @@ export default function TeacherLayout({ children }: { children: React.ReactNode 
                 </p>
                 <div className="flex items-center gap-2 mt-1">
                   <p className={clsx('text-xs', isLoggedIn ? 'text-green-700' : 'text-amber-700')}>
-                    {isLoggedIn ? 'Workspace tools enabled for this session.' : 'Preview mode — log in to unlock workspace features.'}
+                    {isLoggedIn ? 'Workspace tools enabled for this session.' : PREVIEW_BANNER}
                   </p>
                   {!isLoggedIn && (
                     <span className="rounded-full bg-amber-100 px-2 py-0.5 text-[11px] font-semibold text-amber-800">

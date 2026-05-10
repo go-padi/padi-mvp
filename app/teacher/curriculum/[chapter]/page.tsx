@@ -7,6 +7,7 @@ import { TeachingModeToggle } from '@/components/TeachingModeToggle';
 import { useTeachingMode } from '@/lib/teachingModeContext';
 import { useAuth } from '@/lib/auth-store';
 import { previewChapters, previewGroupsByChapter } from '@/lib/demo/demoCurriculum';
+import { PREVIEW_BANNER } from '@/lib/copy/previewCopy';
 
 type Group = {
   id: string;
@@ -64,7 +65,7 @@ export default function ChapterPage({ params }: { params: Promise<{ chapter: str
 
       {!isLoggedIn && (
         <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-xs text-amber-800">
-          Preview mode: log in to unlock editable lessons and saved progress.
+          {PREVIEW_BANNER}
         </div>
       )}
 

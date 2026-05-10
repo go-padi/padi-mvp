@@ -9,6 +9,7 @@ import { demoStudents } from '@/lib/demo/demoStudents';
 import { useTeachingMode } from '@/lib/teachingModeContext';
 import { useGroupingProgressData } from '@/lib/hooks/useGroupingProgressData';
 import { EmptyStateStartTeachingCTA } from '@/components/EmptyStateStartTeachingCTA';
+import { PREVIEW_BANNER } from '@/lib/copy/previewCopy';
 
 export default function GroupingPage() {
   const { isLoggedIn, isHydrated } = useAuth();
@@ -59,7 +60,7 @@ export default function GroupingPage() {
 
       {dataMode === 'demo' && (
         <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-xs text-amber-800">
-          Read-only preview: sign in to see live grouping and progress
+          {PREVIEW_BANNER}
         </div>
       )}
 

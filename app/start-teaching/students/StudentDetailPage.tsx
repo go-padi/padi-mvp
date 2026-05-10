@@ -8,6 +8,7 @@ import { demoTeacherData } from '@/lib/demo/demoTeacherData';
 import { parseProgressLabel } from '@/lib/startTeaching/preview/mapDemoToStartTeachingPreview';
 import type { SectionProgress, ProgressSummary, StudentPreviewDetail } from '@/lib/startTeaching/preview/types';
 import type { StartTeachingStudent } from '@/lib/startTeaching/useStartTeachingData';
+import { PREVIEW_BANNER } from '@/lib/copy/previewCopy';
 
 const computeCoursePercent = (student: { progressPercent: number; progressLabel?: string | null }) => {
   const parsed = parseProgressLabel(student.progressLabel || null);
@@ -115,7 +116,7 @@ export function StudentDetailPage({ studentId }: { studentId: string }) {
     <div className="space-y-6">
       {mode === 'preview' && (
         <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-xs text-amber-800">
-          This is demo data. Sign in to manage your own students and groups.
+          {PREVIEW_BANNER}
         </div>
       )}
 

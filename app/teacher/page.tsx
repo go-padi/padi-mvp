@@ -11,6 +11,7 @@ import { StartTeachingWizard } from '@/components/StartTeachingWizard';
 import { AddStudentModal } from '@/components/AddStudentModal';
 import { AddGroupModal } from '@/components/AddGroupModal';
 import { stripIndividualSuffix } from '@/lib/curriculum/formatting';
+import { PREVIEW_BANNER } from '@/lib/copy/previewCopy';
 
 type CardData = {
   id: string;
@@ -157,7 +158,7 @@ export default function TeacherIndexPage() {
         </div>
 
         <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
-          Anonymous preview: sign in to manage students, groups, and lesson progress.
+          {PREVIEW_BANNER}
         </div>
 
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">

@@ -13,6 +13,7 @@ import {
   groupToChapterCode,
 } from '@/lib/demo/demoCurriculum';
 import { stripIndividualSuffix } from '@/lib/curriculum/formatting';
+import { PREVIEW_BANNER } from '@/lib/copy/previewCopy';
 
 type GroupRow = {
   id: string;
@@ -277,7 +278,7 @@ export default function CurriculumPage() {
 
       {!isLoggedIn && (
         <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-xs text-amber-800">
-          Preview mode: log in to unlock editable lessons and saved progress.
+          {PREVIEW_BANNER}
         </div>
       )}
 

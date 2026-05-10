@@ -8,7 +8,6 @@ import { PREVIEW_BANNER } from '@/lib/copy/previewCopy';
 const tabs = [
   { id: 'about', label: 'About Method', href: '/teacher/about' },
   { id: 'curriculum', label: 'Curriculum', href: '/teacher/curriculum' },
-  { id: 'assessments', label: 'Assessments', href: '/teacher/assessments' },
   { id: 'grouping', label: 'Grouping & Progress', href: '/teacher/grouping' },
   { id: 'resources', label: 'Resources', href: '/teacher/resources' },
 ];
@@ -20,7 +19,6 @@ export default function TeacherLayout({ children }: { children: React.ReactNode 
     pathname.startsWith('/teacher/dashboard') ||
     pathname.startsWith('/teacher/curriculum') ||
     pathname.startsWith('/teacher/about') ||
-    pathname.startsWith('/teacher/assessments') ||
     pathname.startsWith('/teacher/grouping') ||
     pathname.startsWith('/teacher/resources');
 

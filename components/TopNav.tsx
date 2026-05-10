@@ -21,7 +21,6 @@ export default function TopNav(){
     isMatch('/teacher/dashboard') ||
     isMatch('/teacher/curriculum') ||
     isMatch('/teacher/about') ||
-    isMatch('/teacher/assessments') ||
     isMatch('/teacher/grouping') ||
     isMatch('/teacher/resources');
 

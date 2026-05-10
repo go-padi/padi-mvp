@@ -46,3 +46,10 @@ Log of features shipped by BuildLoop.
 - Branch: buildloop/lr-08-demo-anonymize-banner
 - UAT bugs found and fixed: 0
 - Build retries: 0
+
+## LR-03
+- Iteration: 5
+- Shipped: 2026-05-10T19:12:02+00:00
+- Branch: buildloop/lr-03-retire-assessments
+- UAT bugs found and fixed: 0
+- Build retries: 0

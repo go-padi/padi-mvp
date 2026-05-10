@@ -53,3 +53,10 @@ Log of features shipped by BuildLoop.
 - Branch: buildloop/lr-03-retire-assessments
 - UAT bugs found and fixed: 0
 - Build retries: 0
+
+## LR-04
+- Iteration: 6
+- Shipped: 2026-05-10T19:20:17+00:00
+- Branch: buildloop/lr-04-orphan-routes
+- UAT bugs found and fixed: 0
+- Build retries: 0

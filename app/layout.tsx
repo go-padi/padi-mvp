@@ -1,5 +1,6 @@
 import "./globals.css";
 import TopNav from "@/components/TopNav";
+import Footer from "@/components/Footer";
 import { AuthProvider } from "@/lib/auth-store";
 import { TeachingModeProvider } from "@/lib/teachingModeContext";
 import { RoleGuard } from "@/components/auth/RoleGuard";
@@ -24,6 +25,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }){
             <RoleGuard />
             <TopNav />
             <main className="container py-8">{children}</main>
+            <Footer />
           </TeachingModeProvider>
         </AuthProvider>
       </body>

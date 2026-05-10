@@ -3,6 +3,8 @@
 import { useState, type FormEvent } from 'react';
 import { supabaseClient } from '@/lib/supabase';
 import { useDefaultSubject } from '@/lib/startTeaching/useDefaultSubject';
+import { useAuth } from '@/lib/auth-store';
+import { rolePhrase } from '@/lib/copy/roleCopy';
 
 type AddedStudent = { id: string; firstName: string; lastName: string };
 type CreatedGroup = { id: string; name: string; studentIds: string[] };
@@ -14,6 +16,7 @@ type StartTeachingWizardProps = {
 };
 
 export function StartTeachingWizard({ tenantId, onComplete, onSkip }: StartTeachingWizardProps) {
+  const { role } = useAuth();
   const [step, setStep] = useState<1 | 2>(1);
   const [addedStudents, setAddedStudents] = useState<AddedStudent[]>([]);
   const [createdGroups, setCreatedGroups] = useState<CreatedGroup[]>([]);
@@ -24,18 +27,23 @@ export function StartTeachingWizard({ tenantId, onComplete, onSkip }: StartTeach
     await onComplete();
   };
 
+  const introCopy = rolePhrase(
+    role,
+    'Let’s set up your classroom. This takes about 2 minutes.',
+    'Let’s set up Padi for your child. This takes about 2 minutes.',
+  );
+  const step1Label = rolePhrase(role, 'Add Students', 'Add Child');
+
   return (
     <div className="mx-auto max-w-xl space-y-6">
       <div className="space-y-1">
         <h2 className="text-2xl font-semibold text-gray-900">Welcome to Padi!</h2>
-        <p className="text-sm text-gray-700">
-          Let&rsquo;s set up your classroom. This takes about 2 minutes.
-        </p>
+        <p className="text-sm text-gray-700">{introCopy}</p>
       </div>
 
       {/* Step indicator */}
       <div className="flex items-center gap-3">
-        <StepBadge number={1} label="Add Students" active={step === 1} done={step > 1} />
+        <StepBadge number={1} label={step1Label} active={step === 1} done={step > 1} />
         <div className="h-px flex-1 bg-gray-200" />
         <StepBadge number={2} label="Create Groups" active={step === 2} done={false} />
       </div>
@@ -47,6 +55,7 @@ export function StartTeachingWizard({ tenantId, onComplete, onSkip }: StartTeach
           setAddedStudents={setAddedStudents}
           onNext={handleStudentsComplete}
           onSkip={onSkip}
+          role={role}
         />
       )}
 
@@ -95,17 +104,27 @@ function StepAddStudents({
   setAddedStudents,
   onNext,
   onSkip,
+  role,
 }: {
   tenantId: string;
   addedStudents: AddedStudent[];
   setAddedStudents: React.Dispatch<React.SetStateAction<AddedStudent[]>>;
   onNext: () => void;
   onSkip: () => void;
+  role: ReturnType<typeof useAuth>['role'];
 }) {
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  const heading = rolePhrase(role, 'Add your students', 'Add your child');
+  const subheading = rolePhrase(
+    role,
+    'Add the students you’ll be teaching. You can always add more later.',
+    'Add your child to start their lessons. You can update this later.',
+  );
+  const submitLabel = rolePhrase(role, 'Add Student', 'Add Child');
 
   const handleAdd = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -160,10 +179,8 @@ function StepAddStudents({
     <div className="space-y-5">
       <div className="rounded-2xl border border-gray-100 bg-white p-6 shadow-sm space-y-4">
         <div className="space-y-1">
-          <h3 className="text-lg font-semibold text-gray-900">Add your students</h3>
-          <p className="text-sm text-gray-600">
-            Add the students you&rsquo;ll be teaching. You can always add more later.
-          </p>
+          <h3 className="text-lg font-semibold text-gray-900">{heading}</h3>
+          <p className="text-sm text-gray-600">{subheading}</p>
         </div>
 
         <form onSubmit={handleAdd} className="space-y-3">
@@ -205,7 +222,7 @@ function StepAddStudents({
             disabled={saving}
             className="inline-flex items-center rounded-xl bg-gray-900 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-gray-800 disabled:opacity-60"
           >
-            {saving ? 'Adding...' : 'Add Student'}
+            {saving ? 'Adding...' : submitLabel}
           </button>
         </form>
 

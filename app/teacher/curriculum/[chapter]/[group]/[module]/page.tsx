@@ -11,6 +11,7 @@ import { useDefaultSubject } from '@/lib/startTeaching/useDefaultSubject';
 import { AddStudentModal } from '@/components/AddStudentModal';
 import { AddGroupModal } from '@/components/AddGroupModal';
 import { previewModuleByCode } from '@/lib/demo/demoCurriculum';
+import { rolePhrase } from '@/lib/copy/roleCopy';
 
 type Lesson = {
   materials?: string[];
@@ -67,7 +68,7 @@ export default function LessonPage({ params }: { params: Promise<{ chapter: stri
   const { chapter, group, module } = use(params);
   const searchParams = useSearchParams();
   const contextStudentId = searchParams.get('student');
-  const { isLoggedIn, isHydrated, tenantId } = useAuth();
+  const { isLoggedIn, isHydrated, tenantId, role } = useAuth();
   const router = useRouter();
   const [moduleRow, setModuleRow] = useState<ModuleRow | null>(null);
   const [notes, setNotes] = useState('');
@@ -100,10 +101,10 @@ export default function LessonPage({ params }: { params: Promise<{ chapter: stri
     const options: { value: string; label: string }[] = [];
     const includeAddStudent = mode === 'individual' || mode === 'both' || students.length === 0;
     const includeAddGroup = mode === 'group' || mode === 'both';
-    if (includeAddStudent) options.push({ value: '__action_add_student__', label: 'Add Student' });
+    if (includeAddStudent) options.push({ value: '__action_add_student__', label: rolePhrase(role, 'Add Student', 'Add Child') });
     if (includeAddGroup) options.push({ value: '__action_add_group__', label: 'Add Group' });
     return options;
-  }, [isLoggedIn, mode, students.length, hasStudentContext]);
+  }, [isLoggedIn, mode, students.length, hasStudentContext, role]);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -639,8 +640,8 @@ export default function LessonPage({ params }: { params: Promise<{ chapter: stri
         <div className="rounded-2xl border border-gray-100 bg-white p-5 shadow-sm space-y-2">
           <h3 className="text-lg font-semibold text-gray-900">Workspace preview</h3>
           <p className="text-sm text-gray-700">
-            This is a read-only preview of the lesson. Sign in to record notes, attach audio, and personalize lessons for
-            your students and groups.
+            This is a read-only preview of the lesson. Sign in to record notes, attach audio, and personalize lessons for{' '}
+            {rolePhrase(role, 'your students and groups', 'your child')}.
           </p>
           <Link href="/teacher/curriculum" className="text-sm font-semibold text-blue-700 hover:underline">
             Return to curriculum &rarr;

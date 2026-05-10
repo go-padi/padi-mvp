@@ -39,3 +39,10 @@ Log of features shipped by BuildLoop.
 - Branch: buildloop/lr-05-library-redirect
 - UAT bugs found and fixed: 0
 - Build retries: 0
+
+## LR-08
+- Iteration: 4
+- Shipped: 2026-05-10T19:00:13+00:00
+- Branch: buildloop/lr-08-demo-anonymize-banner
+- UAT bugs found and fixed: 0
+- Build retries: 0

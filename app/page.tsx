@@ -11,14 +11,13 @@ export default function Page(){
         <div className="relative grid gap-10 md:grid-cols-[1.1fr_0.9fr] items-center">
           <div className="space-y-6">
             <div className="inline-flex items-center gap-2 rounded-full border border-blue-100 bg-white px-3 py-1 text-xs font-medium text-blue-700 shadow-sm">
-              <span>✨ AI-Enhanced Reading Support</span>
+              <span>📚 Structured Multisensory Reading</span>
             </div>
             <h1 className="text-4xl font-bold leading-tight text-gray-900 md:text-5xl">
               Help Every Child <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-purple-600">Love Reading</span>
             </h1>
             <p className="max-w-2xl text-lg text-gray-700">
-              Structured, interactive reading lessons designed for struggling readers ages 3-4.
-              Based on proven curriculum with AI-powered personalization.
+              Structured, multisensory reading lessons for K-2 readers (ages 5-7), built on the ASDEC Kickstart curriculum.
             </p>
             <div className="flex flex-wrap gap-3">
               <Link href="/teacher" className="btn btn-primary">
@@ -40,7 +39,6 @@ export default function Page(){
                   title: "Interactive Lessons",
                   bullet: [
                     "Phonics-focused instruction",
-                    "Audio pronunciation guides",
                     "Visual word matching",
                     "Progress tracking",
                   ],
@@ -50,7 +48,7 @@ export default function Page(){
                   title: "Teacher Tools",
                   bullet: [
                     "Ready-to-use lesson plans",
-                    "Printable PDF worksheets",
+                    "Printable worksheets (coming soon)",
                     "Student progress reports",
                     "Curriculum alignment",
                   ],
@@ -59,7 +57,7 @@ export default function Page(){
                 {
                   title: "Targeted Support",
                   bullet: [
-                    "Ages 3-4 focus",
+                    "K-2 (ages 5-7) focus",
                     "Systematic phonics approach",
                     "Multi-sensory learning",
                     "Confidence building",

@@ -4,11 +4,12 @@ import { usePathname } from 'next/navigation';
 import clsx from 'clsx';
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/lib/auth-store';
+import { rolePhrase } from '@/lib/copy/roleCopy';
 import { SignInModal } from './auth/SignInModal';
 
 export default function TopNav(){
   const pathname = usePathname();
-  const { isLoggedIn, user, logout } = useAuth();
+  const { isLoggedIn, user, logout, role } = useAuth();
   const [isSignInOpen, setSignInOpen] = useState(false);
 
   const isMatch = (base: string) => pathname === base || pathname.startsWith(`${base}/`);
@@ -58,7 +59,7 @@ export default function TopNav(){
               )}
               aria-current={isStartTeachingRoute ? 'page' : undefined}
             >
-              Start Teaching
+              {rolePhrase(role, 'Start Teaching', 'Start Lesson')}
             </Link>
             {!isLoggedIn && (
             <button

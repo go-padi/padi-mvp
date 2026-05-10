@@ -5,7 +5,7 @@ import clsx from 'clsx';
 import { useAuth } from '@/lib/auth-store';
 import { PREVIEW_BANNER } from '@/lib/copy/previewCopy';
 
-const tabs = [
+const allTabs = [
   { id: 'about', label: 'About Method', href: '/teacher/about' },
   { id: 'curriculum', label: 'Curriculum', href: '/teacher/curriculum' },
   { id: 'grouping', label: 'Grouping & Progress', href: '/teacher/grouping' },
@@ -14,7 +14,8 @@ const tabs = [
 
 export default function TeacherLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
-  const { isLoggedIn } = useAuth();
+  const { isLoggedIn, role } = useAuth();
+  const tabs = role === 'parent' ? allTabs.filter((t) => t.id !== 'grouping') : allTabs;
   const isDashboardView =
     pathname.startsWith('/teacher/curriculum') ||
     pathname.startsWith('/teacher/about') ||

@@ -81,3 +81,10 @@ Log of features shipped by BuildLoop.
 - Branch: buildloop/lr-15-match-go-padi-marketing-copy
 - UAT bugs found and fixed: 0
 - Build retries: 0
+
+## LR-12
+- Iteration: 2
+- Shipped: 2026-05-11T16:31:47+00:00
+- Branch: buildloop/lr-12-disambiguate-continue-teaching
+- UAT bugs found and fixed: 0
+- Build retries: 0

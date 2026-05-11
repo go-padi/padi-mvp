@@ -40,7 +40,7 @@ export default function Page(){
             <div className="grid gap-4 sm:grid-cols-2">
               {[
                 {
-                  title: "Interactive Lessons",
+                  title: "Multisensory Lessons",
                   bullet: [
                     "Phonics-focused instruction",
                     "Visual word matching",
@@ -49,7 +49,7 @@ export default function Page(){
                   icon: "📘",
                 },
                 {
-                  title: "Teacher Tools",
+                  title: "Zero Prep Time",
                   bullet: [
                     "Ready-to-use lesson plans",
                     "Printable worksheets (coming soon)",
@@ -59,7 +59,7 @@ export default function Page(){
                   icon: "🧑‍🏫",
                 },
                 {
-                  title: "Targeted Support",
+                  title: "Science of Reading",
                   bullet: [
                     "Ages 3–7 focus",
                     "Systematic phonics approach",

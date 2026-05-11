@@ -88,3 +88,10 @@ Log of features shipped by BuildLoop.
 - Branch: buildloop/lr-12-disambiguate-continue-teaching
 - UAT bugs found and fixed: 0
 - Build retries: 0
+
+## LR-16
+- Iteration: 3
+- Shipped: 2026-05-11T16:37:45+00:00
+- Branch: buildloop/lr-16-feature-cards-brand-voice
+- UAT bugs found and fixed: 0
+- Build retries: 0

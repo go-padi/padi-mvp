@@ -2,7 +2,7 @@
 id: LR-15
 title: "[Marketing] Replace homepage placeholder copy with go-padi.com source-of-truth"
 type: task
-status: backlog
+status: done
 priority: highest
 feature: launch-readiness
 launch_blocker: true

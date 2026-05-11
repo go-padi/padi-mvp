@@ -2,7 +2,7 @@
 id: LR-12
 title: "[Copy] Disambiguate 'Continue Teaching' — currently means three different things"
 type: task
-status: backlog
+status: done
 priority: high
 feature: launch-readiness
 launch_blocker: true

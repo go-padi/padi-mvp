@@ -2,7 +2,7 @@
 id: LR-16
 title: "[Marketing] Refresh homepage feature cards with go-padi.com brand voice (coming-soon framing for unbuilt capabilities)"
 type: task
-status: backlog
+status: done
 priority: high
 feature: launch-readiness
 launch_blocker: true

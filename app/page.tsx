@@ -9,15 +9,16 @@ export default function Page(){
           <div className="absolute -right-20 bottom-0 h-64 w-64 rounded-full bg-blue-200/30 blur-3xl" />
         </div>
         <div className="relative grid gap-10 md:grid-cols-[1.1fr_0.9fr] items-center">
-          <div className="space-y-6">
+          <div className="space-y-6 min-w-0">
             <div className="inline-flex items-center gap-2 rounded-full border border-blue-100 bg-white px-3 py-1 text-xs font-medium text-blue-700 shadow-sm">
-              <span>📚 Structured Multisensory Reading</span>
+              <span className="md:hidden">Free early access for ages 3–7</span>
+              <span className="hidden md:inline">Now in free early access for teachers of 3- to 7-year-olds</span>
             </div>
             <h1 className="text-4xl font-bold leading-tight text-gray-900 md:text-5xl">
-              Help Every Child <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-purple-600">Love Reading</span>
+              Spot reading gaps before they become <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-purple-600">reading struggles</span>.
             </h1>
-            <p className="max-w-2xl text-lg text-gray-700">
-              Structured, multisensory reading lessons for K-2 readers (ages 5-7), built on the ASDEC Kickstart curriculum.
+            <p className="max-w-full md:max-w-2xl text-lg text-gray-700">
+              Padi gives teachers a clear signal for every student ages 3–7: ready, needs help, or needs intervention. Multisensory lessons built on the Science of Reading — zero prep required.
             </p>
             <div className="flex flex-wrap gap-3">
               <Link href="/teacher" className="btn btn-primary">
@@ -27,8 +28,11 @@ export default function Page(){
                 Teacher Dashboard
               </Link>
             </div>
+            <p className="text-xs text-gray-500">
+              Free during early access. No credit card needed.
+            </p>
           </div>
-          <div className="relative rounded-2xl bg-white/80 p-6 shadow-lg ring-1 ring-blue-100">
+          <div className="relative rounded-2xl bg-white/80 p-6 shadow-lg ring-1 ring-blue-100 min-w-0">
             <h3 className="text-lg font-semibold text-gray-900 mb-3">Everything You Need for Reading Success</h3>
             <p className="text-sm text-gray-600 mb-6">
               Comprehensive tools and resources designed specifically for early reading intervention.
@@ -57,7 +61,7 @@ export default function Page(){
                 {
                   title: "Targeted Support",
                   bullet: [
-                    "K-2 (ages 5-7) focus",
+                    "Ages 3–7 focus",
                     "Systematic phonics approach",
                     "Multi-sensory learning",
                     "Confidence building",

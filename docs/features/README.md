@@ -10,11 +10,15 @@ docs/features/
     epic.md               # feature-level overview (goal, why, scope)
     <ticket-slug>.md      # task/story/bug — one per unit of work
     <ticket-slug>-uat.md  # UAT scenarios for that ticket (if applicable)
-  _orphaned/              # tickets not yet grouped to a feature
   _review.md              # tickets flagged for human triage
   README.md               # this file
   SCHEMA.md               # ticket frontmatter schema
+  SHIPPED.md              # rolling shipped log
 ```
+
+`_orphaned/` was retired 2026-05-11 — its contents were either superseded
+by the launch-readiness epic or deleted as historical. New tickets get
+placed directly under a feature folder (create one if needed).
 
 ## Frontmatter schema
 

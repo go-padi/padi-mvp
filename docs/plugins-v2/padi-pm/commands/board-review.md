@@ -10,7 +10,7 @@ You are reviewing the Padi product board. The board is a file tree at `padi-app-
 
 ## Step 2: Walk the file tree
 
-Read `padi-app-starter/docs/features/README.md` and `SCHEMA.md` if you need a refresher on the format. Then list every feature folder (ignore `_orphaned/` and `_review.md` for now).
+Read `padi-app-starter/docs/features/README.md` and `SCHEMA.md` if you need a refresher on the format. Then list every feature folder (ignore `_review.md` for now).
 
 For each feature folder:
 1. Read `epic.md` — capture title, status, priority.
@@ -31,15 +31,12 @@ Then a top-line summary:
 
 Open `docs/features/_review.md`. Surface anything still flagged.
 
-Open `docs/features/_orphaned/` — list orphan tickets that haven't been re-homed yet.
-
 ## Step 5: Identify gaps
 
 Flag:
 - Tickets with empty / placeholder Acceptance Criteria but status ≠ backlog
 - UAT files still holding scaffold text but parent is in-progress
 - Epics with no open child tickets
-- Orphans older than a week that nobody has triaged
 
 ## Step 6: Ask the PM
 

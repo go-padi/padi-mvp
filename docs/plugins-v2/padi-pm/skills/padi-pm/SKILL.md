@@ -27,8 +27,7 @@ padi-app-starter/docs/features/
 ├── README.md           layout + conventions
 ├── SCHEMA.md           frontmatter contract for every ticket file
 ├── _review.md          stale/misfiled items flagged for PM triage
-├── _orphaned/          tickets without an epic parent
-└── <feature>/          one folder per epic, e.g. role-split/, rubric-authoring/
+└── <feature>/          one folder per epic, e.g. role-split/, launch-readiness/
     ├── epic.md         one per folder; type: epic
     ├── <task>.md       one per task/story/bug
     └── <task>-uat.md   matching UAT for each task that needs one
@@ -113,4 +112,3 @@ Status emoji key: ⬜ not run, ✅ pass, ❌ fail, 🐛 bug found.
 - Ticket files with no filled Acceptance Criteria
 - UAT files still holding placeholder scenarios after the parent is in-progress
 - `_review.md` items older than 30 days
-- Orphaned tickets in `_orphaned/` with no triage

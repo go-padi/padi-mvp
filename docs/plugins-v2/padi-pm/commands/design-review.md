@@ -36,7 +36,7 @@ Wait for the PM's answers before proceeding to Phase 2.
 
 Read `padi-app-starter/docs/features/README.md` and `SCHEMA.md` if you need a format refresher. Then:
 
-1. List every feature folder and its `epic.md` (skip `_orphaned/` and `_review.md`).
+1. List every feature folder and its `epic.md` (skip `_review.md`).
 2. For each folder, list every non-epic, non-`*-uat.md` file — those are the tickets.
 3. For each ticket, capture `id`, `title`, `status`, and `priority` from the frontmatter.
 

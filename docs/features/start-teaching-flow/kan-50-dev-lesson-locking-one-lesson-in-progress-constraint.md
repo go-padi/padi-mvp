@@ -2,12 +2,20 @@
 id: KAN-50
 title: "Dev: Lesson locking — one-lesson-in-progress constraint"
 type: story
-status: backlog
+status: superseded
 priority: high
 feature: start-teaching-flow
 jira_ref: https://go-padi.atlassian.net/browse/KAN-50
-updated: 2026-04-19
+updated: 2026-05-10
+superseded_by: LR-10
 ---
+
+> **Superseded by LR-10 (2026-05-10).** The instructional audit showed
+> the curriculum requires repetition for automaticity (Spelling
+> Exercises SE-1 through SE-9 are graduated by accumulated mastery,
+> not single-pass completion). A one-lesson-in-progress lock contradicts
+> this — students need to re-enter and repeat completed lessons.
+> LR-10 ("Allow re-entry to completed lessons") is the corrected approach.
 
 ### Goal
 Dev: Lesson locking — one-lesson-in-progress constraint.

@@ -11,6 +11,44 @@ Format per day:
 
 ---
 
+## Mon 2026-05-11
+
+### Top priorities
+1. **LR-15 — Replace homepage copy with go-padi.com source-of-truth** (blocker, supersedes part of LR-01). The placeholder marketing copy that landed in LR-01 is technically correct but not Padi's brand voice. Pull the canonical copy from https://go-padi.com/ and replace `app/page.tsx` strings only. ~30 min once copy is captured. File: `docs/features/launch-readiness/lr-15-match-go-padi-marketing-copy.md`.
+2. **LR-09 — Fix progress-number data integrity** (blocker). The teacher walkthrough exposed broken `"13 of 197"` numerators, section duplicates, and inconsistent denominators. This is bigger than the X-of-Y framing fix; the underlying data math is wrong. File: `docs/features/launch-readiness/lr-09-fix-progress-data-integrity.md`.
+3. **Decide which of LR-11 / LR-13 / LR-10 ships in the next BuildLoop batch.** All three came out of the walkthrough audit. LR-11 (next-module obvious) probably matters most for activation; LR-13 (student progress view) replaces what assessments did; LR-10 (lesson re-entry) is curriculum-fidelity. Pick 2-3 to flip to `priority: highest` and run `/buildloop:buildloop-start 3` (or more).
+
+### Checklist
+
+- [ ] Capture canonical hero / subtitle / eyebrow / feature copy from https://go-padi.com/ (just visit the site, screenshot or copy the text)
+- [ ] Flip LR-15 frontmatter to `priority: highest` (already there) and `launch_blocker: true` (already there). Same for LR-09.
+- [ ] Decide ship order for the next batch (LR-15 + LR-09 + one walkthrough finding) and flip them to `priority: highest`
+- [ ] In the repo root: `claude` → `/buildloop:buildloop-start 3` (auto-chain handles everything; no per-step approvals)
+- [ ] Verify the symlink before kicking off: `ls -la ~/.claude/plugins/cache/padi-plugins/buildloop/0.1.0` should show an arrow to `.plugins/buildloop`
+- [ ] Once running, leave the dashboard artifact open (`padi-app-dashboard`) — refresh button after each ship to see what changed
+- [ ] **Parent walkthrough** — record the parent-mode Loom (same flow as teacher walkthrough). Drop the transcript into the chat and ask for an audit. Will likely surface 2-4 more LR tickets.
+- [ ] If credits/time allow: bulk-flip stale frontmatter on backlog tickets in `docs/features/start-teaching-flow/` (KAN-51, 54, 55, 56, 64, 73) — decide keep / supersede / delete for each. Optional, ~10 min.
+- [ ] Transfer Google Workspace billing from Squarespace reseller to direct billing (admin task — was at `_orphaned/kan-95-*`, now retired since `_orphaned/` was deleted; tracking here)
+- [ ] End of day: update this file with Tue 2026-05-12 tasks
+
+### Notes / blockers
+
+- **BuildLoop tooling patches are now persisted** (2026-05-10 late). `claude_cli.py` has `--permission-mode acceptEdits` and `phases.py` has the broader bugs glob + no-op build detection across all four plugin file copies. See `docs/buildloop-handoff.md` "Plugin file divergence" section for the four-copy architecture and recommended post-launch consolidation.
+- **`docs/features/` was cleaned up** 2026-05-10/11:
+  - `assessments-grouping/` reduced to audit + one done ticket (`epic.md` marks it superseded by LR-13)
+  - `teacher-resources/` reduced to epic only (LR-07 hid the route; v1.1 work)
+  - `_orphaned/` deleted entirely (12 files — all superseded by LR work or historical)
+  - 8 top-level `lr-*/` iteration-scratch folders moved under `launch-readiness/iterations/`
+  - Duplicate `lr-15-match-homepage-copy-to-go-padi-com.md` deleted (kept `lr-15-match-go-padi-marketing-copy.md`)
+  - KAN-50, KAN-53, KAN-63 marked superseded with pointers to their LR successor
+- **15 launch-readiness tickets total** filed. 8 shipped, 7 backlog (LR-09 through LR-15).
+- KAN-137 (PostHog analytics util) stays at `priority: medium` — user explicitly wants the app shippable first, analytics second. Bump pre-launch when ready to wire events.
+- The role-split epic (KAN-127) is now marked `shipped` — six children landed plus LR-06 added the role-aware nav layer.
+- LR-08 only shipped a narrow slice (names + banner). Full demo-data surface audit still owed pre-launch.
+- Marketing copy direction: source-of-truth is **https://go-padi.com/**. If it's wrong or stale, escalate to the marketing-site side before patching the app.
+
+---
+
 ## Thu 2026-04-23
 
 ### Top priorities

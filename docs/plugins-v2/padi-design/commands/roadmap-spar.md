@@ -10,7 +10,6 @@ Walk `padi-app-starter/docs/features/` and build a current picture of the board:
 - List every feature folder and its `epic.md`.
 - For each folder, enumerate tickets (non-epic, non-UAT `.md` files) with their frontmatter `status` and `priority`.
 - Read `docs/features/_review.md` for anything flagged stale.
-- Read `docs/features/_orphaned/` for ungrouped tickets.
 
 ## Step 2: Apply the north star
 
@@ -27,7 +26,7 @@ Apply the 5-test sequencing framework (loaded via pm-sparring):
 1. **Right order for first real teacher?** Is anything being built before a foundational piece?
 2. **Right sized epics?** Too big to ship as a unit? Too small — really tasks?
 3. **Mis-filed tickets?** Anything in the wrong folder, or revealing a missing epic?
-4. **Stale work?** Anything in `_review.md` or `_orphaned/` that should be closed instead of re-homed?
+4. **Stale work?** Anything in `_review.md` that should be closed instead of re-homed?
 5. **Parallel paths?** Two features where only one is on the critical path?
 
 ## Step 4: Surface as questions

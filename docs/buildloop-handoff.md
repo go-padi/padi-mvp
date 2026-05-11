@@ -70,6 +70,33 @@ Default 3 iterations. Built-in retry caps. Pauses on real failures (build, UAT, 
 
 - **Cowork "save here" plugin upload fails silently.** Server rejects, no error in any log file we checked. Sidestepped by symlink — irrelevant unless you want to publish BuildLoop externally. To debug for real: open Cowork DevTools (Cmd+Opt+I) → Network tab → save → look at the failing response.
 
+## Plugin file divergence (2026-05-10) — patches persisted
+
+There are FOUR copies of the orchestrator's Python files spread across two roots and two depths:
+
+- `~/Desktop/padi-app/padi-app-starter/.plugins/buildloop/scripts/` (in-app, top)
+- `~/Desktop/padi-app/padi-app-starter/.plugins/buildloop/skills/buildloop/scripts/` (in-app, nested)
+- `~/Desktop/padi-app/padi-plugins/buildloop/scripts/` (sibling, top)
+- `~/Desktop/padi-app/padi-plugins/buildloop/skills/buildloop/scripts/` (sibling, nested)
+
+During the 8-iteration launch-readiness run, tooling patches landed in the sibling root but never propagated to the in-app overlay. On 2026-05-10 the following patches were applied to ALL four copies (so it doesn't matter which one CC loads):
+
+- **`claude_cli.py`:** `cmd = ["claude", flag, "--permission-mode", "acceptEdits", "--", prompt]` and matching `cmd[4:4]` slice for `extra_args`. *Exception:* sibling NESTED keeps `--dangerously-skip-permissions` — that was a deliberate later setting for fully-headless ops; leave it.
+- **`phases.py`** in `build()`: no-op build detection after CLI exit 0. Runs `git status --porcelain`; if working tree is unchanged, pauses with `build no-op`. Prevents advancing to validate on phantom progress (CC silently gave up on an unsurfaced permission prompt).
+- **`phases.py`** in `eng_fix()`: bugs glob broadened from `*-bug.md` to `*bug*.md`. Matches both `<slug>-bug.md` (suffix style) AND `<id>-bug-<slug>.md` (the uat-tester agent's actual write pattern).
+
+PHASE_PROMPTS_PATH was left location-specific in each copy — top-level uses `parent.parent / "skills" / "buildloop" / "references"`, nested uses `parent.parent / "references"`. Don't homogenize that field.
+
+### Tech debt (defer until post-launch)
+
+Four-copy architecture is brittle and will diverge again. Recommended cleanup:
+1. Pick ONE canonical location. Recommendation: `~/Desktop/padi-app/padi-app-starter/.plugins/buildloop/` (in-app, top). Reason: lives in the repo CC operates on, ships with the source.
+2. Delete the in-app nested copy (`.plugins/buildloop/skills/buildloop/scripts/`) — only the SKILL.md needs to live under `skills/buildloop/`, not duplicate Python.
+3. Decide whether `~/Desktop/padi-app/padi-plugins/` stays as a publish target or gets deleted. If publishing externally, symlink scripts/ from in-app rather than copy.
+4. The symlink at `~/.claude/plugins/cache/padi-plugins/buildloop/0.1.0` should point to whichever single canonical location remains.
+
+Not doing this now: user is in launch mode, BuildLoop currently works, refactoring file layout while shipping features risks breaking the loop mid-run.
+
 ## North star + brief
 
 - North star metric: **Activated users** = signed up + role picked + ≥1 student created + ≥1 lesson completed

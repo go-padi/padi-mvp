@@ -2,12 +2,16 @@
 id: KAN-63
 title: "Progress text reads On Lesson X of Y (not 0 of Y or blank)"
 type: bug
-status: backlog
+status: superseded
 priority: medium
 feature: bugs
 jira_ref: https://go-padi.atlassian.net/browse/KAN-63
-updated: 2026-04-19
+updated: 2026-05-10
+superseded_by: LR-09
 ---
+
+> **Superseded by LR-09 (2026-05-10).** Rolled into the broader
+> progress-data-integrity fix.
 
 ### Goal
 Progress text reads On Lesson X of Y (not 0 of Y or blank).

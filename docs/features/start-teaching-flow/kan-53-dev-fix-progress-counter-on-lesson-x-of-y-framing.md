@@ -2,12 +2,20 @@
 id: KAN-53
 title: "Dev: Fix progress counter — On Lesson X of Y framing"
 type: story
-status: backlog
+status: superseded
 priority: medium
 feature: start-teaching-flow
 jira_ref: https://go-padi.atlassian.net/browse/KAN-53
-updated: 2026-04-19
+updated: 2026-05-10
+superseded_by: LR-09
 ---
+
+> **Superseded by LR-09 (2026-05-10).** The walkthrough audit found
+> the progress counter problem is bigger than just framing — the
+> underlying data (numerators, denominators, section completion math)
+> is wrong. LR-09 ("Fix progress-number data integrity") is the
+> broader fix that includes correct counter display as part of the
+> scope.
 
 ### Goal
 Dev: Fix progress counter — On Lesson X of Y framing.

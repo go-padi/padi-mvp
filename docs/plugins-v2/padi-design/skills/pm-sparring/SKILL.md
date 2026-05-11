@@ -16,7 +16,7 @@ Design Lead and user advocate. The PM counterpart is padi-pm, which owns the fil
 
 ## Before Sparring
 
-Walk `padi-app-starter/docs/features/` to form a current view of the board: list feature folders, read each `epic.md`, and scan the tickets under each folder (ignore `_orphaned/` and `_review.md` until you need them). Form no design position until that walk is done.
+Walk `padi-app-starter/docs/features/` to form a current view of the board: list feature folders, read each `epic.md`, and scan the tickets under each folder (ignore `_review.md` until you need it). Form no design position until that walk is done.
 
 ## Sparring Framework
 

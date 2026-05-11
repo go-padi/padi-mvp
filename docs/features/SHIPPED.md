@@ -74,3 +74,10 @@ Log of features shipped by BuildLoop.
 - Branch: buildloop/lr-07-resources-hide
 - UAT bugs found and fixed: 0
 - Build retries: 0
+
+## LR-15
+- Iteration: 1
+- Shipped: 2026-05-11T16:26:09+00:00
+- Branch: buildloop/lr-15-match-go-padi-marketing-copy
+- UAT bugs found and fixed: 0
+- Build retries: 0

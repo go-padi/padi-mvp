@@ -445,7 +445,7 @@ export default function StudentModulePage({
                                         href={lessonHref}
                                         className="rounded-lg bg-blue-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-blue-700"
                                       >
-                                        {completedCount === 0 ? 'Start Teaching' : 'Continue Teaching'}
+                                        {completedCount === 0 ? 'Start Teaching' : 'Continue Lesson'}
                                       </Link>
                                     )}
                                     {isUpcoming && (

@@ -333,7 +333,7 @@ export default function TeacherIndexPage() {
               ? 'View Progress'
               : noneStarted
                 ? 'Start Teaching'
-                : 'Continue Teaching';
+                : 'Continue Lesson';
           const ctaIsPrimary = !allComplete;
 
           const cardHref =

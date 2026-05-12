@@ -2,6 +2,10 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useAuth } from '@/lib/auth-store';
 import { supabaseClient } from '@/lib/supabase';
 import { demoTeacherData } from '@/lib/demo/demoTeacherData';
+import {
+  AssessmentStatus,
+  normalizeAssessmentStatus,
+} from '@/lib/copy/assessmentStatusCopy';
 
 export type StartTeachingStudent = {
   id: string;
@@ -11,7 +15,7 @@ export type StartTeachingStudent = {
   focusAreas: string[];
   progressPercent: number;
   progressLabel?: string | null;
-  assessmentStatus?: string | null;
+  assessmentStatus: AssessmentStatus;
   completedCount: number;
 };
 
@@ -102,11 +106,10 @@ export function useStartTeachingData(): StartTeachingData {
             ? `${completedModules} module${completedModules === 1 ? '' : 's'} done`
             : `${storedPercent}% complete`)
           : storedLabel,
-        assessmentStatus: ['Ready', 'Needs Help', 'Needs Intervention'].includes(student.assessment_status ?? '')
-          ? student.assessment_status!
-          : hasProgress
-            ? 'In progress'
-            : (student.assessment_status ?? 'Not started'),
+        assessmentStatus: normalizeAssessmentStatus({
+          assessmentStatus: student.assessment_status,
+          progressPercent: hasProgress ? Math.max(storedPercent, 1) : storedPercent,
+        }),
         completedCount: completedModules,
       };
     });
@@ -165,7 +168,10 @@ export function useStartTeachingData(): StartTeachingData {
         focusAreas: s.focusAreas,
         progressPercent: s.progressPercent,
         progressLabel: s.progressLabel,
-        assessmentStatus: s.assessmentStatus,
+        assessmentStatus: normalizeAssessmentStatus({
+          assessmentStatus: s.assessmentStatus,
+          progressPercent: s.progressPercent,
+        }),
         completedCount: 0,
       }));
       const groups = demoTeacherData.groups.map(g => ({

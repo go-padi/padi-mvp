@@ -57,7 +57,11 @@ vi.mock('@/lib/demo/demoTeacherData', () => ({
 
 import { useAuth } from '@/lib/auth-store';
 import { useTeachingMode } from '@/lib/teachingModeContext';
-import { useStartTeachingData } from '@/lib/startTeaching/useStartTeachingData';
+import {
+  useStartTeachingData,
+  type StartTeachingStudent,
+  type StartTeachingGroup,
+} from '@/lib/startTeaching/useStartTeachingData';
 
 const mockUseAuth = vi.mocked(useAuth);
 const mockUseTeachingMode = vi.mocked(useTeachingMode);
@@ -87,7 +91,7 @@ const setMode = (mode: 'individual' | 'group' | 'both') => {
   mockUseTeachingMode.mockReturnValue({ mode, setMode: vi.fn() });
 };
 
-const populatedStudents = [
+const populatedStudents: StartTeachingStudent[] = [
   {
     id: 'stu-1',
     name: 'Avery Iyer',
@@ -100,7 +104,7 @@ const populatedStudents = [
   },
 ];
 
-const populatedGroups = [
+const populatedGroups: StartTeachingGroup[] = [
   {
     id: 'grp-1',
     name: 'iyers',
@@ -108,14 +112,14 @@ const populatedGroups = [
   },
 ];
 
-const setStartData = (overrides?: { students?: typeof populatedStudents; groups?: typeof populatedGroups }) => {
+const setStartData = (overrides?: { students?: StartTeachingStudent[]; groups?: StartTeachingGroup[] }) => {
   const students = overrides?.students ?? populatedStudents;
   const groups = overrides?.groups ?? populatedGroups;
   mockUseStartTeachingData.mockReturnValue({
     mode: 'live',
     students,
     groups,
-    groupStudentsByGroupId: groups.reduce<Record<string, typeof populatedStudents>>((acc, g) => {
+    groupStudentsByGroupId: groups.reduce<Record<string, StartTeachingStudent[]>>((acc, g) => {
       acc[g.id] = students.filter(s => g.studentIds.includes(s.id));
       return acc;
     }, {}),

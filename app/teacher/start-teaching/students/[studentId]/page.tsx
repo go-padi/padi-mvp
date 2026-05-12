@@ -2,6 +2,7 @@
 
 import { use, useCallback, useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
+import clsx from 'clsx';
 import { supabaseClient } from '@/lib/supabase';
 import { useAuth } from '@/lib/auth-store';
 import {
@@ -11,6 +12,26 @@ import {
   previewModulesByGroup,
 } from '@/lib/demo/demoCurriculum';
 import { formatProgressLabel } from '@/lib/copy/progressCopy';
+import {
+  AssessmentStatus,
+  assessmentStatusCaption,
+  normalizeAssessmentStatus,
+} from '@/lib/copy/assessmentStatusCopy';
+
+function statusBadgeClass(status: AssessmentStatus): string {
+  switch (status) {
+    case 'Ready':
+      return 'bg-green-50 text-green-700';
+    case 'Needs Help':
+      return 'bg-amber-50 text-amber-700';
+    case 'Needs Intervention':
+      return 'bg-red-50 text-red-700';
+    case 'In progress':
+      return 'bg-blue-50 text-blue-700';
+    case 'Not started':
+      return 'bg-gray-100 text-gray-600';
+  }
+}
 
 type StudentRow = {
   id: string;
@@ -73,7 +94,7 @@ export default function StudentModulePage({
     focusAreas: string[];
     progressPercent: number;
     progressLabel: string | null;
-    assessmentStatus: string;
+    assessmentStatus: AssessmentStatus;
   } | null>(null);
   const [chapters, setChapters] = useState<ChapterWithGroups[]>([]);
   const [completedModuleIds, setCompletedModuleIds] = useState<Set<string>>(new Set());
@@ -123,7 +144,10 @@ export default function StudentModulePage({
           : ['Learning Sensorially'],
         progressPercent: studentRow.progress_percent ?? 0,
         progressLabel: studentRow.progress_label ?? null,
-        assessmentStatus: studentRow.assessment_status ?? 'Not started',
+        assessmentStatus: normalizeAssessmentStatus({
+          assessmentStatus: studentRow.assessment_status,
+          progressPercent: studentRow.progress_percent,
+        }),
       };
       setStudent(s);
 
@@ -298,6 +322,20 @@ export default function StudentModulePage({
               {chaptersStarted} of {chapters.length} chapters started
             </p>
           </div>
+        </div>
+
+        <div className="flex items-center gap-3 flex-wrap">
+          <span
+            className={clsx(
+              'inline-flex items-center rounded-full px-2.5 py-1 text-xs font-semibold',
+              statusBadgeClass(student.assessmentStatus),
+            )}
+          >
+            {student.assessmentStatus}
+          </span>
+          <span className="text-sm text-gray-700">
+            {assessmentStatusCaption(student.assessmentStatus)}
+          </span>
         </div>
 
         {/* Progress bar */}

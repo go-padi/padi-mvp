@@ -12,6 +12,7 @@ export type StartTeachingStudent = {
   progressPercent: number;
   progressLabel?: string | null;
   assessmentStatus?: string | null;
+  completedCount: number;
 };
 
 export type StartTeachingGroup = {
@@ -106,6 +107,7 @@ export function useStartTeachingData(): StartTeachingData {
           : hasProgress
             ? 'In progress'
             : (student.assessment_status ?? 'Not started'),
+        completedCount: completedModules,
       };
     });
 
@@ -142,6 +144,18 @@ export function useStartTeachingData(): StartTeachingData {
     load();
   }, [load]);
 
+  useEffect(() => {
+    if (!isHydrated || !isLoggedIn) return;
+    const mountedAt = Date.now();
+    const onVisible = () => {
+      if (document.visibilityState !== 'visible') return;
+      if (Date.now() - mountedAt < 500) return;
+      load();
+    };
+    document.addEventListener('visibilitychange', onVisible);
+    return () => document.removeEventListener('visibilitychange', onVisible);
+  }, [isHydrated, isLoggedIn, load]);
+
   return useMemo<StartTeachingData>(() => {
     if (!isLoggedIn) {
       const students = demoTeacherData.students.map(s => ({
@@ -152,6 +166,7 @@ export function useStartTeachingData(): StartTeachingData {
         progressPercent: s.progressPercent,
         progressLabel: s.progressLabel,
         assessmentStatus: s.assessmentStatus,
+        completedCount: 0,
       }));
       const groups = demoTeacherData.groups.map(g => ({
         id: g.id,

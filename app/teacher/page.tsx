@@ -12,6 +12,7 @@ import { AddStudentModal } from '@/components/AddStudentModal';
 import { AddGroupModal } from '@/components/AddGroupModal';
 import { stripIndividualSuffix } from '@/lib/curriculum/formatting';
 import { PREVIEW_BANNER } from '@/lib/copy/previewCopy';
+import { formatProgressLabel } from '@/lib/copy/progressCopy';
 
 type CardData = {
   id: string;
@@ -21,6 +22,7 @@ type CardData = {
   type: 'student' | 'group';
   progressPercent: number;
   progressLabel: string | null;
+  completedCount: number;
 };
 
 
@@ -62,24 +64,32 @@ export default function TeacherIndexPage() {
 
   const cards = useMemo((): CardData[] => {
     if (dataMode === 'demo') {
-      const studentCards: CardData[] = demoTeacherData.students.map(s => ({
-        id: s.id,
-        name: s.name,
-        status: s.assessmentStatus,
-        focus: s.focusAreas[0],
-        type: 'student' as const,
-        progressPercent: s.progressPercent,
-        progressLabel: s.progressLabel,
-      }));
-      const groupCards: CardData[] = demoTeacherData.groups.map(g => ({
-        id: g.id,
-        name: g.name,
-        status: g.status,
-        focus: g.focus,
-        type: 'group' as const,
-        progressPercent: g.progressPercent,
-        progressLabel: g.progressLabel,
-      }));
+      const studentCards: CardData[] = demoTeacherData.students.map(s => {
+        const m = s.progressLabel?.match(/(\d+)\/(\d+)/);
+        return {
+          id: s.id,
+          name: s.name,
+          status: s.assessmentStatus,
+          focus: s.focusAreas[0],
+          type: 'student' as const,
+          progressPercent: s.progressPercent,
+          progressLabel: s.progressLabel,
+          completedCount: m ? parseInt(m[1], 10) : 0,
+        };
+      });
+      const groupCards: CardData[] = demoTeacherData.groups.map(g => {
+        const m = g.progressLabel?.match(/(\d+)\/(\d+)/);
+        return {
+          id: g.id,
+          name: g.name,
+          status: g.status,
+          focus: g.focus,
+          type: 'group' as const,
+          progressPercent: g.progressPercent,
+          progressLabel: g.progressLabel,
+          completedCount: m ? parseInt(m[1], 10) : 0,
+        };
+      });
       if (effectiveMode === 'individual') return studentCards;
       if (effectiveMode === 'group') return groupCards;
       return [...studentCards, ...groupCards];
@@ -93,12 +103,14 @@ export default function TeacherIndexPage() {
       type: 'student' as const,
       progressPercent: s.progressPercent ?? 0,
       progressLabel: s.progressLabel ?? null,
+      completedCount: s.completedCount ?? 0,
     }));
     const groupCards: CardData[] = startData.groups.map(g => {
       const members = startData.groupStudentsByGroupId[g.id] || [];
       const avgPercent = members.length
         ? Math.round(members.reduce((sum, m) => sum + (m.progressPercent ?? 0), 0) / members.length)
         : 0;
+      const completedSum = members.reduce((sum, m) => sum + (m.completedCount ?? 0), 0);
       return {
         id: g.id,
         name: g.name,
@@ -107,6 +119,7 @@ export default function TeacherIndexPage() {
         type: 'group' as const,
         progressPercent: avgPercent,
         progressLabel: `${members.length} student${members.length !== 1 ? 's' : ''}`,
+        completedCount: completedSum,
       };
     });
     if (effectiveMode === 'individual') return studentCards;
@@ -323,9 +336,11 @@ export default function TeacherIndexPage() {
           const progressMatch = card.progressLabel?.match(/(\d+)\/(\d+)/);
           const completed = progressMatch ? parseInt(progressMatch[1], 10) : 0;
           const total = progressMatch ? parseInt(progressMatch[2], 10) : 0;
-          const currentLesson = completed < total ? completed + 1 : total;
           const allComplete = total > 0 && completed >= total;
           const noneStarted = card.progressPercent === 0;
+          const progress = total > 0
+            ? formatProgressLabel({ completedCount: card.completedCount, totalCount: total })
+            : null;
 
           const ctaLabel = card.type === 'group'
             ? 'Browse Lessons'
@@ -383,10 +398,8 @@ export default function TeacherIndexPage() {
 
               <div className="flex items-center justify-between text-sm">
                 <span className="text-gray-700">
-                  {total > 0
-                    ? allComplete
-                      ? `${total} of ${total} complete`
-                      : `On Lesson ${currentLesson} of ${total}`
+                  {progress
+                    ? progress.label
                     : noneStarted
                       ? 'Not started'
                       : (card.progressLabel || `${card.progressPercent}% complete`)}

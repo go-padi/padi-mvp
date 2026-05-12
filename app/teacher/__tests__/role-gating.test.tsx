@@ -96,6 +96,7 @@ const populatedStudents = [
     progressPercent: 25,
     progressLabel: '1/4',
     assessmentStatus: 'In progress',
+    completedCount: 1,
   },
 ];
 

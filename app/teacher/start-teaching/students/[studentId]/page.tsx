@@ -10,6 +10,7 @@ import {
   previewGroups,
   previewModulesByGroup,
 } from '@/lib/demo/demoCurriculum';
+import { formatProgressLabel } from '@/lib/copy/progressCopy';
 
 type StudentRow = {
   id: string;
@@ -200,6 +201,18 @@ export default function StudentModulePage({
     fetchData();
   }, [studentId, isHydrated, isLoggedIn, fetchCompletions]);
 
+  useEffect(() => {
+    if (!isHydrated || !isLoggedIn) return;
+    const mountedAt = Date.now();
+    const onVisible = () => {
+      if (document.visibilityState !== 'visible') return;
+      if (Date.now() - mountedAt < 500) return;
+      fetchCompletions(studentId);
+    };
+    document.addEventListener('visibilitychange', onVisible);
+    return () => document.removeEventListener('visibilitychange', onVisible);
+  }, [isHydrated, isLoggedIn, studentId, fetchCompletions]);
+
   const avatarInitials = useMemo(() => {
     if (!student) return 'S';
     return (student.name || 'S')
@@ -291,7 +304,7 @@ export default function StudentModulePage({
         <div className="space-y-1">
           <div className="flex items-center justify-between text-sm">
             <span className="text-gray-700">
-              {completedCount} of {totalCount} modules complete
+              {formatProgressLabel({ completedCount, totalCount }).label}
             </span>
             <span className="font-semibold text-gray-900">
               {progressPercent}%
@@ -303,6 +316,11 @@ export default function StudentModulePage({
               style={{ width: `${progressPercent}%` }}
             />
           </div>
+          {formatProgressLabel({ completedCount, totalCount }).intent === 'error' && (
+            <p className="text-sm text-gray-500">
+              Curriculum hasn&apos;t loaded yet &mdash; try refreshing the page.
+            </p>
+          )}
         </div>
       </div>
 
@@ -324,6 +342,11 @@ export default function StudentModulePage({
           const chCompleted = ch.groups.reduce((s, g) => s + g.completedCount, 0);
           const chTotal = ch.groups.reduce((s, g) => s + g.totalCount, 0);
           const chAllDone = chCompleted === chTotal && chTotal > 0;
+          const chProgress = formatProgressLabel({ completedCount: chCompleted, totalCount: chTotal });
+          const chGroupSuffix = `across ${ch.groups.length} group${ch.groups.length !== 1 ? 's' : ''}`;
+          const chLabel = chProgress.intent === 'error'
+            ? chProgress.label
+            : `${chProgress.label} ${chGroupSuffix}`;
 
           return (
             <div key={ch.code} className="rounded-2xl border border-gray-100 bg-white shadow-sm overflow-hidden">
@@ -345,7 +368,7 @@ export default function StudentModulePage({
                   <div>
                     <p className="text-sm font-semibold text-gray-900">{ch.title}</p>
                     <p className="text-xs text-gray-600">
-                      {chCompleted}/{chTotal} modules complete across {ch.groups.length} group{ch.groups.length !== 1 ? 's' : ''}
+                      {chLabel}
                     </p>
                   </div>
                 </div>
@@ -367,6 +390,10 @@ export default function StudentModulePage({
                   {ch.groups.map((g) => {
                     const gAllDone = g.completedCount === g.totalCount && g.totalCount > 0;
                     const chapterCode = groupToChapterCode[g.code] || ch.code;
+                    const gProgress = formatProgressLabel({ completedCount: g.completedCount, totalCount: g.totalCount });
+                    const gAbbreviated = gProgress.intent === 'error'
+                      ? '—'
+                      : `${g.completedCount}/${g.totalCount}`;
 
                     return (
                       <div key={g.code} className="space-y-2">
@@ -374,7 +401,7 @@ export default function StudentModulePage({
                           <p className="text-sm font-semibold text-gray-800">{g.title}</p>
                           <div className="flex items-center gap-2">
                             <span className="text-xs text-gray-500">
-                              {g.completedCount}/{g.totalCount}
+                              {gAbbreviated}
                             </span>
                             <div className="w-16 h-1.5 rounded-full bg-gray-100 overflow-hidden">
                               <div

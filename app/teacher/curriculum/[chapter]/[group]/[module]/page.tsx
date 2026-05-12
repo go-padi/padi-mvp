@@ -12,6 +12,11 @@ import { AddStudentModal } from '@/components/AddStudentModal';
 import { AddGroupModal } from '@/components/AddGroupModal';
 import { previewModuleByCode } from '@/lib/demo/demoCurriculum';
 import { rolePhrase } from '@/lib/copy/roleCopy';
+import {
+  normalizeAssessmentStatus,
+  assessmentStatusShortCaption,
+  type AssessmentStatus,
+} from '@/lib/copy/assessmentStatusCopy';
 
 type Lesson = {
   materials?: string[];
@@ -64,6 +69,16 @@ const SIGNAL_OPTIONS = [
   },
 ];
 
+function statusBadgeClass(status: AssessmentStatus): string {
+  switch (status) {
+    case "Ready": return "bg-green-50 text-green-700";
+    case "Needs Help": return "bg-amber-50 text-amber-700";
+    case "Needs Intervention": return "bg-red-50 text-red-700";
+    case "In progress": return "bg-blue-50 text-blue-700";
+    case "Not started": return "bg-gray-100 text-gray-600";
+  }
+}
+
 export default function LessonPage({ params }: { params: Promise<{ chapter: string; group: string; module: string }> }) {
   const { chapter, group, module } = use(params);
   const searchParams = useSearchParams();
@@ -74,6 +89,7 @@ export default function LessonPage({ params }: { params: Promise<{ chapter: stri
   const [notes, setNotes] = useState('');
   const [studentId, setStudentId] = useState<string>(contextStudentId || '');
   const [contextStudentName, setContextStudentName] = useState<string | null>(null);
+  const [contextStudentStatus, setContextStudentStatus] = useState<AssessmentStatus | null>(null);
   const [students, setStudents] = useState<Student[]>([]);
   const [audioFile, setAudioFile] = useState<File | null>(null);
   const [saving, setSaving] = useState(false);
@@ -113,17 +129,29 @@ export default function LessonPage({ params }: { params: Promise<{ chapter: stri
 
       // Fetch student name if in student context
       if (contextStudentId) {
-        const { data: studentRow } = await sb
+        const { data: studentRowRaw } = await sb
           .from('students')
-          .select('name,first_name,last_name')
+          .select('name,first_name,last_name,assessment_status,progress_percent')
           .eq('id', contextStudentId)
           .single();
+        const studentRow = studentRowRaw as {
+          name: string | null;
+          first_name: string | null;
+          last_name: string | null;
+          assessment_status: string | null;
+          progress_percent: number | null;
+        } | null;
         if (studentRow) {
           const fullName = [studentRow.first_name, studentRow.last_name]
             .filter(Boolean)
             .join(' ')
             .trim();
           setContextStudentName(fullName || studentRow.name || 'Student');
+          const status = normalizeAssessmentStatus({
+            assessmentStatus: studentRow.assessment_status,
+            progressPercent: studentRow.progress_percent,
+          });
+          setContextStudentStatus(status);
         }
         setStudentId(contextStudentId);
       }
@@ -399,9 +427,24 @@ export default function LessonPage({ params }: { params: Promise<{ chapter: stri
             <div className="flex h-8 w-8 items-center justify-center rounded-full bg-gray-900 text-white text-xs font-semibold">
               {(contextStudentName || 'S').split(' ').map(p => p[0]).join('').slice(0, 2).toUpperCase()}
             </div>
-            <div>
+            <div className="flex flex-col gap-0.5">
               <p className="text-sm font-semibold text-blue-900">Teaching {contextStudentName}</p>
               <p className="text-xs text-blue-700">{moduleRow?.title}</p>
+              {contextStudentStatus && (
+                <div className="flex items-center gap-2 mt-1 flex-wrap">
+                  <span
+                    className={clsx(
+                      'inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-semibold',
+                      statusBadgeClass(contextStudentStatus),
+                    )}
+                  >
+                    {contextStudentStatus}
+                  </span>
+                  <span className="text-xs text-blue-800">
+                    {assessmentStatusShortCaption(contextStudentStatus)}
+                  </span>
+                </div>
+              )}
             </div>
           </div>
           <Link

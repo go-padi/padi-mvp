@@ -102,3 +102,10 @@ Log of features shipped by BuildLoop.
 - Branch: buildloop/lr-09a-progress-refetch-and-unified-count
 - UAT bugs found and fixed: 0
 - Build retries: 1
+
+## LR-13a
+- Iteration: 2
+- Shipped: 2026-05-12T18:18:39+00:00
+- Branch: buildloop/lr-13a-three-signal-on-student-profile-heading
+- UAT bugs found and fixed: 0
+- Build retries: 1

@@ -35,3 +35,15 @@ const CAPTIONS: Record<AssessmentStatus, string> = {
 export function assessmentStatusCaption(status: AssessmentStatus): string {
   return CAPTIONS[status];
 }
+
+const SHORT_CAPTIONS: Record<AssessmentStatus, string> = {
+  "Ready": "On track",
+  "Needs Help": "Targeted support",
+  "Needs Intervention": "Hands-on time today",
+  "In progress": "Foundation lessons",
+  "Not started": "Start the first lesson",
+};
+
+export function assessmentStatusShortCaption(status: AssessmentStatus): string {
+  return SHORT_CAPTIONS[status];
+}

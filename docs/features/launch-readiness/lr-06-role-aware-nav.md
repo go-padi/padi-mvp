@@ -20,8 +20,8 @@ of the role split.
 
 ### Background
 
-The brief calls out two primary user types: K-2 classroom teachers
-AND parents teaching at home. The role-split epic (KAN-127) added
+The brief calls out two primary user types: classroom teachers of
+ages 3–7 AND parents teaching at home. The role-split epic (KAN-127) added
 the data: the `role` column on `profiles`, `/welcome/role` to set
 it, `useAuth().roleSetAt`, and `lib/copy/roleCopy.ts` for some
 role-aware copy.

@@ -30,6 +30,7 @@ export type StartTeachingData = {
   students: StartTeachingStudent[];
   groups: StartTeachingGroup[];
   groupStudentsByGroupId: Record<string, StartTeachingStudent[]>;
+  totalCurriculumModules: number;
   refetch: () => Promise<void>;
 };
 
@@ -38,11 +39,12 @@ export function useStartTeachingData(): StartTeachingData {
   const [liveStudents, setLiveStudents] = useState<StartTeachingStudent[]>([]);
   const [liveGroups, setLiveGroups] = useState<StartTeachingGroup[]>([]);
   const [liveGroupStudentsByGroupId, setLiveGroupStudentsByGroupId] = useState<Record<string, StartTeachingStudent[]>>({});
+  const [liveTotalCurriculumModules, setLiveTotalCurriculumModules] = useState<number>(0);
 
   const load = useCallback(async () => {
     if (!isHydrated || !isLoggedIn) return;
     const sb = supabaseClient();
-    const [studentsRes, membershipsRes, groupsRes, assessmentsRes] = await Promise.all([
+    const [studentsRes, membershipsRes, groupsRes, assessmentsRes, groupsCountRes] = await Promise.all([
       sb
         .from('students')
         .select('id,name,first_name,last_name,progress_percent,progress_label,focus_areas,assessment_status')
@@ -50,7 +52,16 @@ export function useStartTeachingData(): StartTeachingData {
       sb.from('student_group_memberships').select('student_id,group_id,active').eq('active', true),
       sb.from('groups').select('id,name').order('name'),
       sb.from('module_assessment').select('student_id,module_id'),
+      sb.rpc('content_get_groups', { p_teaching_mode: null }),
     ]);
+
+    const curriculumGroupRows =
+      (groupsCountRes.data as { module_count: number | null }[] | null) || [];
+    const totalCurriculumModules = curriculumGroupRows.reduce(
+      (sum, row) => sum + (row.module_count ?? 0),
+      0,
+    );
+    setLiveTotalCurriculumModules(totalCurriculumModules);
 
     const studentRows =
       (studentsRes.data as {
@@ -183,14 +194,22 @@ export function useStartTeachingData(): StartTeachingData {
       groups.forEach(group => {
         groupStudentsByGroupId[group.id] = students.filter(student => student.groupId === group.id);
       });
-      return { mode: 'preview', students, groups, groupStudentsByGroupId, refetch: async () => {} };
+      return {
+        mode: 'preview',
+        students,
+        groups,
+        groupStudentsByGroupId,
+        totalCurriculumModules: 0,
+        refetch: async () => {},
+      };
     }
     return {
       mode: 'live',
       students: liveStudents,
       groups: liveGroups,
       groupStudentsByGroupId: liveGroupStudentsByGroupId,
+      totalCurriculumModules: liveTotalCurriculumModules,
       refetch: load,
     };
-  }, [isLoggedIn, liveStudents, liveGroups, liveGroupStudentsByGroupId, load]);
+  }, [isLoggedIn, liveStudents, liveGroups, liveGroupStudentsByGroupId, liveTotalCurriculumModules, load]);
 }

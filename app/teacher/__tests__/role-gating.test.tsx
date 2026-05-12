@@ -123,6 +123,7 @@ const setStartData = (overrides?: { students?: StartTeachingStudent[]; groups?: 
       acc[g.id] = students.filter(s => g.studentIds.includes(s.id));
       return acc;
     }, {}),
+    totalCurriculumModules: 0,
     refetch: vi.fn().mockResolvedValue(undefined),
   });
 };

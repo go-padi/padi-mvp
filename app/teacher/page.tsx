@@ -333,14 +333,13 @@ export default function TeacherIndexPage() {
 
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
         {cards.map(card => {
-          const progressMatch = card.progressLabel?.match(/(\d+)\/(\d+)/);
-          const completed = progressMatch ? parseInt(progressMatch[1], 10) : 0;
-          const total = progressMatch ? parseInt(progressMatch[2], 10) : 0;
-          const allComplete = total > 0 && completed >= total;
-          const noneStarted = card.progressPercent === 0;
-          const progress = total > 0
-            ? formatProgressLabel({ completedCount: card.completedCount, totalCount: total })
-            : null;
+          const totalCount = startData.totalCurriculumModules;
+          const helperResult = formatProgressLabel({
+            completedCount: card.completedCount,
+            totalCount,
+          });
+          const allComplete = helperResult.intent === 'all-complete';
+          const noneStarted = helperResult.intent === 'empty';
 
           const ctaLabel = card.type === 'group'
             ? 'Browse Lessons'
@@ -398,11 +397,9 @@ export default function TeacherIndexPage() {
 
               <div className="flex items-center justify-between text-sm">
                 <span className="text-gray-700">
-                  {progress
-                    ? progress.label
-                    : noneStarted
-                      ? 'Not started'
-                      : (card.progressLabel || `${card.progressPercent}% complete`)}
+                  {startData.mode === 'preview'
+                    ? (card.progressLabel || `${card.progressPercent}% complete`)
+                    : helperResult.label}
                 </span>
                 <span className={statusBadgeClass}>{card.status}</span>
               </div>

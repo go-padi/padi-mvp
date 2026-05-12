@@ -11,6 +11,33 @@ Format per day:
 
 ---
 
+## Tue 2026-05-12
+
+### Top priorities
+1. **LR-20 — Role-aware copy pass #2** (BLOCKER, XS-S, fastest win). Sweep all hard-coded "Teacher Dashboard" strings across `app/page.tsx`, `app/teacher/layout.tsx`, `app/teacher/page.tsx`, `app/students/page.tsx`. Use the `rolePhrase()` helper from `lib/copy/roleCopy.ts`. This is the NEXT BuildLoop pick — flip to `priority: highest` (already is) and demote everything else to clear the field.
+2. **LR-18 — Gate logged-out curriculum content** (BLOCKER, M, highest commercial-risk item). Replace logged-out curriculum browser with chapter/section overview cards; gate full lesson content behind login. Needs chapter/section description copy authored first (~30 min source from `docs/curriculum/ind.pdf` + `group.pdf`); after that the build is straightforward. Pairs with LR-17.
+3. **LR-17 — Fix logged-out students preview hang** (BLOCKER, S). Ships in same batch as LR-18 since both reshape the logged-out experience.
+
+### Checklist
+
+- [ ] Confirm BuildLoop iter-4+ from yesterday's run completed (was paused on pm_generate when last checked). If still paused, `/buildloop:buildloop-step --all` to finish. Otherwise verify what LR tickets shipped past LR-13b.
+- [ ] **Author chapter/section overview copy for LR-18** from the curriculum PDFs. ~30 min. Drop into LR-18 ticket as a "## Authored copy" section before BuildLoop picks it.
+- [ ] Demote everything except LR-20, LR-18, LR-17 to `priority: high` (or lower). Keep only those three at `highest` so PM picks the right batch.
+- [ ] `/buildloop:buildloop-start 3` — should ship LR-20 + LR-18 + LR-17 in one run. With yesterday's auto-chain pseudocode + mid-loop /compact patches, this should run hands-off all the way through.
+- [ ] If BuildLoop ships those, then `/buildloop:buildloop-start 3` again for LR-11 + LR-21 (parent-onboarding pair) + LR-10.
+- [ ] Eyeball padi-mvp.vercel.app after each ship to verify Vercel deployed (no token = "assumed READY"; eyeball is the verification).
+- [ ] **Update the padi-pm skill** when next editing it: retire the "Content is always visible regardless of auth state" Key Product Rule. New rule: "Content overview (chapter/section descriptions, lesson counts, time estimates) is always visible. Full lesson content is gated behind login." LR-18 implements this; the skill rule needs to match. Meta-task, not blocking the ticket.
+
+### Notes / blockers
+
+- **Parent walkthrough audited 2026-05-11.** 5 new tickets filed (LR-17 through LR-21) + 1 confirmed (LR-10) + 3 superseded (KAN-58, KAN-59, KAN-72 deleted from bugs/). See `docs/walkthroughs/walkthrough-2026-05-11-parent.md` for full findings + sequencing rationale.
+- **15 launch-readiness tickets shipped total** as of 2026-05-12 noon (LR-01..08 from 5/10 run, LR-12+15+16 from 5/11 run, LR-09a+13a+13b from 5/12 in-flight run).
+- **10 LR tickets still backlog:** LR-09 remainder, LR-10, LR-11, LR-13 remainder, LR-14, LR-17, LR-18, LR-19, LR-20, LR-21.
+- **BuildLoop tooling all patched** (acceptEdits flag, bugs glob, no-op detection, _scratch_dir routing, auto-chain pseudocode + /compact). Loop should now survive N≥3 runs hands-off. If it drops out, that's a real bug worth filing.
+- **Key product rule changed:** Padi now intentionally GATES full curriculum content for logged-out visitors. LR-18 ships this. The earlier "content always visible" rule was retired by founder direction on 2026-05-11. Make sure design / PM / marketing all align before launch — the marketing site at go-padi.com may need a corresponding "log in to see lessons" framing if it's currently advertising open-access content.
+
+---
+
 ## Mon 2026-05-11
 
 ### Top priorities

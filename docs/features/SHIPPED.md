@@ -109,3 +109,10 @@ Log of features shipped by BuildLoop.
 - Branch: buildloop/lr-13a-three-signal-on-student-profile-heading
 - UAT bugs found and fixed: 0
 - Build retries: 1
+
+## LR-13b
+- Iteration: 3
+- Shipped: 2026-05-12T18:58:33+00:00
+- Branch: buildloop/lr-13b-three-signal-lesson-page-banner
+- UAT bugs found and fixed: 0
+- Build retries: 0

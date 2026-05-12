@@ -3,12 +3,15 @@ id: LR-10
 title: "[UX] Allow re-entry to completed lessons (Montessori repetition principle)"
 type: story
 status: backlog
-priority: high
+priority: highest
 feature: launch-readiness
 launch_blocker: true
 created: 2026-05-10
+updated: 2026-05-11
 created_by: walkthrough-audit-2026-05-10
-source_walkthrough: docs/walkthroughs/walkthrough-2026-05-10-teacher.md
+source_walkthroughs:
+  - docs/walkthroughs/walkthrough-2026-05-10-teacher.md
+  - docs/walkthroughs/walkthrough-2026-05-11-parent.md (confirmed in parent flow — same broken state)
 instructional_review: passed — curriculum requires repetition for automaticity
 ---
 

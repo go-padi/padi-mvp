@@ -130,3 +130,10 @@ Log of features shipped by BuildLoop.
 - Branch: buildloop/lr-17-fix-logged-out-student-preview-hang
 - UAT bugs found and fixed: 1
 - Build retries: 0
+
+## LR-18a
+- Iteration: 3
+- Shipped: 2026-05-13T01:39:37+00:00
+- Branch: buildloop/lr-18a-gate-logged-out-lesson-detail
+- UAT bugs found and fixed: 0
+- Build retries: 0

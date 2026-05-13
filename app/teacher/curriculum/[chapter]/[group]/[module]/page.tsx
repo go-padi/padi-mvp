@@ -402,6 +402,31 @@ export default function LessonPage({ params }: { params: Promise<{ chapter: stri
     }
   };
 
+  if (isHydrated && !isLoggedIn) {
+    return (
+      <div className="space-y-4">
+        <Link
+          href="/teacher/curriculum"
+          className="inline-flex items-center gap-1 text-sm text-gray-700 hover:text-gray-900"
+        >
+          &larr; Back to curriculum
+        </Link>
+        <div className="card space-y-2">
+          <h3 className="text-lg font-semibold text-gray-900">Sign in to access this lesson</h3>
+          <p className="text-sm text-gray-700">
+            Anonymous visitors can browse curriculum chapters, but individual lesson content
+            requires a sign-in. Lessons include teacher scripts, student materials, and assessment guidance.
+          </p>
+          <div className="text-sm">
+            <Link href="/teacher/curriculum" className="text-blue-700 font-semibold hover:underline">
+              Browse curriculum chapters →
+            </Link>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6">
       {/* Navigation bar */}

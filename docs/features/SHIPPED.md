@@ -123,3 +123,10 @@ Log of features shipped by BuildLoop.
 - Branch: buildloop/lr-20-role-aware-copy-pass-2
 - UAT bugs found and fixed: 0
 - Build retries: 0
+
+## LR-17
+- Iteration: 2
+- Shipped: 2026-05-13T01:22:21+00:00
+- Branch: buildloop/lr-17-fix-logged-out-student-preview-hang
+- UAT bugs found and fixed: 1
+- Build retries: 0

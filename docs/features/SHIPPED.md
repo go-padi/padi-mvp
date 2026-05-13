@@ -151,3 +151,10 @@ Log of features shipped by BuildLoop.
 - Branch: buildloop/lr-19a-signin-modal-identity-banner
 - UAT bugs found and fixed: 0
 - Build retries: 0
+
+## KAN-141
+- Iteration: 6
+- Shipped: 2026-05-13T01:58:45+00:00
+- Branch: buildloop/kan-141-fix-not-found-teacher-dashboard-link
+- UAT bugs found and fixed: 0
+- Build retries: 0

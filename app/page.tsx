@@ -25,7 +25,7 @@ export default function Page(){
                 Start Teaching
               </Link>
               <Link href="/teacher/curriculum" className="btn">
-                Teacher Dashboard
+                Dashboard
               </Link>
             </div>
             <p className="text-xs text-gray-500">
@@ -97,7 +97,7 @@ export default function Page(){
               Start Teaching Today
             </Link>
             <Link href="/teacher/curriculum" className="rounded-xl bg-white/10 px-4 py-2 font-semibold text-white ring-1 ring-white/40 hover:bg-white/15">
-              View Teacher Dashboard
+              View Dashboard
             </Link>
           </div>
         </div>

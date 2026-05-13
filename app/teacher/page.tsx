@@ -13,6 +13,7 @@ import { AddGroupModal } from '@/components/AddGroupModal';
 import { stripIndividualSuffix } from '@/lib/curriculum/formatting';
 import { PREVIEW_BANNER } from '@/lib/copy/previewCopy';
 import { formatProgressLabel } from '@/lib/copy/progressCopy';
+import { rolePhrase } from '@/lib/copy/roleCopy';
 
 type CardData = {
   id: string;
@@ -429,10 +430,10 @@ export default function TeacherIndexPage() {
       <div className="rounded-2xl border border-gray-100 bg-white p-5 shadow-sm flex items-center justify-between">
         <div>
           <p className="text-sm font-semibold text-gray-900">Need the full curriculum?</p>
-          <p className="text-xs text-gray-600">Browse every developmental area in the teacher dashboard.</p>
+          <p className="text-xs text-gray-600">Browse every developmental area in {rolePhrase(role, 'the teacher dashboard', 'my dashboard')}.</p>
         </div>
         <Link href="/teacher/curriculum" className="btn btn-primary">
-          Go to Teacher Dashboard
+          {rolePhrase(role, 'Go to Teacher Dashboard', 'Go to My Dashboard')}
         </Link>
       </div>
       <AddStudentModal

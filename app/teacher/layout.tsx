@@ -3,6 +3,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import clsx from 'clsx';
 import { useAuth } from '@/lib/auth-store';
+import { rolePhrase } from '@/lib/copy/roleCopy';
 import { PREVIEW_BANNER } from '@/lib/copy/previewCopy';
 
 const allTabs = [
@@ -26,8 +27,8 @@ export default function TeacherLayout({ children }: { children: React.ReactNode 
           <>
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-xs font-semibold text-blue-700 uppercase tracking-wide">Teacher</p>
-                <h1 className="text-3xl font-semibold text-gray-900">Teacher Dashboard</h1>
+                <p className="text-xs font-semibold text-blue-700 uppercase tracking-wide">{rolePhrase(role, 'Teacher', 'Parent')}</p>
+                <h1 className="text-3xl font-semibold text-gray-900">{rolePhrase(role, 'Teacher Dashboard', 'My Dashboard')}</h1>
                 <p className="text-sm text-gray-700">
                   Guide students through the Padi multisensory reading method with confidence.
                 </p>

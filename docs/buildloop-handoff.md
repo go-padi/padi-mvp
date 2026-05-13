@@ -70,6 +70,44 @@ Default 3 iterations. Built-in retry caps. Pauses on real failures (build, UAT, 
 
 - **Cowork "save here" plugin upload fails silently.** Server rejects, no error in any log file we checked. Sidestepped by symlink — irrelevant unless you want to publish BuildLoop externally. To debug for real: open Cowork DevTools (Cmd+Opt+I) → Network tab → save → look at the failing response.
 
+## Known gotcha — CC reads a stripped slash command when symlink is missing (2026-05-12)
+
+**Symptom:** Auto-chain stops at the first Cowork-resident phase. CC
+prints something like "orchestrator signaled pm_generate is
+Cowork-pending. Run /buildloop-step to fire pm_generate" instead of
+executing the phase inline. The patched `buildloop-start.md` has
+explicit `DO NOT STOP` directives — but CC isn't seeing them.
+
+**Cause:** When `~/.claude/plugins/cache/padi-plugins/buildloop/0.1.0`
+doesn't exist (or isn't a valid symlink), CC's harness falls back to
+a relayed/stripped version of the slash command without the auto-chain
+WHILE loop and pseudocode. The source file is fine; the discovery path
+is broken.
+
+**Diagnostic:** In CC, run:
+```bash
+grep -c "DO NOT STOP" ~/.claude/plugins/cache/padi-plugins/buildloop/0.1.0/commands/buildloop-start.md
+```
+- Returns `2` → patched file is reachable, CC just needs to actually read it.
+- Returns `0` or errors → symlink is broken; fall back to stripped relay.
+
+**Fix:** Recreate the symlink. The exact commands:
+```bash
+mkdir -p ~/.claude/plugins/cache/padi-plugins/buildloop
+rm -rf ~/.claude/plugins/cache/padi-plugins/buildloop/0.1.0
+ln -sfn ~/Desktop/padi-app/padi-app-starter/.plugins/buildloop ~/.claude/plugins/cache/padi-plugins/buildloop/0.1.0
+```
+
+The symlink has been nuked at least three times across the project's
+life (2026-05-08, 2026-05-10, 2026-05-12). Long-term fix is to either
+add a launchd job that recreates it on login, or stop relying on
+symlink discovery entirely. Deferred until post-launch.
+
+**Workaround when running and the symlink is broken:** tell CC to
+`Read` the source file directly (`~/Desktop/padi-app/padi-app-starter/.plugins/buildloop/commands/buildloop-start.md`)
+and follow those instructions. CC will then have the patched pseudocode
+in its context and run the auto-chain correctly.
+
 ## Known gotcha — deploy_prod sweeps unrelated changes (2026-05-12)
 
 The orchestrator's `deploy_prod` (and likely `record`) phase uses

@@ -144,3 +144,10 @@ Log of features shipped by BuildLoop.
 - Branch: buildloop/kan-143-fix-gate-position-above-not-found
 - UAT bugs found and fixed: 0
 - Build retries: 0
+
+## LR-19a
+- Iteration: 5
+- Shipped: 2026-05-13T01:54:32+00:00
+- Branch: buildloop/lr-19a-signin-modal-identity-banner
+- UAT bugs found and fixed: 0
+- Build retries: 0

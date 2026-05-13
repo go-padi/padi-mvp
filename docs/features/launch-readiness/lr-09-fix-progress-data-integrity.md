@@ -3,7 +3,7 @@ id: LR-09
 title: "[Data] Fix progress-number integrity — wrong totals, stale counts, duplicate sections"
 type: bug
 status: backlog
-priority: highest
+priority: high
 feature: launch-readiness
 launch_blocker: true
 created: 2026-05-10

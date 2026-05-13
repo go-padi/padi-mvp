@@ -3,7 +3,7 @@ id: LR-21
 title: "[Onboarding] Post-add-child clear next-action — drop parent into first recommended lesson"
 type: story
 status: backlog
-priority: highest
+priority: high
 feature: launch-readiness
 launch_blocker: true
 created: 2026-05-11

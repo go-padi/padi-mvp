@@ -3,7 +3,7 @@ id: LR-10
 title: "[UX] Allow re-entry to completed lessons (Montessori repetition principle)"
 type: story
 status: backlog
-priority: highest
+priority: high
 feature: launch-readiness
 launch_blocker: true
 created: 2026-05-10

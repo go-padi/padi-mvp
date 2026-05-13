@@ -70,6 +70,22 @@ Default 3 iterations. Built-in retry caps. Pauses on real failures (build, UAT, 
 
 - **Cowork "save here" plugin upload fails silently.** Server rejects, no error in any log file we checked. Sidestepped by symlink — irrelevant unless you want to publish BuildLoop externally. To debug for real: open Cowork DevTools (Cmd+Opt+I) → Network tab → save → look at the failing response.
 
+## Known gotcha — deploy_prod sweeps unrelated changes (2026-05-12)
+
+The orchestrator's `deploy_prod` (and likely `record`) phase uses
+`git add -A` before committing. If you edit anything in the working
+tree while BuildLoop is running, those changes get swept into the
+iteration commit under a misleading message. Found via LR-09c's
+2026-05-12 deploy (commit `723ca2f` — see
+`docs/features/buildloop-tech-debt/bldtd-01-deploy-scope.md`).
+
+**Workaround for now:** either commit your unrelated PM/docs work
+BEFORE starting the loop, or accept that whatever's dirty gets
+bundled. Functionally fine; just be aware the commit history isn't
+literal.
+
+**Fix tracked in:** `docs/features/buildloop-tech-debt/bldtd-01-deploy-scope.md`. Not launch-blocking; deferred to post-launch.
+
 ## Plugin file divergence (2026-05-10) — patches persisted
 
 There are FOUR copies of the orchestrator's Python files spread across two roots and two depths:

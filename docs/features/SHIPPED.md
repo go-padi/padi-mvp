@@ -158,3 +158,10 @@ Log of features shipped by BuildLoop.
 - Branch: buildloop/kan-141-fix-not-found-teacher-dashboard-link
 - UAT bugs found and fixed: 0
 - Build retries: 0
+
+## LR-21a
+- Iteration: 7
+- Shipped: 2026-05-13T02:05:00+00:00
+- Branch: buildloop/lr-21a-parent-first-lesson-prompt
+- UAT bugs found and fixed: 0
+- Build retries: 0

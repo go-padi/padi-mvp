@@ -242,8 +242,18 @@ export default function LessonPage({ params }: { params: Promise<{ chapter: stri
             Anonymous visitors can browse curriculum chapters, but individual lesson content
             requires a sign-in. Lessons include teacher scripts, student materials, and assessment guidance.
           </p>
-          <div className="text-sm">
-            <Link href="/teacher/curriculum" className="text-blue-700 font-semibold hover:underline">
+          <div className="flex flex-wrap gap-3">
+            <button
+              type="button"
+              onClick={() => window.dispatchEvent(new Event('padi-open-signin'))}
+              className="inline-flex items-center justify-center rounded-xl bg-gray-900 px-4 py-2 text-sm font-semibold text-white hover:bg-gray-800"
+            >
+              Sign in
+            </button>
+            <Link
+              href="/teacher/curriculum"
+              className="inline-flex items-center text-sm text-blue-700 font-semibold hover:underline self-center"
+            >
               Browse curriculum chapters →
             </Link>
           </div>

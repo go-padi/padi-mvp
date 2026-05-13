@@ -296,8 +296,18 @@ export default function StudentModulePage({
             Anonymous visitors can explore the curriculum, but individual student profiles
             require a sign-in to view progress and assessments.
           </p>
-          <div className="text-sm">
-            <Link href="/teacher/curriculum" className="text-blue-700 font-semibold hover:underline">
+          <div className="flex flex-wrap gap-3">
+            <button
+              type="button"
+              onClick={() => window.dispatchEvent(new Event('padi-open-signin'))}
+              className="inline-flex items-center justify-center rounded-xl bg-gray-900 px-4 py-2 text-sm font-semibold text-white hover:bg-gray-800"
+            >
+              Sign in
+            </button>
+            <Link
+              href="/teacher/curriculum"
+              className="inline-flex items-center text-sm text-blue-700 font-semibold hover:underline self-center"
+            >
               Browse curriculum and modules →
             </Link>
           </div>

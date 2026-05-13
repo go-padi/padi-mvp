@@ -137,3 +137,10 @@ Log of features shipped by BuildLoop.
 - Branch: buildloop/lr-18a-gate-logged-out-lesson-detail
 - UAT bugs found and fixed: 0
 - Build retries: 0
+
+## KAN-143
+- Iteration: 4
+- Shipped: 2026-05-13T01:47:12+00:00
+- Branch: buildloop/kan-143-fix-gate-position-above-not-found
+- UAT bugs found and fixed: 0
+- Build retries: 0

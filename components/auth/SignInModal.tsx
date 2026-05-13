@@ -28,7 +28,7 @@ function EyeIcon({ open }: { open: boolean }) {
 }
 
 export function SignInModal({ onClose }: SignInModalProps) {
-  const { login, signup } = useAuth();
+  const { login, signup, isLoggedIn, user, logout } = useAuth();
   const [mode, setMode] = useState<Mode>('signin');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -38,6 +38,7 @@ export function SignInModal({ onClose }: SignInModalProps) {
   const [error, setError] = useState<string | null>(null);
   const [info, setInfo] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [loggingOut, setLoggingOut] = useState(false);
 
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
@@ -157,6 +158,36 @@ export function SignInModal({ onClose }: SignInModalProps) {
         >
           X
         </button>
+        {isLoggedIn && user?.email ? (
+          <div className="p-6">
+            <div className="rounded-xl border border-blue-200 bg-blue-50 p-4 space-y-3">
+              <div>
+                <p className="text-sm font-semibold text-blue-900">{`You're signed in as ${user.email}.`}</p>
+              </div>
+              <div className="flex gap-2">
+                <button
+                  type="button"
+                  disabled={loggingOut}
+                  onClick={async () => {
+                    setLoggingOut(true);
+                    try { await logout(); }
+                    finally { setLoggingOut(false); }
+                  }}
+                  className="rounded-lg border border-blue-300 bg-white px-3 py-1.5 text-sm font-semibold text-blue-800 hover:bg-blue-100 disabled:opacity-60 disabled:cursor-not-allowed"
+                >
+                  {loggingOut ? 'Signing out…' : 'Sign out'}
+                </button>
+                <button
+                  type="button"
+                  onClick={onClose}
+                  className="rounded-lg px-3 py-1.5 text-sm font-semibold text-gray-700 hover:bg-gray-100"
+                >
+                  Close
+                </button>
+              </div>
+            </div>
+          </div>
+        ) : (
         <form className="space-y-4 p-6" onSubmit={handleSubmit}>
           <div className="space-y-1">
             <h2 className="text-xl font-semibold text-gray-900">{title}</h2>
@@ -252,6 +283,7 @@ export function SignInModal({ onClose }: SignInModalProps) {
             {isSignup ? 'Already have an account? Sign in' : 'Don\u2019t have an account? Create one'}
           </button>
         </form>
+        )}
       </div>
     </div>
   );

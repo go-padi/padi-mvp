@@ -116,3 +116,10 @@ Log of features shipped by BuildLoop.
 - Branch: buildloop/lr-13b-three-signal-lesson-page-banner
 - UAT bugs found and fixed: 0
 - Build retries: 0
+
+## LR-20
+- Iteration: 1
+- Shipped: 2026-05-13T01:06:59+00:00
+- Branch: buildloop/lr-20-role-aware-copy-pass-2
+- UAT bugs found and fixed: 0
+- Build retries: 0

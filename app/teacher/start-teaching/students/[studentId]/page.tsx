@@ -273,7 +273,40 @@ export default function StudentModulePage({
     });
   };
 
-  if (!isHydrated || loading) {
+  if (!isHydrated) {
+    return (
+      <div className="rounded-2xl border border-gray-100 bg-white p-5 shadow-sm text-sm text-gray-700">
+        Loading...
+      </div>
+    );
+  }
+
+  if (!isLoggedIn) {
+    return (
+      <div className="space-y-4">
+        <Link
+          href="/teacher"
+          className="inline-flex items-center gap-1 text-sm text-gray-700 hover:text-gray-900"
+        >
+          &larr; Back to Start Teaching
+        </Link>
+        <div className="card space-y-2">
+          <h3 className="text-lg font-semibold text-gray-900">Sign in to view this student</h3>
+          <p className="text-sm text-gray-700">
+            Anonymous visitors can explore the curriculum, but individual student profiles
+            require a sign-in to view progress and assessments.
+          </p>
+          <div className="text-sm">
+            <Link href="/teacher/curriculum" className="text-blue-700 font-semibold hover:underline">
+              Browse curriculum and modules →
+            </Link>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (loading) {
     return (
       <div className="rounded-2xl border border-gray-100 bg-white p-5 shadow-sm text-sm text-gray-700">
         Loading...

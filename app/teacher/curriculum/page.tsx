@@ -52,6 +52,13 @@ type ChapterWithGroups = {
   groups: GroupWithModules[];
 };
 
+function chapterPhase(code: string): 1 | 2 | 3 {
+  const c = code.replace(/^ind-/, '');
+  if (c === 'phonological-awareness' || c === 'alphabet') return 1;
+  if (c === 'phonics' || c === 'reading' || c === 'handwriting') return 2;
+  return 3;
+}
+
 export default function CurriculumPage() {
   const [chapters, setChapters] = useState<ChapterWithGroups[]>([]);
   const [expandedChapters, setExpandedChapters] = useState<Set<string>>(new Set());
@@ -253,6 +260,11 @@ export default function CurriculumPage() {
             <div>
               <p className="text-sm font-semibold text-gray-900 flex items-center gap-2">
                 {isParent ? stripIndividualSuffix(ch.title) : ch.title}
+                {isParent && isLoggedIn && (
+                  <span className="rounded-full bg-gray-100 px-2 py-0.5 text-[11px] font-semibold text-gray-600">
+                    Phase {chapterPhase(ch.code)}
+                  </span>
+                )}
                 {isParent && isLoggedIn && idx === 0 && (
                   <span className="rounded-full bg-blue-100 px-2 py-0.5 text-[11px] font-semibold text-blue-800">Start here</span>
                 )}

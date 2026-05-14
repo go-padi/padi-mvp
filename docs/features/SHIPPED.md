@@ -207,3 +207,10 @@ Log of features shipped by BuildLoop.
 - Branch: buildloop/lr-24a-curriculum-order-callout-for-parents
 - UAT bugs found and fixed: 0
 - Build retries: 0
+
+## LR-24b
+- Iteration: 7
+- Shipped: 2026-05-14T03:05:04+00:00
+- Branch: buildloop/lr-24b-start-here-badge-first-chapter
+- UAT bugs found and fixed: 0
+- Build retries: 0

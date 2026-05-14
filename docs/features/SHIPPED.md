@@ -172,3 +172,10 @@ Log of features shipped by BuildLoop.
 - Branch: buildloop/lr-23-wire-react-hooks-lint
 - UAT bugs found and fixed: 0
 - Build retries: 0
+
+## LR-25a
+- Iteration: 2
+- Shipped: 2026-05-14T02:33:07+00:00
+- Branch: buildloop/lr-25a-fix-usestartteachingdata-exhaustive-deps
+- UAT bugs found and fixed: 0
+- Build retries: 0

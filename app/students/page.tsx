@@ -1,5 +1,5 @@
 'use client';
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import Link from 'next/link';
 import { supabaseClient } from '@/lib/supabase';
 import { useAuth } from '@/lib/auth-store';
@@ -8,25 +8,25 @@ type Student = { id: string; name: string | null; first_name: string | null; las
 
 export default function StudentsPage(){
   const { isLoggedIn, isHydrated, tenantId, role } = useAuth();
-  const sb = supabaseClient();
   const [students,setStudents]=useState<Student[]>([]);
   const [name,setName]=useState('');
 
-  const load = async()=>{
+  const load = useCallback(async () => {
     if (!tenantId) return;
+    const sb = supabaseClient();
     const { data } = await sb
       .from('students')
       .select('id,name,first_name,last_name')
       .eq('tenant_id', tenantId)
       .order('name');
     setStudents(data||[]);
-  };
+  }, [tenantId]);
 
   useEffect(() => {
     if (!isLoggedIn) { setStudents([]); return; }
     if (!isHydrated || !tenantId) return;
     load();
-  }, [isLoggedIn, isHydrated, tenantId]);
+  }, [isLoggedIn, isHydrated, tenantId, load]);
 
   const add = async()=>{
     if(!name || !tenantId) return;
@@ -34,6 +34,7 @@ export default function StudentsPage(){
     if (!trimmed) return;
     const [first, ...rest] = trimmed.split(/\s+/);
     const last = rest.join(' ') || null;
+    const sb = supabaseClient();
     await sb
       .from('students')
       .insert({ tenant_id: tenantId, name: trimmed, first_name: first || null, last_name: last });

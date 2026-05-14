@@ -179,3 +179,10 @@ Log of features shipped by BuildLoop.
 - Branch: buildloop/lr-25a-fix-usestartteachingdata-exhaustive-deps
 - UAT bugs found and fixed: 0
 - Build retries: 0
+
+## LR-25b
+- Iteration: 3
+- Shipped: 2026-05-14T02:35:51+00:00
+- Branch: buildloop/lr-25b-memoize-load-in-students-page
+- UAT bugs found and fixed: 0
+- Build retries: 0

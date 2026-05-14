@@ -21,8 +21,8 @@ export default function GroupingPage() {
     enabled: dataMode === 'live' && isHydrated,
   });
   const liveGroups = data?.groups || [];
-  const liveStudents = data?.students || [];
-  const liveMemberships = data?.memberships || [];
+  const liveStudents = useMemo(() => data?.students || [], [data?.students]);
+  const liveMemberships = useMemo(() => data?.memberships || [], [data?.memberships]);
   const studentsByGroupId = data?.studentsByGroupId || {};
   const groupStudentCounts = data?.groupStudentCounts || {};
   const showStartTeachingCta = dataMode === 'live' && !isLoading && !error && liveStudents.length === 0;

@@ -11,6 +11,42 @@ Format per day:
 
 ---
 
+## Wed 2026-05-13
+
+### Top priorities
+1. **Fix BuildLoop tooling before the next big run.** Four bugs surfaced in last night's 8-iter loop. All four block clean autonomy:
+   - **BLDTD-01** — deploy_prod still does `git add -A` (every commit message mislabels what it contains)
+   - **BLDTD-02** — UAT verdict file isn't reset between attempts (orchestrator re-reads stale verdicts after eng_fix; iter 2 + iter 8 of 2026-05-13 loop)
+   - **BLDTD-03** — UAT verdict regex misses `## Verdict` markdown header style (iter 8 of 2026-05-13 loop)
+   - **BLDTD-04** — non-LR feature_ids (KAN-*, BLDTD-*) hit a scratch-dir / agent-prompt mismatch — verdict files land in the wrong folder
+   Recommend a single tooling PR that fixes all 4. Estimate ~45 min including the 4-copy propagation.
+2. **LR-23 — Wire `eslint-plugin-react-hooks`** (10-15 min). KAN-142 (Rules of Hooks bug shipped past validate) showed lint config is missing the plugin. Cheap pre-launch hardening.
+3. **Next BuildLoop batch — migrate-touching tickets.** Remaining LR work needs Supabase migrations (LR-09 remainder, LR-10, LR-11, LR-13 full, LR-14, LR-21 full, LR-19b, LR-18 remainder). BuildLoop pauses on migrations per the brief — these tickets either need pre-loop migration runs or a relaxed `allow_migration_this_iteration: true`. Decide migration strategy before kicking off the next run.
+
+### Checklist
+
+- [ ] Fix BLDTD-01..04 in a single tooling PR (small, targeted patches to `phases.py` across all 4 copies + uat-tester subagent prompt). After landing, do a small 1-iter BuildLoop test on a trivial ticket to verify all four fixes hold.
+- [ ] LR-23 — install `eslint-plugin-react-hooks`, wire into `.eslintrc.js`, run lint, ship as a manual PR (no BuildLoop needed for this one).
+- [ ] **Branch cleanup:** all of these are merged to main via ff and safe to delete locally:
+  ```
+  git branch -d buildloop/lr-{20,17,18a}-* buildloop/kan-{143,141}-* buildloop/lr-{19a,21a,22}-*
+  ```
+  Run after confirming `git log --oneline main | grep <branch-tip>` shows the commit on main.
+- [ ] Decide migration strategy for the next batch — manual pre-runs vs `allow_migration_this_iteration: true` vs splitting tickets so the non-migration parts ship via BuildLoop first.
+- [ ] After tooling fixes land: `/buildloop:buildloop-start 5` (or 8) targeting LR-09 / LR-10 / LR-11 / LR-13 / LR-18 remainder.
+- [ ] Eyeball padi-mvp.vercel.app after each ship — verify the gated curriculum experience from LR-18a + LR-22 actually behaves correctly when logged out (chapter overviews show, drilling redirects to sign-in modal).
+
+### Notes / blockers
+
+- **Last loop shipped 8 features** (LR-20, LR-17, LR-18a, KAN-143, LR-19a, KAN-141, LR-21a, LR-22). All slices, not full features — PM continued the pattern of splitting big tickets. Healthy.
+- **`docs/features/SHIPPED.md` is the ledger of truth.** state.json should match.
+- **23 LR tickets total now** (LR-01..LR-23). 15 shipped (some as a/b slices). 8+ in backlog.
+- **buildloop-tech-debt epic** now has 4 children — file under `docs/features/buildloop-tech-debt/`. None are launch-blocking but all create operational friction.
+- **Branch list is getting long** — `git branch | wc -l` is probably 25+. Routine cleanup is overdue. Branches merged via ff are 100% safe to delete locally; remote stays clean too.
+- **LR-18 remainder** is the bigger curriculum-gating work (chapter/section overview cards). LR-18a only covered the lesson-detail gating. The bigger LR-18 ticket has the full authored copy I wrote — PM should pick up the rest when next batch runs.
+
+---
+
 ## Tue 2026-05-12
 
 ### Top priorities

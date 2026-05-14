@@ -42,6 +42,31 @@ Pre-launch hygiene epic. Findings come from:
 12. ✅ LR-09a — Fix progress-number data integrity (first slice)
 13. ✅ LR-13a — Student progress view (first slice)
 14. ✅ LR-13b — Student progress view (second slice)
+15. ✅ LR-09c — Fix progress-number data integrity (third slice)
+
+**Shipped via BuildLoop run 2026-05-13 (8 iterations, all to prod):**
+
+16. ✅ LR-20 — Role-aware copy pass #2 (parent sees "My Dashboard" not "Teacher Dashboard")
+17. ✅ LR-17 — Fix logged-out students preview hang (1 UAT bug, KAN-142 filed + fixed in eng_fix)
+18. ✅ LR-18a — Gate logged-out lesson detail (first slice of the curriculum-gating ticket)
+19. ✅ KAN-143 — Follow-up: gate position above 404 (iter 4 fix from LR-18a UAT)
+20. ✅ LR-19a — Sign-in modal identity banner (first slice of LR-19)
+21. ✅ KAN-141 — Fix "Teacher Dashboard" link on 404 page (LR-20 follow-up)
+22. ✅ LR-21a — Parent first-lesson prompt (first slice of LR-21)
+23. ✅ LR-22 — Sign-in CTAs on logged-out gated screens (NEW ticket auto-filed)
+
+**Backlog after 2026-05-13 run:**
+
+- LR-09 — remainder (full progress-data-integrity sweep)
+- LR-10 — Allow re-entry to completed lessons
+- LR-11 — Surface curriculum sequencing — make 'next module' obvious
+- LR-13 — remainder (full student progress view)
+- LR-14 — Audio recording at module level
+- LR-18 — remainder (full curriculum gating — LR-18a covered lesson detail; rest of the chapter/section overview cards still backlog)
+- LR-19 — remainder (LR-19b: stale-session detection)
+- LR-21 — remainder (full parent onboarding)
+- LR-23 — Wire eslint-plugin-react-hooks (tooling hardening from KAN-142 incident)
+- LR-24 — Curriculum cards redesign (catalog → child-centered journey; priority medium, post-launch-blocker)
 
 **Backlog — next prioritization batch (post parent walkthrough 2026-05-11):**
 

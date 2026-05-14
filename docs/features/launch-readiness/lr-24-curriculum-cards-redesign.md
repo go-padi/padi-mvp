@@ -145,12 +145,12 @@ Visual structure per card:
 **Phase 2 — Connecting Sound to Print** (Chapter 3: Phonics)
 - **Doing:** Matching letters to the sounds they make, working through six color-coded clusters of letters, three sounds at a time.
 - **Learn:** That every letter (or letter pair) represents a sound, and how to blend them — the heart of decoding.
-- **Tells:** Whether Ready, Needs Help, or Needs Intervention starts to show — this is where children begin to sort by reading aptitude.
+- **Tells:** Whether your child is **Accelerating**, **Practicing**, or on the **Specialist Track** — this is where children begin to sort by reading aptitude.
 
 **Phase 3 — Reading, Writing, Meaning** (Chapters 4-7: Reading, Handwriting, Spelling, VCF)
 - **Doing:** Reading words and short sentences, writing letters with proper formation, spelling by sound, building vocabulary.
 - **Learn:** How to read fluently for meaning, write what they hear, and understand what they read.
-- **Tells:** Whether your child is on track for first grade (Ready), needs more group support (Needs Help), or needs one-on-one intervention.
+- **Tells:** Whether your child is on track for first grade (**Accelerating**), still building foundational skills (**Practicing**), or recommended for one-on-one specialist support (**Specialist Track**).
 
 ---
 
@@ -189,7 +189,7 @@ Visual structure per card:
 **Chapter 7 — Vocabulary, Comprehension and Fluency**
 - **Doing:** Building word knowledge, practicing comprehension strategies, and reading aloud with expression.
 - **Learn:** How to read for meaning — not just to decode, but to understand.
-- **Tells:** Whether your child is ready for Grade 1 reading, needs more group support, or needs targeted intervention. This is where the three-signal outcome resolves.
+- **Tells:** Whether your child is **Accelerating** toward Grade 1, still **Practicing** foundational skills, or on the **Specialist Track** for closer review. This is where the three-signal outcome resolves.
 
 ### Voice rules for card content
 

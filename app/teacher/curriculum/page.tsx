@@ -282,6 +282,16 @@ export default function CurriculumPage() {
         </div>
       )}
 
+      {isParent && isLoggedIn && (
+        <div className="rounded-2xl border border-blue-200 bg-blue-50 p-5 space-y-2">
+          <p className="text-sm font-semibold text-blue-900">The curriculum builds in order</p>
+          <p className="text-xs text-blue-700">
+            Start with Phonological Awareness, then Alphabet, then Phonics. Reading,
+            Handwriting, Spelling, and Vocabulary &amp; Comprehension build on those.
+          </p>
+        </div>
+      )}
+
       <div className="space-y-2">
         <h2 className="text-2xl font-semibold text-gray-900">K-Reading Kickstart Program</h2>
         <p className="text-sm text-gray-700">Tap a chapter to explore its lessons</p>

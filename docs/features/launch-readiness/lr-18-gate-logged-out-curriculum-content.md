@@ -356,13 +356,14 @@ represents both delivery models.
 
 **For Padi's 3-signal positioning — confirmed curriculum origin.** The
 Group curriculum *literally* ends in three buckets, captured verbatim
-from `group.pdf` p10–p11:
+from `group.pdf` p10–p11. **Note (2026-05-13): the Padi signal vocab
+shifted from clinical to affirmative per LR-26. Updated mapping:**
 
-| Curriculum bucket | Padi signal | Notes |
+| Curriculum bucket | Padi signal (post-LR-26) | Notes |
 |---|---|---|
-| "Students who can proceed to Grade 1 reading" | **Ready** ✅ | Direct mapping |
-| "Students who need to attend a remedial Group Literacy program" | **Needs Help** 🟡 | Curriculum's own remediation pathway |
-| "Students who may need a one-on-one therapy for reading e.g., Sounds in Syllables (SIS) therapy program" | **Needs Intervention** 🔴 | SIS is a real ASDEC therapy program |
+| "Students who can proceed to Grade 1 reading" | 🟢 **Accelerating** | On track to read sooner |
+| "Students who need to attend a remedial Group Literacy program" | 🟡 **Practicing** | Locking in foundational skills |
+| "Students who may need a one-on-one therapy for reading e.g., Sounds in Syllables (SIS) therapy program" | 🔴 **Specialist Track** | Recommended for closer review (SIS is a real ASDEC therapy program) |
 
 So Padi's three-signal north star is not marketing-speak — it's the
 **ASDEC curriculum's own end-of-year sorting output**. This is a
@@ -377,7 +378,7 @@ can ground in this directly:
 Also worth noting from the same page: the curriculum acknowledges
 "issues like dyslexia or dysgraphia may have to be addressed outside
 the program through specialized interventions." That's the
-boundary condition for Padi's Needs Intervention signal — Padi
+boundary condition for Padi's **Specialist Track** signal — Padi
 detects, the parent/teacher escalates to a specialist.
 
 **Group program scale (from `group.pdf` p11 Figure 1):**

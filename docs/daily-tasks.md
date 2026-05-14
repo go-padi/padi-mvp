@@ -21,7 +21,12 @@ Format per day:
    - **BLDTD-04** — non-LR feature_ids (KAN-*, BLDTD-*) hit a scratch-dir / agent-prompt mismatch — verdict files land in the wrong folder
    Recommend a single tooling PR that fixes all 4. Estimate ~45 min including the 4-copy propagation.
 2. **LR-23 — Wire `eslint-plugin-react-hooks`** (10-15 min). KAN-142 (Rules of Hooks bug shipped past validate) showed lint config is missing the plugin. Cheap pre-launch hardening.
-3. **Next BuildLoop batch — migrate-touching tickets.** Remaining LR work needs Supabase migrations (LR-09 remainder, LR-10, LR-11, LR-13 full, LR-14, LR-21 full, LR-19b, LR-18 remainder). BuildLoop pauses on migrations per the brief — these tickets either need pre-loop migration runs or a relaxed `allow_migration_this_iteration: true`. Decide migration strategy before kicking off the next run.
+3. **Next BuildLoop batch — copy-coherence cluster from updated go-padi.com.** Founder updated go-padi.com 2026-05-13; app drifted on positioning + 3-signal vocab. Three new tickets filed:
+   - **LR-26** — 3-signal vocab migration (Ready/Needs Help/Needs Intervention → Accelerating/Practicing/Specialist Track). Foundational — LR-25 depends on this. **May require a Supabase migration** if `students.assessment_status` has a CHECK constraint; spot-check `supabase/schema.sql` first.
+   - **LR-25** — Homepage rewrite #2 (Accelerate framing, 6-card grid, How-It-Works, Mona section)
+   - **LR-27** — /teacher/about refresh (Why Padi paragraph + Mona credibility + new vocab)
+   Ship as a cluster (LR-26 → LR-25 → LR-27 same BuildLoop run) so prod is internally consistent. ~30 min total estimated.
+4. **Then: migrate-touching tickets.** Remaining LR work needs Supabase migrations (LR-09 remainder, LR-10, LR-11, LR-13 full, LR-14, LR-21 full, LR-19b, LR-18 remainder). BuildLoop pauses on migrations per the brief — these tickets either need pre-loop migration runs or a relaxed `allow_migration_this_iteration: true`. Decide migration strategy before kicking off that batch.
 
 ### Checklist
 

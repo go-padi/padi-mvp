@@ -67,6 +67,9 @@ Pre-launch hygiene epic. Findings come from:
 - LR-21 — remainder (full parent onboarding)
 - LR-23 — Wire eslint-plugin-react-hooks (tooling hardening from KAN-142 incident)
 - LR-24 — Curriculum cards redesign (catalog → child-centered journey; priority medium, post-launch-blocker)
+- LR-25 — Homepage rewrite #2 — match updated go-padi.com (Accelerate framing; supersedes part of LR-15/LR-16)
+- LR-26 — 3-signal vocab migration: Ready/Needs Help/Needs Intervention → Accelerating/Practicing/Specialist Track (may require Supabase migration; LR-25 depends on this)
+- LR-27 — /teacher/about refresh — Why Padi paragraph + Mona Iyer credibility section + new 3-signal vocab
 
 **Backlog — next prioritization batch (post parent walkthrough 2026-05-11):**
 

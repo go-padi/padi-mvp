@@ -193,3 +193,10 @@ Log of features shipped by BuildLoop.
 - Branch: buildloop/lr-25c-memoize-grouping-data-fields
 - UAT bugs found and fixed: 0
 - Build retries: 0
+
+## KAN-145
+- Iteration: 5
+- Shipped: 2026-05-14T02:41:12+00:00
+- Branch: buildloop/kan-145-delete-unused-authstatusindicator
+- UAT bugs found and fixed: 0
+- Build retries: 0

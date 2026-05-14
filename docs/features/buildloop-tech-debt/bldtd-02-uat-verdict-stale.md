@@ -3,7 +3,8 @@ id: BLDTD-02
 title: "[BuildLoop] UAT phase re-reads stale verdict file after eng_fix; doesn't reset between attempts"
 type: bug
 status: backlog
-priority: high
+priority: medium
+handling: manual — fix outside BuildLoop (orchestrator self-edit is fragile)
 feature: buildloop-tech-debt
 launch_blocker: false
 created: 2026-05-13

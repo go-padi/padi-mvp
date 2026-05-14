@@ -214,3 +214,10 @@ Log of features shipped by BuildLoop.
 - Branch: buildloop/lr-24b-start-here-badge-first-chapter
 - UAT bugs found and fixed: 0
 - Build retries: 0
+
+## LR-24c
+- Iteration: 8
+- Shipped: 2026-05-14T03:09:29+00:00
+- Branch: buildloop/lr-24c-phase-badges-on-chapters
+- UAT bugs found and fixed: 0
+- Build retries: 0

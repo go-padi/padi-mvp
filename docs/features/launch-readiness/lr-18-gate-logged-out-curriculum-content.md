@@ -3,10 +3,12 @@ id: LR-18
 title: "[Curriculum] Replace logged-out curriculum browser with overview cards — gate full content behind login"
 type: story
 status: backlog
-priority: highest
+priority: high
 feature: launch-readiness
 launch_blocker: true
+partial_shipped: LR-18a (lesson detail gating) on 2026-05-13; remainder = chapter overview cards
 created: 2026-05-11
+updated: 2026-05-13
 created_by: parent-walkthrough-2026-05-11
 source_walkthrough: docs/walkthroughs/walkthrough-2026-05-11-parent.md
 supersedes_pm_rule: "Content is always visible regardless of auth state"

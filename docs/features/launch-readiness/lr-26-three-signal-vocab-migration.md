@@ -3,13 +3,15 @@ id: LR-26
 title: "[Copy + Data] Migrate 3-signal vocabulary: Ready/Needs Help/Needs Intervention → Accelerating/Practicing/Specialist Track"
 type: story
 status: backlog
-priority: high
+priority: highest
 feature: launch-readiness
 launch_blocker: true
 created: 2026-05-13
+updated: 2026-05-13
 created_by: founder-direction-2026-05-13
 related: LR-25, LR-27, LR-18, LR-24
-might_require_migration: true
+might_require_migration: false
+schema_check: "Confirmed 2026-05-13: students.assessment_status has no CHECK constraint in supabase/schema.sql — no DB migration needed. Pure TypeScript + component edits."
 ---
 
 ### Goal
@@ -46,7 +48,7 @@ The old vocabulary appears in:
 - `app/teacher/start-teaching/students/[studentId]/page.tsx` — switch case
 - `app/page.tsx` — homepage subtitle (LR-25 handles this surface)
 
-**Database (likely):** the `students.assessment_status` column may have a CHECK constraint or enum locking it to the old values. **Spot-check `supabase/schema.sql` before scoping the build — if there's a constraint, this becomes a 2-step migration (nullable add → backfill → drop old constraint → add new constraint).**
+**Database (confirmed 2026-05-13):** `students.assessment_status` is a free-text column — NO CHECK constraint in `supabase/schema.sql`. **No database migration needed.** Existing rows can be backfilled with an optional `UPDATE` if desired (see Requirements step 5), but it's not blocking.
 
 **Docs (agent-facing, lower priority — update for consistency but doesn't block users):**
 - `.buildloop/product-brief.md` lines 45, 89

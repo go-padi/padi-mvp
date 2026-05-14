@@ -2,11 +2,14 @@
 id: LR-20
 title: "[Copy] Role-aware copy pass #2 — sweep all 'Teacher Dashboard' strings"
 type: task
-status: backlog
+status: done
 priority: highest
 feature: launch-readiness
 launch_blocker: true
 created: 2026-05-11
+updated: 2026-05-13
+shipped_at: 2026-05-13
+shipped_in_loop: 2026-05-13T00:50:20Z-cc45 iteration 1
 created_by: parent-walkthrough-2026-05-11
 source_walkthrough: docs/walkthroughs/walkthrough-2026-05-11-parent.md
 follows_up: LR-06

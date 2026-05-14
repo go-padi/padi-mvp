@@ -3,7 +3,8 @@ id: BLDTD-04
 title: "[BuildLoop] _scratch_dir routes non-LR tickets to legacy path but agent prompt points at iterations/ path"
 type: bug
 status: backlog
-priority: high
+priority: medium
+handling: manual — fix outside BuildLoop (orchestrator self-edit is fragile)
 feature: buildloop-tech-debt
 launch_blocker: false
 created: 2026-05-13

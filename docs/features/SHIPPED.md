@@ -200,3 +200,10 @@ Log of features shipped by BuildLoop.
 - Branch: buildloop/kan-145-delete-unused-authstatusindicator
 - UAT bugs found and fixed: 0
 - Build retries: 0
+
+## LR-24a
+- Iteration: 6
+- Shipped: 2026-05-14T03:00:38+00:00
+- Branch: buildloop/lr-24a-curriculum-order-callout-for-parents
+- UAT bugs found and fixed: 0
+- Build retries: 0

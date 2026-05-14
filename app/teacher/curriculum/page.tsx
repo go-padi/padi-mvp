@@ -235,7 +235,7 @@ export default function CurriculumPage() {
     </div>
   );
 
-  const renderChapter = (ch: ChapterWithGroups) => {
+  const renderChapter = (ch: ChapterWithGroups, idx: number) => {
     const isExpanded = expandedChapters.has(ch.code);
     const totalModules = ch.groups.reduce((sum, g) => sum + g.modules.length, 0);
 
@@ -251,7 +251,12 @@ export default function CurriculumPage() {
               {isExpanded ? '▼' : '▶'}
             </div>
             <div>
-              <p className="text-sm font-semibold text-gray-900">{isParent ? stripIndividualSuffix(ch.title) : ch.title}</p>
+              <p className="text-sm font-semibold text-gray-900 flex items-center gap-2">
+                {isParent ? stripIndividualSuffix(ch.title) : ch.title}
+                {isParent && isLoggedIn && idx === 0 && (
+                  <span className="rounded-full bg-blue-100 px-2 py-0.5 text-[11px] font-semibold text-blue-800">Start here</span>
+                )}
+              </p>
               <p className="text-xs text-gray-600">
                 {totalModules} module{totalModules !== 1 ? 's' : ''} across {ch.groups.length} group{ch.groups.length !== 1 ? 's' : ''}
               </p>

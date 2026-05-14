@@ -39,6 +39,7 @@
     "dotenv": "^17.2.3",
     "eslint": "^9.9.0",
     "eslint-config-next": "15.5.4",
+    "eslint-plugin-react-hooks": "^5.2.0",
     "globals": "^15.14.0",
     "jsdom": "^29.1.1",
     "postcss": "^8.4.47",

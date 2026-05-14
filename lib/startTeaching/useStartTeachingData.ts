@@ -156,7 +156,7 @@ export function useStartTeachingData(): StartTeachingData {
   useEffect(() => {
     if (!isHydrated || !isLoggedIn) return;
     load();
-  }, [load]);
+  }, [load, isHydrated, isLoggedIn]);
 
   useEffect(() => {
     if (!isHydrated || !isLoggedIn) return;

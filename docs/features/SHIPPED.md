@@ -165,3 +165,10 @@ Log of features shipped by BuildLoop.
 - Branch: buildloop/lr-21a-parent-first-lesson-prompt
 - UAT bugs found and fixed: 0
 - Build retries: 0
+
+## LR-23
+- Iteration: 1
+- Shipped: 2026-05-14T02:29:30+00:00
+- Branch: buildloop/lr-23-wire-react-hooks-lint
+- UAT bugs found and fixed: 0
+- Build retries: 0

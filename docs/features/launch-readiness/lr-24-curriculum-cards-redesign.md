@@ -2,7 +2,7 @@
 id: LR-24
 title: "[Curriculum] Redesign curriculum cards — replace catalog browser with child-centered journey view"
 type: story
-status: backlog
+status: done
 priority: medium
 feature: launch-readiness
 launch_blocker: false

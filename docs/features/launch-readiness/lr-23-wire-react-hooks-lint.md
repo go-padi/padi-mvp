@@ -2,7 +2,7 @@
 id: LR-23
 title: "[Tooling] Wire eslint-plugin-react-hooks so Rules of Hooks violations fail validate, not UAT"
 type: task
-status: backlog
+status: done
 priority: high
 feature: launch-readiness
 launch_blocker: false

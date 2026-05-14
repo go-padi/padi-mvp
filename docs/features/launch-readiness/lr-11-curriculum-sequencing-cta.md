@@ -1,14 +1,16 @@
 ---
 id: LR-11
-title: "[UX] Surface curriculum sequencing — make 'next module' obvious"
+title: "[UX] Surface curriculum sequencing — make 'next module' obvious AND gate Start on prior completion"
 type: story
 status: backlog
 priority: high
 feature: launch-readiness
 launch_blocker: true
 created: 2026-05-10
+updated: 2026-05-13
 created_by: walkthrough-audit-2026-05-10
 source_walkthrough: docs/walkthroughs/walkthrough-2026-05-10-teacher.md
+design_call_2026_05_13: "See everything, gate the action. Future modules stay visible (parents/teachers want to see what's coming) but the Start button is disabled until prior modules complete. Curriculum-fidelity enforced without losing the browse-ahead affordance."
 instructional_review: required — curriculum prescribes order
 ---
 
@@ -16,7 +18,33 @@ instructional_review: required — curriculum prescribes order
 
 Make the curriculum's prescribed order legible in the UI so a teacher
 on any student's profile knows *exactly* what to teach next. Today
-the teacher has to guess — there's no "next" affordance.
+the teacher has to guess — there's no "next" affordance — AND there's
+no enforcement, so anyone can click any module out of sequence.
+
+### Design rule (2026-05-13)
+
+**See everything, gate the action.** Founder's call after the
+2026-05-13 walkthrough:
+
+> "I don't think we hide courses to force order, but just don't
+> let parents or teachers start teaching. They should be able to
+> see what they are."
+
+So the rule is:
+
+- **Visible:** every module's title, description, lesson summary,
+  and time estimate — for all chapters/sections, regardless of where
+  the student currently is. Parents browsing ahead is encouraged
+  (helps them see the journey).
+- **Disabled "Start":** modules outside the student's next-recommended
+  position render with a disabled Start button + a tooltip /
+  inline note explaining what to complete first. Example: *"Complete
+  Listening Skills lesson 3 first."*
+- **Single enabled "Start":** at any moment, only the next-recommended
+  module has an active Start button. This makes the right action
+  unambiguous.
+- **Completed modules:** also "Start" — re-entry is allowed
+  (per LR-10) so the button reads *"Replay"* or *"Practice again."*
 
 ### Background
 

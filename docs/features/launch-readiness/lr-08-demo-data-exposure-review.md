@@ -2,7 +2,7 @@
 id: LR-08
 title: "[Privacy] Demo-data exposure review across all surfaces"
 type: story
-status: backlog
+status: done
 priority: high
 feature: launch-readiness
 launch_blocker: true

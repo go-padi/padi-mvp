@@ -249,3 +249,10 @@ Log of features shipped by BuildLoop.
 - Branch: buildloop/lr-21b-post-add-child-first-lesson-landing
 - UAT bugs found and fixed: 0
 - Build retries: 0
+
+## LR-21c
+- Iteration: 5
+- Shipped: 2026-05-15T18:44:04+00:00
+- Branch: buildloop/lr-21c-inline-first-lesson-cta-on-students-cards
+- UAT bugs found and fixed: 0
+- Build retries: 0

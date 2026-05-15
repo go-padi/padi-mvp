@@ -1,10 +1,17 @@
 'use client';
-import { FormEvent, MouseEvent, useEffect, useState } from 'react';
+import { FormEvent, MouseEvent, useEffect, useRef, useState } from 'react';
 import { useAuth } from '@/lib/auth-store';
 
 type SignInModalProps = { onClose: () => void };
 
 type Mode = 'signin' | 'signup';
+
+// Supabase auth returns one of these phrasings when an email is
+// already registered:
+//   - "User already registered"
+//   - "Email already in use"
+//   - "User with this email already exists"
+const EMAIL_EXISTS_REGEX = /already\s+(registered|exist|in use)/i;
 
 function EyeIcon({ open }: { open: boolean }) {
   if (open) {
@@ -39,6 +46,8 @@ export function SignInModal({ onClose }: SignInModalProps) {
   const [info, setInfo] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [loggingOut, setLoggingOut] = useState(false);
+  const [emailExists, setEmailExists] = useState(false);
+  const passwordRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
@@ -56,6 +65,17 @@ export function SignInModal({ onClose }: SignInModalProps) {
     setConfirmPassword('');
     setShowPassword(false);
     setShowConfirm(false);
+    setEmailExists(false);
+  };
+
+  const handleSignInInstead = () => {
+    setMode('signin');
+    setPassword('');
+    setConfirmPassword('');
+    setError(null);
+    setInfo(null);
+    setEmailExists(false);
+    setTimeout(() => passwordRef.current?.focus(), 0);
   };
 
   const attemptLogin = async () => {
@@ -107,14 +127,19 @@ export function SignInModal({ onClose }: SignInModalProps) {
       // TODO(activation-telemetry): emit signup_completed event here when telemetry plumbing lands
       onClose();
     } catch (err) {
-      const isKnownError =
-        err instanceof Error &&
-        /already|exists|email|invalid|password/i.test(err.message);
-      setError(
-        isKnownError
-          ? 'An account with this email may already exist. Try signing in instead.'
-          : 'Unable to create account. Please try again.'
-      );
+      const message = err instanceof Error ? err.message : '';
+      if (EMAIL_EXISTS_REGEX.test(message)) {
+        setEmailExists(true);
+      } else {
+        const isKnownError =
+          err instanceof Error &&
+          /already|exists|email|invalid|password/i.test(err.message);
+        setError(
+          isKnownError
+            ? 'An account with this email may already exist. Try signing in instead.'
+            : 'Unable to create account. Please try again.'
+        );
+      }
     } finally {
       setLoading(false);
     }
@@ -201,7 +226,7 @@ export function SignInModal({ onClose }: SignInModalProps) {
               id="email"
               type="email"
               value={email}
-              onChange={e => setEmail(e.target.value)}
+              onChange={e => { setEmail(e.target.value); setEmailExists(false); }}
               className="w-full rounded-xl border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-100"
               placeholder="teacher@school.edu"
               required
@@ -216,6 +241,7 @@ export function SignInModal({ onClose }: SignInModalProps) {
             </label>
             <div className="relative">
               <input
+                ref={passwordRef}
                 id="password"
                 type={showPassword ? 'text' : 'password'}
                 value={password}
@@ -264,6 +290,18 @@ export function SignInModal({ onClose }: SignInModalProps) {
                   <EyeIcon open={showConfirm} />
                 </button>
               </div>
+            </div>
+          )}
+          {emailExists && (
+            <div className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700">
+              This email already has an account.{' '}
+              <button
+                type="button"
+                onClick={handleSignInInstead}
+                className="text-red-900 underline font-semibold cursor-pointer"
+              >
+                Sign in instead.
+              </button>
             </div>
           )}
           {error && <div className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700">{error}</div>}

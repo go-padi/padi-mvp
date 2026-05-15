@@ -221,3 +221,10 @@ Log of features shipped by BuildLoop.
 - Branch: buildloop/lr-24c-phase-badges-on-chapters
 - UAT bugs found and fixed: 0
 - Build retries: 0
+
+## LR-26
+- Iteration: 1
+- Shipped: 2026-05-15T16:53:40+00:00
+- Branch: buildloop/lr-26-three-signal-vocab-migration
+- UAT bugs found and fixed: 1
+- Build retries: 0

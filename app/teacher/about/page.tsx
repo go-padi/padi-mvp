@@ -1,4 +1,6 @@
 'use client';
+import { useAuth } from '@/lib/auth-store';
+import { rolePhrase } from '@/lib/copy/roleCopy';
 
 const coreConcepts = [
   {
@@ -62,24 +64,6 @@ const programStructure = [
   },
 ];
 
-const outcomes = [
-  {
-    label: 'Accelerating',
-    description: 'On track to read sooner — has mastered all core skills',
-    tone: 'bg-green-50 text-green-800 border-green-100',
-  },
-  {
-    label: 'Practicing',
-    description: 'Locking in foundational skills — building confidence with practice',
-    tone: 'bg-amber-50 text-amber-900 border-amber-100',
-  },
-  {
-    label: 'Specialist Track',
-    description: 'Recommended for closer review with a reading specialist',
-    tone: 'bg-red-50 text-red-900 border-red-100',
-  },
-];
-
 const dailyUse = [
   "Review today's lesson plan and gather materials",
   "Teach multisensory activities following the app's guided steps",
@@ -89,9 +73,22 @@ const dailyUse = [
 ];
 
 export default function AboutPage(){
+  const { role } = useAuth();
 
   return (
     <div className="space-y-6">
+      <section className="rounded-2xl border border-blue-100 bg-white/80 p-5 shadow-sm">
+        <h3 className="text-lg font-semibold text-gray-900">Why Padi</h3>
+        <p className="mt-2 text-sm text-gray-700">
+          Most reading programs teach every child the same way. Kids ready to fly get held back. Kids who need more time get rushed. By kindergarten, the differences add up. Padi gives every child the right pace — and gives {rolePhrase(role, 'teachers', 'you')} a clear view of where each one is, in real time.
+        </p>
+      </section>
+      <section className="rounded-2xl border border-blue-100 bg-white/80 p-5 shadow-sm">
+        <h3 className="text-lg font-semibold text-gray-900">Built by a teacher, for teachers</h3>
+        <p className="mt-2 text-sm text-gray-700">
+          Padi was created by Mona Iyer, a reading specialist with over 25 years of classroom experience and certifications including AMS, CDT, and CALT. After decades of teaching, Mona built Padi to give every early childhood teacher the tools to accelerate every reader — and recognize early which kids deserve more time, so they get it before kindergarten.
+        </p>
+      </section>
       <div className="rounded-2xl border border-blue-100 bg-white/80 p-5 shadow-sm">
         <h3 className="text-lg font-semibold text-gray-900">About the Padi Method</h3>
         <p className="mt-2 text-sm text-gray-700">
@@ -138,20 +135,23 @@ export default function AboutPage(){
           </div>
         </div>
       </div>
-      <div className="space-y-4">
-        <h4 className="text-base font-semibold text-gray-900">Final Outcomes (After 12 Months)</h4>
+      <section className="space-y-4">
+        <h4 className="text-base font-semibold text-gray-900">Three signals at a glance</h4>
         <div className="rounded-2xl border border-gray-100 bg-white p-5 shadow-sm space-y-3">
-          <p className="text-sm text-gray-700">Students will be placed into one of three groups:</p>
-          <div className="grid gap-3 md:grid-cols-3">
-            {outcomes.map(o => (
-              <div key={o.label} className={`rounded-xl border p-4 ${o.tone}`}>
-                <p className="text-sm font-semibold">{o.label}</p>
-                <p className="mt-1 text-sm">{o.description}</p>
-              </div>
-            ))}
+          <div className="space-y-3">
+            <div className="rounded-xl border p-4 bg-green-50 text-green-800 border-green-100">
+              <p className="text-sm">🟢 <span className="font-semibold">Accelerating</span> — On track to read sooner — has mastered all core skills</p>
+            </div>
+            <div className="rounded-xl border p-4 bg-amber-50 text-amber-900 border-amber-100">
+              <p className="text-sm">🟡 <span className="font-semibold">Practicing</span> — Locking in foundational skills — building confidence with practice</p>
+            </div>
+            <div className="rounded-xl border p-4 bg-red-50 text-red-900 border-red-100">
+              <p className="text-sm">🔴 <span className="font-semibold">Specialist Track</span> — Recommended for closer review with a reading specialist</p>
+            </div>
           </div>
+          <p className="text-sm italic text-gray-700">A clear signal for every student, every lesson.</p>
         </div>
-      </div>
+      </section>
       <div className="space-y-3 rounded-2xl border border-gray-100 bg-white p-5 shadow-sm">
         <h4 className="text-base font-semibold text-gray-900">Using This App Daily</h4>
         <ol className="list-decimal list-inside space-y-1 text-sm text-gray-700">

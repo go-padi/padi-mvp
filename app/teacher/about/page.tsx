@@ -64,18 +64,18 @@ const programStructure = [
 
 const outcomes = [
   {
-    label: 'Ready',
-    description: 'On track for first grade — has mastered all core skills',
+    label: 'Accelerating',
+    description: 'On track to read sooner — has mastered all core skills',
     tone: 'bg-green-50 text-green-800 border-green-100',
   },
   {
-    label: 'Needs Help',
-    description: 'Requires targeted support in specific areas before progressing',
+    label: 'Practicing',
+    description: 'Locking in foundational skills — building confidence with practice',
     tone: 'bg-amber-50 text-amber-900 border-amber-100',
   },
   {
-    label: 'Needs Intervention',
-    description: 'Requires serious, immediate specialist support',
+    label: 'Specialist Track',
+    description: 'Recommended for closer review with a reading specialist',
     tone: 'bg-red-50 text-red-900 border-red-100',
   },
 ];

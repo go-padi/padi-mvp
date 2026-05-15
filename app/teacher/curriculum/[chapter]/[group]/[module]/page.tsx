@@ -71,9 +71,9 @@ const SIGNAL_OPTIONS = [
 
 function statusBadgeClass(status: AssessmentStatus): string {
   switch (status) {
-    case "Ready": return "bg-green-50 text-green-700";
-    case "Needs Help": return "bg-amber-50 text-amber-700";
-    case "Needs Intervention": return "bg-red-50 text-red-700";
+    case "Accelerating": return "bg-green-50 text-green-700";
+    case "Practicing": return "bg-amber-50 text-amber-700";
+    case "Specialist Track": return "bg-red-50 text-red-700";
     case "In progress": return "bg-blue-50 text-blue-700";
     case "Not started": return "bg-gray-100 text-gray-600";
   }
@@ -469,7 +469,7 @@ export default function LessonPage({ params }: { params: Promise<{ chapter: stri
                 <div className="flex items-center gap-2 mt-1 flex-wrap">
                   <span
                     className={clsx(
-                      'inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-semibold',
+                      'inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-semibold whitespace-nowrap',
                       statusBadgeClass(contextStudentStatus),
                     )}
                   >

@@ -20,11 +20,11 @@ import {
 
 function statusBadgeClass(status: AssessmentStatus): string {
   switch (status) {
-    case 'Ready':
+    case 'Accelerating':
       return 'bg-green-50 text-green-700';
-    case 'Needs Help':
+    case 'Practicing':
       return 'bg-amber-50 text-amber-700';
-    case 'Needs Intervention':
+    case 'Specialist Track':
       return 'bg-red-50 text-red-700';
     case 'In progress':
       return 'bg-blue-50 text-blue-700';
@@ -370,7 +370,7 @@ export default function StudentModulePage({
         <div className="flex items-center gap-3 flex-wrap">
           <span
             className={clsx(
-              'inline-flex items-center rounded-full px-2.5 py-1 text-xs font-semibold',
+              'inline-flex items-center rounded-full px-2.5 py-1 text-xs font-semibold whitespace-nowrap',
               statusBadgeClass(student.assessmentStatus),
             )}
           >

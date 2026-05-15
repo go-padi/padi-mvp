@@ -25,7 +25,7 @@ export const demoStudents: DemoStudent[] = [
     progressPercent: 27,
     progressLabel: 'Chapter 1 of 7 — Recognizing Sounds',
     focusAreas: ['Recognizing Sounds', 'Following Patterns'],
-    assessmentStatus: 'Needs Help',
+    assessmentStatus: 'Practicing',
   },
   {
     id: 'stu-6',
@@ -34,6 +34,6 @@ export const demoStudents: DemoStudent[] = [
     progressPercent: 61,
     progressLabel: 'Chapter 3 of 7 — Sounding Out Words',
     focusAreas: ['Sounding Out Words', 'Rhyming'],
-    assessmentStatus: 'Ready',
+    assessmentStatus: 'Accelerating',
   },
 ];

@@ -38,7 +38,7 @@ const previewHighlights = [
   },
   {
     title: 'Know if they\'re ready for school',
-    body: 'Padi helps you determine if your child is Ready, Needs Help, or Needs Intervention — so you can act early.',
+    body: 'Padi shows you whether your child is Accelerating, Practicing, or on the Specialist Track — and what to do next, today.',
   },
 ];
 
@@ -379,12 +379,12 @@ export default function TeacherIndexPage() {
               : `/teacher/curriculum`;
 
           const statusBadgeClass = clsx(
-            'rounded-full px-2 py-0.5 text-[11px] font-semibold',
-            card.status === 'Ready'
+            'rounded-full px-2 py-0.5 text-[11px] font-semibold whitespace-nowrap',
+            card.status === 'Accelerating'
               ? 'bg-green-50 text-green-700'
-              : card.status === 'Needs Help'
+              : card.status === 'Practicing'
                 ? 'bg-amber-50 text-amber-700'
-                : card.status === 'Needs Intervention'
+                : card.status === 'Specialist Track'
                   ? 'bg-red-50 text-red-700'
                   : card.status === 'In progress'
                     ? 'bg-blue-50 text-blue-700'

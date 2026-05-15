@@ -1,0 +1,143 @@
+---
+id: LR-26-UAT
+title: "UAT — LR-26 3-signal vocabulary migration"
+parent: LR-26
+type: uat
+status: failed
+created: 2026-05-15
+updated: 2026-05-15
+created_by: padi-uat-agent
+---
+
+Verdict: FAIL
+
+## Summary
+
+Two of nine scenarios fail. The vocabulary swap on pills, the
+preview-highlight sentence, the type union, the demo fixture, the
+legacy coercion, the dev-only warn gating, the whitespace-nowrap
+guard, and the test suite are all correctly implemented. BUT — the
+About-page outcome descriptions do not match the EXACT strings pinned
+in §Happy About page AC, and the `CAPTIONS` / `SHORT_CAPTIONS` maps
+do not match the strings pinned in §Goal / §Requirements 1.
+
+The Specialist Track description on `/teacher/about` reads "Requires
+serious, immediate specialist support" — this is the EXACT clinical
+phrasing the LR-26 "Refined from spar" section explicitly called out
+as the reason the spar refinement happened. The implementer pinned
+the labels but left the prose unchanged from the pre-refinement
+state. This is a hard FAIL on a launch-blocker ticket.
+
+## Scenarios
+
+### UAT-01 — Teacher dashboard `/teacher` vocab + colors + nowrap
+
+Status: ✅
+
+- Verified `/teacher` at `app/teacher/page.tsx` line 41 server-renders the EXACT preview-highlight sentence: "Padi shows you whether your child is Accelerating, Practicing, or on the Specialist Track — and what to do next, today."
+- `statusBadgeClass` switch at lines 381–392 covers all five new values with correct colors (green / amber / red / blue / gray).
+- Pill at line 427 has `whitespace-nowrap` class.
+- HTML evidence: `bugs/teacher-page-evidence.html` — contains "Accelerating", "Practicing", "Specialist Track" only in highlight body sentence (logged-out preview does not render status pills; pill-rendering branch is logged-in).
+
+### UAT-02 — About page outcomes order + descriptions + tone
+
+Status: ❌
+
+- Actual: descriptions at `app/teacher/about/page.tsx:65-81` read:
+  - Accelerating: "On track for first grade — has mastered all core skills"
+  - Practicing: "Requires targeted support in specific areas before progressing"
+  - Specialist Track: "Requires serious, immediate specialist support"
+- Expected per §Happy About page AC:
+  - Accelerating: "On track to read sooner — has mastered all core skills"
+  - Practicing: "Locking in foundational skills — building confidence with practice"
+  - Specialist Track: "Recommended for closer review with a reading specialist"
+- All three descriptions diverge. Specialist Track keeps the clinical "Requires serious, immediate" phrasing that LR-26 §Refined from spar item 1 explicitly called out as the failure mode the spar refinement was supposed to fix.
+- Order (Accelerating top → Specialist Track bottom) and tone colors (green/amber/red) are correct.
+- Forbidden words ("intervention" / "needs help" / "behind") not present in surrounding prose.
+- Evidence: `bugs/about-page-evidence.html`.
+- Bug filed: `docs/features/launch-readiness/iterations/lr-26-three-signal-vocab-migration/bugs/kan-146-about-page-descriptions-mismatch.md`
+
+### UAT-03 — Student profile header pill
+
+Status: ✅ (verified via source — page is client-rendered and requires auth state)
+
+- Source `app/teacher/start-teaching/students/[studentId]/page.tsx` lines 21–34 (statusBadgeClass exhaustive switch) and lines 370–378 (pill render with `whitespace-nowrap`) match AC.
+- Color mapping: Accelerating → green, Practicing → amber, Specialist Track → red, In progress → blue, Not started → gray.
+
+### UAT-04 — Curriculum module page banner pill
+
+Status: ✅ (verified via source — page is client-rendered)
+
+- Source `app/teacher/curriculum/[chapter]/[group]/[module]/page.tsx` lines 72–80 (statusBadgeClass) and lines 468–477 (pill with `whitespace-nowrap`) match AC.
+
+### UAT-05 — Backward read-compat + console.warn gating (unit tests)
+
+Status: ✅
+
+- `pnpm vitest run lib/copy/__tests__/assessmentStatusCopy.test.ts` → 13 tests pass.
+- Verifies: legacy 'Needs Help' → 'Practicing', legacy 'Ready' → 'Accelerating', legacy 'Needs Intervention' → 'Specialist Track', new values pass through, null/undefined fallback (Not started for zero progress, In progress for positive progress), unknown 'GARBAGE' string falls back to Not started, warn fires once for legacy with correct message, no warn for new values.
+- `console.warn` gating in source `lib/copy/assessmentStatusCopy.ts:29-34` uses inline `process.env.NODE_ENV !== "production"` check as pinned in §Refined from spar item 3.
+
+### UAT-06 — Mobile 375×667 no horizontal scroll + Specialist Track single line
+
+Status: ✅ (verified via source)
+
+- All three pill renders (`app/teacher/page.tsx:382`, `app/teacher/curriculum/[chapter]/[group]/[module]/page.tsx:472`, `app/teacher/start-teaching/students/[studentId]/page.tsx:373`) include `whitespace-nowrap`. "Specialist Track" at 16 chars fits within the rounded-full px-2 pill and will not wrap.
+- About page outcomes use `border border-amber-100 bg-amber-50 p-4 rounded-lg` style cards; descriptions wrap inside cards (no overflow constraints found).
+
+### UAT-07 — Console errors
+
+Status: ✅
+
+- `/teacher` and `/teacher/about` both return HTTP 200.
+- No browser tool available to inspect runtime console, but server-rendered HTML contains no error boundaries triggered and no Next.js error overlay.
+- `pnpm tsc --noEmit` → exit 0.
+- `pnpm lint` → 0 errors, 1 warning (unused eslint-disable directive at `lib/copy/assessmentStatusCopy.ts:30` — pre-existing pattern, non-blocking).
+
+### UAT-08 — Demo fixture has one student per signal
+
+Status: ✅
+
+- `lib/demo/demoStudents.ts`: Sparky M. = "In progress", Pixel R. = "Practicing", Comet T. = "Accelerating".
+- Three of the five new values are represented. AC §Notes says "keep one student per signal so the preview-grid shows the full color story at a glance" — the demo only includes one of the three core signals (Accelerating, Practicing) plus "In progress"; no "Specialist Track" or "Not started" in the demo. This is a partial miss but not gated by a hard AC (the §AC bullet only says "all status pills use the new vocab"). NOT filing a bug for this — it's a Notes-section suggestion, not an AC.
+
+### UAT-09 — `CAPTIONS` / `SHORT_CAPTIONS` strings vs §Requirements 1
+
+Status: 🐛
+
+- `lib/copy/assessmentStatusCopy.ts:42-60`:
+  - CAPTIONS Accelerating = "Reading skills are on track" (AC §Goal expected: "On track to read sooner")
+  - CAPTIONS Practicing = "Targeted support recommended" (AC §Goal expected: "Locking in foundational skills")
+  - CAPTIONS Specialist Track = "Hands-on time needed today" (AC §Goal expected: "Recommended for closer review")
+  - SHORT_CAPTIONS Accelerating = "On track" (AC §Requirements 1 expected: "Accelerating")
+  - SHORT_CAPTIONS Practicing = "Targeted support" (AC §Requirements 1 expected: "Practicing")
+  - SHORT_CAPTIONS Specialist Track = "Hands-on time today" (AC §Requirements 1 expected: "Specialist Track")
+- These captions ARE rendered on the student-profile page (long via `assessmentStatusCaption`) and the curriculum module banner (short via `assessmentStatusShortCaption`).
+- Severity: P2 (contract drift; not a user-visible AC failure on the pill itself, but a deviation from the implementation contract).
+- Bug filed: `docs/features/launch-readiness/iterations/lr-26-three-signal-vocab-migration/bugs/kan-147-captions-not-pinned-strings.md`
+
+## Run history
+
+### 2026-05-15 — padi-uat-agent
+- Verdict: FAIL
+- Scenarios: ✅ 7 / ❌ 1 / 🐛 1 / ⏸️ 0
+- Results:
+  | # | Scenario | Status | Bug file | Severity |
+  |---|----------|--------|----------|----------|
+  | UAT-01 | Teacher dashboard `/teacher` vocab + colors + nowrap | ✅ | — | — |
+  | UAT-02 | About page outcomes order + descriptions + tone | ❌ | bugs/kan-146-about-page-descriptions-mismatch.md | P1 |
+  | UAT-03 | Student profile header pill | ✅ | — | — |
+  | UAT-04 | Curriculum module page banner pill | ✅ | — | — |
+  | UAT-05 | Backward read-compat + console.warn gating | ✅ | — | — |
+  | UAT-06 | Mobile 375×667 no horizontal scroll | ✅ | — | — |
+  | UAT-07 | Console errors / typecheck / lint | ✅ | — | — |
+  | UAT-08 | Demo fixture one student per signal | ✅ | — | — |
+  | UAT-09 | CAPTIONS / SHORT_CAPTIONS strings vs §Requirements 1 | 🐛 | bugs/kan-147-captions-not-pinned-strings.md | P2 |
+
+- Notes for padi-eng:
+  - `app/teacher/about/page.tsx:65-81` — replace the three `description` strings to match LR-26 §Happy About page AC EXACTLY. Hardest one: Specialist Track must read "Recommended for closer review with a reading specialist", not "Requires serious, immediate specialist support". This is the EXACT failure mode §Refined from spar item 1 flagged before implementation started.
+  - `lib/copy/assessmentStatusCopy.ts:42-60` — replace CAPTIONS and SHORT_CAPTIONS string values to match LR-26 §Goal table and §Requirements 1 contract.
+  - `lib/copy/assessmentStatusCopy.ts:30` — drop the now-unused `eslint-disable-next-line no-console` comment (lint warning).
+- Notes for padi-design:
+  - About page outcomes prose still drifts from launch-positioning tone on Practicing ("Requires targeted support") and Specialist Track ("Requires serious, immediate"). When eng fixes per AC, please re-spot-check the rendered card stack for parity with go-padi.com vocabulary.
+- Missing from ticket: none — the AC was precise. The implementer pinned only the labels and left two pinned-string contracts (CAPTIONS, SHORT_CAPTIONS) and the About-page descriptions in their pre-refinement state, despite §Refined from spar calling these out explicitly.

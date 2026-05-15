@@ -1,15 +1,21 @@
 export type AssessmentStatus =
-  | "Ready"
-  | "Needs Help"
-  | "Needs Intervention"
+  | "Accelerating"
+  | "Practicing"
+  | "Specialist Track"
   | "In progress"
   | "Not started";
 
 const THREE_SIGNAL_VALUES: ReadonlyArray<AssessmentStatus> = [
-  "Ready",
-  "Needs Help",
-  "Needs Intervention",
+  "Accelerating",
+  "Practicing",
+  "Specialist Track",
 ];
+
+const LEGACY_COERCION: Record<string, AssessmentStatus> = {
+  Ready: "Accelerating",
+  "Needs Help": "Practicing",
+  "Needs Intervention": "Specialist Track",
+};
 
 export function normalizeAssessmentStatus(input: {
   assessmentStatus: string | null | undefined;
@@ -19,15 +25,24 @@ export function normalizeAssessmentStatus(input: {
   if (THREE_SIGNAL_VALUES.includes(raw as AssessmentStatus)) {
     return raw as AssessmentStatus;
   }
+  if (raw in LEGACY_COERCION) {
+    if (process.env.NODE_ENV !== "production") {
+      // eslint-disable-next-line no-console
+      console.warn(
+        `[assessmentStatusCopy] coercing legacy value "${raw}" → "${LEGACY_COERCION[raw]}"`,
+      );
+    }
+    return LEGACY_COERCION[raw];
+  }
   const progress = input.progressPercent ?? 0;
   if (progress > 0) return "In progress";
   return "Not started";
 }
 
 const CAPTIONS: Record<AssessmentStatus, string> = {
-  "Ready": "Reading skills are on track",
-  "Needs Help": "Targeted support recommended",
-  "Needs Intervention": "Hands-on time needed today",
+  "Accelerating": "On track to read sooner",
+  "Practicing": "Locking in foundational skills",
+  "Specialist Track": "Recommended for closer review",
   "In progress": "Building the foundation",
   "Not started": "Start with the first lesson",
 };
@@ -37,9 +52,9 @@ export function assessmentStatusCaption(status: AssessmentStatus): string {
 }
 
 const SHORT_CAPTIONS: Record<AssessmentStatus, string> = {
-  "Ready": "On track",
-  "Needs Help": "Targeted support",
-  "Needs Intervention": "Hands-on time today",
+  "Accelerating": "Accelerating",
+  "Practicing": "Practicing",
+  "Specialist Track": "Specialist Track",
   "In progress": "Foundation lessons",
   "Not started": "Start the first lesson",
 };

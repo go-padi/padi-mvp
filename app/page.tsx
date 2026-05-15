@@ -1,6 +1,14 @@
+'use client';
 import Link from "next/link";
+import { useAuth } from "@/lib/auth-store";
 
 export default function Page(){
+  const { isLoggedIn } = useAuth();
+  const openSignIn = () => {
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new Event('padi-open-signin'));
+    }
+  };
   return (
     <div className="space-y-16">
       <section className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-[#eef2ff] via-white to-[#e3f1ff] px-6 py-14 shadow-sm">
@@ -11,23 +19,32 @@ export default function Page(){
         <div className="relative grid gap-10 md:grid-cols-[1.1fr_0.9fr] items-center">
           <div className="space-y-6 min-w-0">
             <div className="inline-flex items-center gap-2 rounded-full border border-blue-100 bg-white px-3 py-1 text-xs font-medium text-blue-700 shadow-sm">
-              <span className="md:hidden">Free early access for ages 3–7</span>
-              <span className="hidden md:inline">Now in free early access for teachers of 3- to 7-year-olds</span>
+              <span className="md:hidden">Now in free early access</span>
+              <span className="hidden md:inline">Now in free early access for ages 3–7</span>
             </div>
             <h1 className="text-4xl font-bold leading-tight text-gray-900 md:text-5xl">
-              Spot reading gaps before they become <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-purple-600">reading struggles</span>.
+              Accelerate <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-purple-600">your child&apos;s reading</span>.
             </h1>
             <p className="max-w-full md:max-w-2xl text-lg text-gray-700">
-              Padi gives teachers a clear signal for every student ages 3–7: ready, needs help, or needs intervention. Multisensory lessons built on the Science of Reading — zero prep required.
+              A multisensory reading program for ages 3–7, built on the Science of Reading. Padi adapts to every child — moving ready readers forward faster, and giving emerging readers exactly the practice they need.
             </p>
             <div className="flex flex-wrap gap-3">
-              <Link href="/teacher" className="btn btn-primary">
-                Start Teaching
-              </Link>
+              {isLoggedIn ? (
+                <Link href="/teacher" className="btn btn-primary">
+                  Continue to your dashboard
+                </Link>
+              ) : (
+                <button type="button" onClick={openSignIn} className="btn btn-primary">
+                  Get Free Early Access
+                </button>
+              )}
               <Link href="/teacher/curriculum" className="btn">
-                Dashboard
+                Browse curriculum
               </Link>
             </div>
+            <p className="text-xs text-gray-500">
+              Built on the Science of Reading · Multisensory · Designed by a 25-year reading specialist
+            </p>
             <p className="text-xs text-gray-500">
               Free during early access. No credit card needed.
             </p>

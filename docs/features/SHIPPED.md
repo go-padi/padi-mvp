@@ -256,3 +256,10 @@ Log of features shipped by BuildLoop.
 - Branch: buildloop/lr-21c-inline-first-lesson-cta-on-students-cards
 - UAT bugs found and fixed: 0
 - Build retries: 0
+
+## LR-19b
+- Iteration: 6
+- Shipped: 2026-05-15T18:50:53+00:00
+- Branch: buildloop/lr-19b-email-exists-inline-action
+- UAT bugs found and fixed: 0
+- Build retries: 0

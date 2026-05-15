@@ -242,3 +242,10 @@ Log of features shipped by BuildLoop.
 - Branch: buildloop/lr-18b-chapter-overview-cards-logged-out
 - UAT bugs found and fixed: 1
 - Build retries: 0
+
+## LR-21b
+- Iteration: 4
+- Shipped: 2026-05-15T18:36:33+00:00
+- Branch: buildloop/lr-21b-post-add-child-first-lesson-landing
+- UAT bugs found and fixed: 0
+- Build retries: 0

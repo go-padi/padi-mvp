@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { supabaseClient } from '@/lib/supabase';
 import { useAuth } from '@/lib/auth-store';
 import { rolePhrase } from '@/lib/copy/roleCopy';
+import { FIRST_LESSON_PATH } from '@/lib/copy/firstLesson';
 type Student = { id: string; name: string | null; first_name: string | null; last_name: string | null };
 
 export default function StudentsPage(){
@@ -87,7 +88,15 @@ export default function StudentsPage(){
           <div className="grid md:grid-cols-2 gap-3">
             {students.map(s => {
               const fullName = [s.first_name, s.last_name].filter(Boolean).join(' ').trim();
-              return <div key={s.id} className="card">{fullName || s.name}</div>;
+              const firstName = s.first_name || s.name?.split(' ')[0] || 'this student';
+              return (
+                <div key={s.id} className="card flex items-center justify-between gap-3">
+                  <span className="min-w-0 break-words">{fullName || s.name}</span>
+                  <Link href={`${FIRST_LESSON_PATH}?student=${s.id}`} className="btn btn-primary shrink-0">
+                    Teach {firstName}
+                  </Link>
+                </div>
+              );
             })}
           </div>
         </>

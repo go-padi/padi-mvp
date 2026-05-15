@@ -1,12 +1,14 @@
 'use client';
 import { useCallback, useEffect, useState } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { supabaseClient } from '@/lib/supabase';
 import { useAuth } from '@/lib/auth-store';
 import { rolePhrase } from '@/lib/copy/roleCopy';
 type Student = { id: string; name: string | null; first_name: string | null; last_name: string | null };
 
 export default function StudentsPage(){
+  const router = useRouter();
   const { isLoggedIn, isHydrated, tenantId, role } = useAuth();
   const [students,setStudents]=useState<Student[]>([]);
   const [name,setName]=useState('');
@@ -34,10 +36,17 @@ export default function StudentsPage(){
     if (!trimmed) return;
     const [first, ...rest] = trimmed.split(/\s+/);
     const last = rest.join(' ') || null;
+    const isFirstChild = students.length === 0;
     const sb = supabaseClient();
-    await sb
+    const { data: row } = await sb
       .from('students')
-      .insert({ tenant_id: tenantId, name: trimmed, first_name: first || null, last_name: last });
+      .insert({ tenant_id: tenantId, name: trimmed, first_name: first || null, last_name: last })
+      .select('id, first_name, name')
+      .single();
+    if (isFirstChild && row?.id) {
+      router.push(`/students/${row.id}/start`);
+      return;
+    }
     setName('');
     load();
   };

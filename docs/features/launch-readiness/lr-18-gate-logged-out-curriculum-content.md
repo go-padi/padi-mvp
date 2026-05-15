@@ -2,7 +2,7 @@
 id: LR-18
 title: "[Curriculum] Replace logged-out curriculum browser with overview cards — gate full content behind login"
 type: story
-status: backlog
+status: done
 priority: high
 feature: launch-readiness
 launch_blocker: true

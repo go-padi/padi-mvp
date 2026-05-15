@@ -235,3 +235,10 @@ Log of features shipped by BuildLoop.
 - Branch: buildloop/lr-27-teacher-about-refresh
 - UAT bugs found and fixed: 1
 - Build retries: 0
+
+## LR-18b
+- Iteration: 3
+- Shipped: 2026-05-15T18:23:38+00:00
+- Branch: buildloop/lr-18b-chapter-overview-cards-logged-out
+- UAT bugs found and fixed: 1
+- Build retries: 0

@@ -263,3 +263,10 @@ Log of features shipped by BuildLoop.
 - Branch: buildloop/lr-19b-email-exists-inline-action
 - UAT bugs found and fixed: 0
 - Build retries: 0
+
+## LR-25d
+- Iteration: 7
+- Shipped: 2026-05-15T19:04:55+00:00
+- Branch: buildloop/lr-25d-homepage-hero-rewrite
+- UAT bugs found and fixed: 1
+- Build retries: 0

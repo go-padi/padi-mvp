@@ -2,7 +2,7 @@
 id: LR-26
 title: "[Copy + Data] Migrate 3-signal vocabulary: Ready/Needs Help/Needs Intervention → Accelerating/Practicing/Specialist Track"
 type: story
-status: backlog
+status: done
 priority: highest
 feature: launch-readiness
 launch_blocker: true

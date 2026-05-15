@@ -228,3 +228,10 @@ Log of features shipped by BuildLoop.
 - Branch: buildloop/lr-26-three-signal-vocab-migration
 - UAT bugs found and fixed: 1
 - Build retries: 0
+
+## LR-27
+- Iteration: 2
+- Shipped: 2026-05-15T18:02:18+00:00
+- Branch: buildloop/lr-27-teacher-about-refresh
+- UAT bugs found and fixed: 1
+- Build retries: 0

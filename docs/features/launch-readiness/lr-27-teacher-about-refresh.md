@@ -2,7 +2,7 @@
 id: LR-27
 title: "[Copy] /teacher/about refresh — match updated go-padi.com (Why Padi + Mona story + new 3-signal vocab)"
 type: task
-status: backlog
+status: done
 priority: highest
 feature: launch-readiness
 launch_blocker: true

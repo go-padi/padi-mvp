@@ -14,6 +14,7 @@ import {
 } from '@/lib/demo/demoCurriculum';
 import { stripIndividualSuffix } from '@/lib/curriculum/formatting';
 import { PREVIEW_BANNER } from '@/lib/copy/previewCopy';
+import { CURRICULUM_INTRO, CURRICULUM_OVERVIEW } from '@/lib/copy/curriculumOverview';
 
 type GroupRow = {
   id: string;
@@ -90,7 +91,7 @@ export default function CurriculumPage() {
 
   useEffect(() => {
     const fetchAll = async () => {
-      if (!isHydrated) return;
+      if (!isHydrated || !isLoggedIn) return;
       setLoading(true);
 
       const sb = supabaseClient();
@@ -170,7 +171,79 @@ export default function CurriculumPage() {
     };
 
     fetchAll();
-  }, [effectiveMode, isHydrated]);
+  }, [effectiveMode, isHydrated, isLoggedIn]);
+
+  if (isHydrated && !isLoggedIn) {
+    const openSignIn = () => {
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(new Event('padi-open-signin'));
+      }
+    };
+
+    return (
+      <div className="space-y-6">
+        <div className="space-y-2">
+          <h2 className="text-2xl font-semibold text-gray-900">K-Reading Kickstart Program</h2>
+        </div>
+
+        <section className="rounded-2xl border border-gray-100 bg-white/80 p-5 shadow-sm">
+          <p className="text-sm text-gray-700">{CURRICULUM_INTRO}</p>
+        </section>
+
+        {CURRICULUM_OVERVIEW.map((chapter) => (
+          <section
+            key={chapter.code}
+            className="rounded-2xl border border-gray-100 bg-white/80 p-5 shadow-sm space-y-3"
+          >
+            <h3 className="text-lg font-semibold text-gray-900">{chapter.title}</h3>
+            <p className="text-sm text-gray-700">{chapter.blurb}</p>
+
+            {chapter.sections && (
+              <details open className="space-y-2">
+                <summary className="cursor-pointer text-xs font-semibold uppercase tracking-wide text-gray-500">
+                  Sections
+                </summary>
+                <ul className="mt-2 space-y-2">
+                  {chapter.sections.map((section) => (
+                    <li
+                      key={section.title}
+                      className="rounded-xl border border-gray-100 bg-white p-3"
+                    >
+                      <p className="text-sm font-semibold text-gray-900">{section.title}</p>
+                      <p className="text-xs text-gray-700">{section.description}</p>
+                      <p className="mt-1 text-xs italic text-gray-500">{section.estimate}</p>
+                    </li>
+                  ))}
+                </ul>
+              </details>
+            )}
+
+            {chapter.inlineNote && (
+              <p className="text-xs italic text-gray-600">{chapter.inlineNote}</p>
+            )}
+
+            <button
+              type="button"
+              onClick={openSignIn}
+              className="w-full rounded-xl border border-gray-900 px-4 py-2 text-sm font-semibold text-gray-900 hover:bg-gray-900 hover:text-white"
+            >
+              Sign in to begin
+            </button>
+          </section>
+        ))}
+
+        <section className="rounded-2xl border border-gray-100 bg-white/80 p-5 shadow-sm">
+          <button
+            type="button"
+            onClick={openSignIn}
+            className="w-full rounded-xl bg-gray-900 px-4 py-3 text-sm font-semibold text-white hover:bg-gray-800"
+          >
+            Sign in to access full lessons and progress tracking
+          </button>
+        </section>
+      </div>
+    );
+  }
 
   if (!isHydrated || loading) {
     return (

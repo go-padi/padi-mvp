@@ -1,0 +1,108 @@
+---
+id: LR-18b-UAT
+parent: LR-18b
+ran: 2026-05-15
+ran_by: padi-uat-agent
+verdict: FAIL
+---
+
+Verdict: FAIL
+
+## Summary
+
+Two pinned-copy ACs fail. The intro paragraph and all four inline italic notes are the wrong strings. Specifically the intro carries the OLD pre-LR-26 three-outcome vocabulary that the spar transcript explicitly retired ("ready for first grade, needs more group support, or needs one-on-one intervention"), and the four solo-estimate chapters carry the long-form authored-copy text rather than the spar-pinned short-form ("Roughly N lessons in this chapter.") strings. Structure, ordering, button-not-link CTA pattern, logged-in regression, lint, and typecheck all pass.
+
+## Scenarios
+
+### UAT-01 — Intro paragraph copy matches AC verbatim — FAIL
+- Expected: "~140 lessons (Individual, 1:1) or ~180 lessons (Group, classroom) across a 9-month program. Three phases, three signals — Accelerating, Practicing, or Specialist Track. Padi shows you which, every lesson."
+- Actual (lib/copy/curriculumOverview.ts line 16): "~140 lessons (Individual, 1:1) or ~180 lessons (classroom Group) across a 9-month program. Three phases, three outcomes: ready for first grade, needs more support, or needs targeted intervention."
+- Differences: "(Group, classroom)" vs "(classroom Group)"; "three signals — Accelerating, Practicing, or Specialist Track" vs "three outcomes: ready for first grade, needs more support, or needs targeted intervention"; trailing "Padi shows you which, every lesson." is missing entirely.
+- This is the exact failure mode the spar called out as Refinement #1.
+- Bug filed: docs/features/launch-readiness/iterations/lr-18b-chapter-overview-cards-logged-out/bugs/lr-18b-bug-01-intro-old-vocab.md
+
+### UAT-02 — Alphabet inline italic note matches pinned string — FAIL
+- Expected: "Roughly 20 lessons in this chapter."
+- Actual (curriculumOverview.ts line 61–62): "this chapter is structured as a single set of ~20 letter-recognition lessons, not nested sub-sections — explore to see all activities"
+- Bug filed: docs/features/launch-readiness/iterations/lr-18b-chapter-overview-cards-logged-out/bugs/lr-18b-bug-02-inline-notes-wrong-strings.md
+
+### UAT-03 — Phonics inline italic note matches pinned string — FAIL
+- Expected: "Roughly 30–40 lessons in this chapter."
+- Actual (curriculumOverview.ts line 69–70): "structured as a sequence of sound introductions, keyword cards, and three-period review lessons — roughly 30–40 lessons total"
+- Bug filed: docs/features/launch-readiness/iterations/lr-18b-chapter-overview-cards-logged-out/bugs/lr-18b-bug-02-inline-notes-wrong-strings.md
+
+### UAT-04 — Handwriting inline italic note matches pinned string — FAIL
+- Expected: "Roughly 25–30 lessons in this chapter."
+- Actual (curriculumOverview.ts line 91–92): "structured as a sequence of handwriting exercises, roughly 25–30 lessons"
+- Bug filed: docs/features/launch-readiness/iterations/lr-18b-chapter-overview-cards-logged-out/bugs/lr-18b-bug-02-inline-notes-wrong-strings.md
+
+### UAT-05 — VCF inline italic note matches pinned string — FAIL
+- Expected: "Roughly 15–25 lessons in this chapter."
+- Actual (curriculumOverview.ts line 113–114): "structured as a sequence of vocabulary, comprehension, and fluency activities — roughly 15–25 lessons"
+- Bug filed: docs/features/launch-readiness/iterations/lr-18b-chapter-overview-cards-logged-out/bugs/lr-18b-bug-02-inline-notes-wrong-strings.md
+
+### UAT-06 — Seven chapter cards in exact order — PASS
+- CURRICULUM_OVERVIEW renders: Phonological Awareness, Alphabet, Phonics, Reading, Handwriting, Spelling, Vocabulary, Comprehension and Fluency. Correct order, correct titles.
+
+### UAT-07 — Three chapters have `<details open>` with section breakdowns — PASS
+- Source-level: Phonological Awareness has 5 sections (Learning Sensorially, Rhyming, Words & Sentences, Syllables, Phonemic Awareness). Reading has 1 section (Reading Exercises). Spelling has 1 section (Spelling Exercises). The render branch wraps these in `<details open>` with `<summary>Sections</summary>`. The other four chapters have `sections` undefined and render the inlineNote instead.
+
+### UAT-08 — Sign-in CTAs are buttons that dispatch `padi-open-signin` (not anchor links) — PASS
+- Per-card "Sign in to begin" is `<button type="button" onClick={openSignIn}>` at app/teacher/curriculum/page.tsx:225–231. Global CTA "Sign in to access full lessons and progress tracking" is `<button type="button" onClick={openSignIn}>` at app/teacher/curriculum/page.tsx:235–243. `openSignIn` dispatches `new Event('padi-open-signin')` (line 177–181). No `<a href="/sign-in">` patterns — correct since there is no /sign-in route.
+
+### UAT-09 — No module content leaks on logged-out branch — PASS
+- The logged-out branch renders ONLY from the static CURRICULUM_OVERVIEW constant. No imports of demoCurriculum's previewModulesByGroup are consumed in the new branch. No "Ind-Module", no "PA-LS-", no module slugs or lesson titles appear in the JSX. (The page does still import previewChapters/previewGroups/previewModulesByGroup at the top of the file, but those are only consumed inside the post-return code path that runs when `isLoggedIn === true`.)
+
+### UAT-10 — Logged-in regression: hierarchical browser still renders — PASS
+- The new branch is gated `if (isHydrated && !isLoggedIn) { return <overview JSX>; }` at line 176. Logged-in path falls through to the existing render at lines 248–417, which is unchanged. The supabase fetch in useEffect is correctly gated on `!isHydrated || !isLoggedIn` at line 94. Parent gating, teaching-mode toggle, and expand-state machine all intact.
+
+### UAT-11 — LR-18a regression: drilling to module URL logged-out — BLOCKED
+- Direct curl of /teacher/curriculum/phonological-awareness/learning-sensorially/PA-LS-1 returns HTTP 500 from the dev server with error "Cannot find module './vendor-chunks/tr46@0.0.3.js'". This is a stale dev-server build cache, not the gating logic. Source inspection of app/teacher/curriculum/[chapter]/[group]/[module]/page.tsx confirms gating intact at line 230 (`if (!isLoggedIn) { return <sign-in modal trigger> }`). Cannot get a runtime confirmation without restarting the dev server. Filing as BLOCKED; recommend orchestrator clear .next/cache and re-run before relying on this verdict for LR-18a regression.
+
+### UAT-12 — Mobile 375×667: no horizontal scroll — BLOCKED
+- Cannot drive a headless browser at viewport 375×667 in this environment. Source-level: all cards use `rounded-2xl border bg-white/80 p-5 shadow-sm space-y-3` with no fixed widths, buttons use `w-full`, no overflow-x triggers. High confidence no horizontal scroll, but not runtime-verified.
+
+### UAT-13 — Lint passes — PASS
+- `pnpm lint` exits 0. 1 pre-existing warning (lib/copy/assessmentStatusCopy.ts unused eslint-disable) unrelated to this ticket.
+
+### UAT-14 — Typecheck passes — PASS
+- `pnpm tsc --noEmit` exits 0. Note: lib/copy/curriculumOverview.ts type names diverge from the refined-brief contract — brief specifies `ChapterOverview` with fields `chapter` (lowercase), `headline`, `sections`, `soloEstimate`; implementation uses `code`, `title`, `blurb`, `sections`, `inlineNote`. Types are internally consistent and consumed correctly by the page, so tsc passes, but the brief's contract was not honored. Not a runtime failure, but a brief-fidelity gap.
+
+### UAT-15 — No new console errors on logged-out load — BLOCKED
+- Cannot read browser console without a headless browser tool. SSR HTML (`curl /teacher/curriculum`) returns clean and only emits "Loading curriculum..." in the not-yet-hydrated state, with no error markers. High confidence no new console errors but not runtime-verified.
+
+## Run history
+
+### 2026-05-15 — padi-uat-agent
+- Verdict: FAIL
+- Scenarios: PASS 8 / FAIL 5 / BLOCKED 3
+- Results:
+  | # | Scenario | Status | Bug file | Severity |
+  |---|----------|--------|----------|----------|
+  | UAT-01 | Intro paragraph matches AC verbatim | FAIL | bugs/lr-18b-bug-01-intro-old-vocab.md | P0 |
+  | UAT-02 | Alphabet inline note matches pinned string | FAIL | bugs/lr-18b-bug-02-inline-notes-wrong-strings.md | P0 |
+  | UAT-03 | Phonics inline note matches pinned string | FAIL | bugs/lr-18b-bug-02-inline-notes-wrong-strings.md | P0 |
+  | UAT-04 | Handwriting inline note matches pinned string | FAIL | bugs/lr-18b-bug-02-inline-notes-wrong-strings.md | P0 |
+  | UAT-05 | VCF inline note matches pinned string | FAIL | bugs/lr-18b-bug-02-inline-notes-wrong-strings.md | P0 |
+  | UAT-06 | Seven cards correct order | PASS | — | — |
+  | UAT-07 | Three `<details open>` with sections | PASS | — | — |
+  | UAT-08 | CTAs are buttons w/ padi-open-signin event | PASS | — | — |
+  | UAT-09 | No module content leaks | PASS | — | — |
+  | UAT-10 | Logged-in regression | PASS | — | — |
+  | UAT-11 | LR-18a drill-down gating regression | BLOCKED | — | — |
+  | UAT-12 | Mobile 375×667 no horizontal scroll | BLOCKED | — | — |
+  | UAT-13 | Lint passes | PASS | — | — |
+  | UAT-14 | Typecheck passes | PASS | — | — |
+  | UAT-15 | No new console errors | BLOCKED | — | — |
+
+- Notes for padi-eng:
+  - lib/copy/curriculumOverview.ts: replace CURRICULUM_INTRO (line 15–16) with the spar-pinned string verbatim: "~140 lessons (Individual, 1:1) or ~180 lessons (Group, classroom) across a 9-month program. Three phases, three signals — Accelerating, Practicing, or Specialist Track. Padi shows you which, every lesson." Mind the dash characters — em-dash (—) before "Accelerating", not hyphen.
+  - lib/copy/curriculumOverview.ts: replace the four `inlineNote` strings (lines 62, 70, 92, 114) with the spar-pinned short forms exactly: "Roughly 20 lessons in this chapter." / "Roughly 30–40 lessons in this chapter." / "Roughly 25–30 lessons in this chapter." / "Roughly 15–25 lessons in this chapter." Mind the en-dash (–) in the ranges, not a hyphen.
+  - Optional brief-fidelity: the engineer renamed the type contract (chapter→title, headline→blurb, soloEstimate→inlineNote). Code works but diverges from refined-brief §1. Either rename to match the brief, or leave as-is — types are consumed correctly.
+  - Restart the dev server / clear .next so we can confirm the module URL doesn't 500 and LR-18a gating actually fires.
+
+- Notes for padi-design:
+  - The implementer used the long-form authored-copy paragraphs (verbatim from LR-18 §Authored copy "*(structured as a sequence of ... lessons)*") as inline notes. The spar refinement #4 explicitly pinned shorter, format-aligned strings ("Roughly N lessons in this chapter.") to keep the four solo-estimate cards visually parallel. Long-form notes break that rhythm — they read as breadcrumbs from the source doc, not as deliberate UI copy.
+  - Intro paragraph: the old "ready for first grade, needs more support, or needs targeted intervention" vocabulary leaks the pre-LR-26 framing the team has been actively replacing across about/curriculum/grouping. Visitor-facing copy here must use Accelerating / Practicing / Specialist Track.
+
+- Missing from ticket: None — the refined ticket and eng-brief are unambiguous. The implementer simply used the long-form source-copy text from LR-18 §Authored copy instead of the spar-refined pinned strings.

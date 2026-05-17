@@ -2,9 +2,10 @@
 id: BLDTD-03
 title: "[BuildLoop] UAT verdict regex misses `## Verdict` markdown header style"
 type: bug
-status: backlog
+status: done
 priority: medium
 handling: manual — fix outside BuildLoop (orchestrator self-edit is fragile)
+fixed_in: cc-prompt-tooling-fixes-2026-05-14 (4-copy patch: _extract_verdict helper + tightened agent prompt)
 feature: buildloop-tech-debt
 launch_blocker: false
 created: 2026-05-13

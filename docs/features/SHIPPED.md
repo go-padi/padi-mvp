@@ -326,3 +326,10 @@ Log of features shipped by BuildLoop.
 - Branch: buildloop/lr-11b-off-sequence-warning-on-lesson-page
 - UAT bugs found and fixed: 0
 - Build retries: 0
+
+## LR-11b-fix
+- Iteration: 8
+- Shipped: 2026-05-17T21:33:50+00:00
+- Branch: buildloop/lr-11b-fix-banner-spec-deviations
+- UAT bugs found and fixed: 0
+- Build retries: 0

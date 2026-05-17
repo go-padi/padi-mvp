@@ -270,3 +270,10 @@ Log of features shipped by BuildLoop.
 - Branch: buildloop/lr-25d-homepage-hero-rewrite
 - UAT bugs found and fixed: 1
 - Build retries: 0
+
+## LR-25e
+- Iteration: 8
+- Shipped: 2026-05-15T19:12:40+00:00
+- Branch: buildloop/lr-25e-homepage-six-card-feature-grid
+- UAT bugs found and fixed: 0
+- Build retries: 0

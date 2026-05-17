@@ -291,3 +291,10 @@ Log of features shipped by BuildLoop.
 - Branch: buildloop/kan-137a-posthog-analytics-foundation
 - UAT bugs found and fixed: 0
 - Build retries: 0
+
+## KAN-137b
+- Iteration: 3
+- Shipped: 2026-05-17T13:17:17+00:00
+- Branch: buildloop/kan-137b-wire-non-auth-funnel-events
+- UAT bugs found and fixed: 0
+- Build retries: 0

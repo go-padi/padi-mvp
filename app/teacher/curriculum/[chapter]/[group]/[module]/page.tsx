@@ -42,27 +42,27 @@ type Student = { id: string; name: string };
 
 const SIGNAL_OPTIONS = [
   {
-    value: 'ready',
-    label: 'On Track',
-    description: 'Progressing well, ready to move on',
+    value: 'Accelerating',
+    label: 'Accelerating',
+    description: 'On track to read sooner',
     color: 'border-green-300 bg-green-50 text-green-800 hover:bg-green-100',
     selectedColor: 'border-green-500 bg-green-100 text-green-900 ring-2 ring-green-500',
     icon: '🟢',
     confirmation: (name: string) => `Great progress! Next lesson is ready for ${name}.`,
   },
   {
-    value: 'needs_help',
-    label: 'Needs Practice',
-    description: 'Getting there, could use more time',
+    value: 'Practicing',
+    label: 'Practicing',
+    description: 'Locking in foundational skills',
     color: 'border-amber-300 bg-amber-50 text-amber-800 hover:bg-amber-100',
     selectedColor: 'border-amber-500 bg-amber-100 text-amber-900 ring-2 ring-amber-500',
     icon: '🟡',
     confirmation: (name: string) => `Notes saved. Consider revisiting this lesson or trying the extension activities with ${name}.`,
   },
   {
-    value: 'needs_intervention',
-    label: 'Needs Extra Support',
-    description: 'Struggling, may need a different approach',
+    value: 'Specialist Track',
+    label: 'Specialist Track',
+    description: 'Recommended for closer review',
     color: 'border-red-200 bg-red-50 text-red-800 hover:bg-red-100',
     selectedColor: 'border-red-400 bg-red-100 text-red-900 ring-2 ring-red-400',
     icon: '🔴',
@@ -685,7 +685,7 @@ export default function LessonPage({ params }: { params: Promise<{ chapter: stri
                   </button>
                 ))}
               </div>
-              {selectedSignal === 'needs_intervention' && (
+              {selectedSignal === 'Specialist Track' && (
                 <p className="text-xs text-gray-600 italic">
                   It&apos;s okay to select this — it helps you plan the right next steps for {contextStudentName || 'this student'}.
                 </p>

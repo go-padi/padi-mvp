@@ -319,3 +319,10 @@ Log of features shipped by BuildLoop.
 - Branch: buildloop/lr-11a-next-module-cta-on-student-profile
 - UAT bugs found and fixed: 0
 - Build retries: 0
+
+## LR-11b
+- Iteration: 7
+- Shipped: 2026-05-17T19:55:27+00:00
+- Branch: buildloop/lr-11b-off-sequence-warning-on-lesson-page
+- UAT bugs found and fixed: 0
+- Build retries: 0

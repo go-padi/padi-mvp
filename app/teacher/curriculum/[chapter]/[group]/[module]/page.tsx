@@ -637,17 +637,17 @@ export default function LessonPage({ params }: { params: Promise<{ chapter: stri
       {offSequenceWarning && !warningDismissed && (
         <div className="rounded-2xl border border-amber-200 bg-amber-50 p-4 space-y-2">
           <p className="text-sm text-amber-900">
-            Heads up: this lesson typically comes after{' '}
-            <span className="font-semibold">{offSequenceWarning.prereqChapterTitle}</span>
-            {' → '}
-            <span className="font-semibold">{offSequenceWarning.prereqModuleTitle}</span>.
-            You can continue, or start with the prereq first.
+            Per the curriculum, this is taught after{' '}
+            <span className="font-semibold">
+              {offSequenceWarning.prereqChapterTitle} — {offSequenceWarning.prereqModuleTitle}
+            </span>
+            .
           </p>
           <div className="flex flex-wrap gap-4">
             <button
               type="button"
               onClick={() => setWarningDismissed(true)}
-              className="text-sm font-semibold text-amber-800 hover:text-amber-900"
+              className="text-sm font-semibold text-amber-800 hover:text-amber-900 underline"
             >
               Continue anyway
             </button>

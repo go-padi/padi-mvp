@@ -312,3 +312,10 @@ Log of features shipped by BuildLoop.
 - Branch: buildloop/lr-10a-allow-lesson-reentry
 - UAT bugs found and fixed: 0
 - Build retries: 0
+
+## LR-11a
+- Iteration: 6
+- Shipped: 2026-05-17T19:44:55+00:00
+- Branch: buildloop/lr-11a-next-module-cta-on-student-profile
+- UAT bugs found and fixed: 0
+- Build retries: 0

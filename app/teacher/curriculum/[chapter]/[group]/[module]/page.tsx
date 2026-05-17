@@ -10,7 +10,7 @@ import { useAuth } from '@/lib/auth-store';
 import { useDefaultSubject } from '@/lib/startTeaching/useDefaultSubject';
 import { AddStudentModal } from '@/components/AddStudentModal';
 import { AddGroupModal } from '@/components/AddGroupModal';
-import { previewModuleByCode } from '@/lib/demo/demoCurriculum';
+import { groupToChapterCode, previewChapters, previewModuleByCode } from '@/lib/demo/demoCurriculum';
 import { rolePhrase } from '@/lib/copy/roleCopy';
 import {
   normalizeAssessmentStatus,
@@ -39,6 +39,14 @@ type ModuleRow = {
 };
 
 type Student = { id: string; name: string };
+
+type SequencedModule = {
+  chapterCode: string;
+  chapterTitle: string;
+  groupCode: string;
+  moduleCode: string;
+  moduleTitle: string;
+};
 
 const SIGNAL_OPTIONS = [
   {
@@ -103,6 +111,9 @@ export default function LessonPage({ params }: { params: Promise<{ chapter: stri
   const [selectedSignal, setSelectedSignal] = useState<string | null>(null);
   const [completionMessage, setCompletionMessage] = useState<string | null>(null);
   const [priorCompletions, setPriorCompletions] = useState<{ count: number; lastAt: string | null }>({ count: 0, lastAt: null });
+  const [curriculumSequence, setCurriculumSequence] = useState<SequencedModule[]>([]);
+  const [completedModuleIds, setCompletedModuleIds] = useState<Set<string>>(new Set());
+  const [warningDismissed, setWarningDismissed] = useState(false);
   const { mode } = useTeachingMode();
   const { ensureSubject } = useDefaultSubject();
 
@@ -245,6 +256,75 @@ export default function LessonPage({ params }: { params: Promise<{ chapter: stri
       cancelled = true;
     };
   }, [isHydrated, isLoggedIn, tenantId, contextStudentId, moduleRow?.code, ensureSubject]);
+
+  // LR-11b: Load curriculum sequence + completion IDs for off-sequence detection
+  useEffect(() => {
+    if (!isHydrated || !isLoggedIn || !contextStudentId) return;
+    let cancelled = false;
+    const loadSequence = async () => {
+      try {
+        const sb = supabaseClient();
+        const [groupsRes, completionsRes] = await Promise.all([
+          sb.rpc('content_get_groups', { p_teaching_mode: null }),
+          sb.from('module_assessment').select('module_id').eq('student_id', contextStudentId),
+        ]);
+        if (cancelled) return;
+        const groups = (groupsRes.data as { code: string; title: string; teaching_mode: 'group' | 'individual' }[] | null) || [];
+        const modulesEntries = await Promise.all(
+          groups.map(async (g) => {
+            const { data } = await sb.rpc('content_get_modules', {
+              p_group_code: g.code,
+              p_teaching_mode: g.teaching_mode,
+            });
+            const rows = (data as { code: string; title: string; display_order: number | null }[] | null) || [];
+            return [g.code, rows.slice().sort((a, b) => (a.display_order || 0) - (b.display_order || 0))] as const;
+          }),
+        );
+        if (cancelled) return;
+        const modsByGroup = new Map(modulesEntries);
+        const seq: SequencedModule[] = [];
+        for (const ch of previewChapters) {
+          for (const g of groups) {
+            if (groupToChapterCode[g.code] !== ch.code) continue;
+            for (const m of modsByGroup.get(g.code) || []) {
+              seq.push({
+                chapterCode: ch.code,
+                chapterTitle: ch.title,
+                groupCode: g.code,
+                moduleCode: m.code,
+                moduleTitle: m.title,
+              });
+            }
+          }
+        }
+        setCurriculumSequence(seq);
+        const completedIds = new Set(
+          ((completionsRes.data || []) as { module_id: string }[]).map((r) => r.module_id),
+        );
+        setCompletedModuleIds(completedIds);
+      } catch (err) {
+        console.error('LR-11b load sequence:', err);
+      }
+    };
+    loadSequence();
+    return () => {
+      cancelled = true;
+    };
+  }, [isHydrated, isLoggedIn, contextStudentId]);
+
+  const offSequenceWarning = useMemo(() => {
+    if (!contextStudentId || !moduleRow?.code || curriculumSequence.length === 0) return null;
+    const currentIndex = curriculumSequence.findIndex((s) => s.moduleCode === moduleRow.code);
+    if (currentIndex === -1) return null;
+    const recommendedIndex = curriculumSequence.findIndex((s) => !completedModuleIds.has(s.moduleCode));
+    if (recommendedIndex === -1 || currentIndex <= recommendedIndex) return null;
+    const prereq = curriculumSequence[recommendedIndex];
+    return {
+      prereqChapterTitle: prereq.chapterTitle,
+      prereqModuleTitle: prereq.moduleTitle,
+      prereqHref: `/teacher/curriculum/${prereq.chapterCode}/${prereq.groupCode}/${prereq.moduleCode}?student=${contextStudentId}`,
+    };
+  }, [curriculumSequence, completedModuleIds, contextStudentId, moduleRow?.code]);
 
   // Load previously saved notes when student context is set
   useEffect(() => {
@@ -551,6 +631,33 @@ export default function LessonPage({ params }: { params: Promise<{ chapter: stri
           >
             Back to modules &rarr;
           </Link>
+        </div>
+      )}
+
+      {offSequenceWarning && !warningDismissed && (
+        <div className="rounded-2xl border border-amber-200 bg-amber-50 p-4 space-y-2">
+          <p className="text-sm text-amber-900">
+            Heads up: this lesson typically comes after{' '}
+            <span className="font-semibold">{offSequenceWarning.prereqChapterTitle}</span>
+            {' → '}
+            <span className="font-semibold">{offSequenceWarning.prereqModuleTitle}</span>.
+            You can continue, or start with the prereq first.
+          </p>
+          <div className="flex flex-wrap gap-4">
+            <button
+              type="button"
+              onClick={() => setWarningDismissed(true)}
+              className="text-sm font-semibold text-amber-800 hover:text-amber-900"
+            >
+              Continue anyway
+            </button>
+            <Link
+              href={offSequenceWarning.prereqHref}
+              className="text-sm font-semibold text-amber-800 hover:text-amber-900 underline"
+            >
+              Go to {offSequenceWarning.prereqModuleTitle} &rarr;
+            </Link>
+          </div>
         </div>
       )}
 

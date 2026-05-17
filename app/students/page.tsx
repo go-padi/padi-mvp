@@ -6,6 +6,7 @@ import { supabaseClient } from '@/lib/supabase';
 import { useAuth } from '@/lib/auth-store';
 import { rolePhrase } from '@/lib/copy/roleCopy';
 import { FIRST_LESSON_PATH } from '@/lib/copy/firstLesson';
+import { track, ANALYTICS_EVENTS } from '@/lib/analytics';
 type Student = { id: string; name: string | null; first_name: string | null; last_name: string | null };
 
 export default function StudentsPage(){
@@ -44,6 +45,7 @@ export default function StudentsPage(){
       .insert({ tenant_id: tenantId, name: trimmed, first_name: first || null, last_name: last })
       .select('id, first_name, name')
       .single();
+    track(ANALYTICS_EVENTS.STUDENT_CREATED, { is_first: isFirstChild });
     if (isFirstChild && row?.id) {
       router.push(`/students/${row.id}/start`);
       return;

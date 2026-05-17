@@ -284,3 +284,10 @@ Log of features shipped by BuildLoop.
 - Branch: buildloop/lr-25f-homepage-why-padi-how-it-works-mona
 - UAT bugs found and fixed: 0
 - Build retries: 0
+
+## KAN-137a
+- Iteration: 2
+- Shipped: 2026-05-17T13:06:18+00:00
+- Branch: buildloop/kan-137a-posthog-analytics-foundation
+- UAT bugs found and fixed: 0
+- Build retries: 0

@@ -17,6 +17,7 @@ import {
   assessmentStatusShortCaption,
   type AssessmentStatus,
 } from '@/lib/copy/assessmentStatusCopy';
+import { track, ANALYTICS_EVENTS } from '@/lib/analytics';
 
 type Lesson = {
   materials?: string[];
@@ -201,6 +202,15 @@ export default function LessonPage({ params }: { params: Promise<{ chapter: stri
     fetchData();
   }, [module, mode, isLoggedIn, isHydrated, contextStudentId]);
 
+  useEffect(() => {
+    if (!studentId || !moduleRow?.code) return;
+    track(ANALYTICS_EVENTS.LESSON_STARTED, {
+      module_code: moduleRow.code,
+      chapter_code: chapter,
+      student_id: studentId,
+    });
+  }, [studentId, moduleRow?.code, chapter]);
+
   // Load previously saved notes when student context is set
   useEffect(() => {
     if (!isHydrated || !isLoggedIn || !tenantId || !contextStudentId) return;
@@ -366,6 +376,11 @@ export default function LessonPage({ params }: { params: Promise<{ chapter: stri
 
   const markComplete = async (signal: string) => {
     if (!tenantId || !studentId || !moduleRow) return;
+    track(ANALYTICS_EVENTS.LESSON_COMPLETED, {
+      module_code: moduleRow.code,
+      signal,
+      student_id: studentId,
+    });
     setSaving(true);
     setStatus(null);
     try {

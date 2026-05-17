@@ -264,6 +264,26 @@ export default function StudentModulePage({
     [chapters, completedModuleIds],
   );
 
+  const nextModule = useMemo(() => {
+    for (const ch of chapters) {
+      for (const g of ch.groups) {
+        for (const mod of g.modules) {
+          if (!completedModuleIds.has(mod.code)) {
+            return {
+              chapterCode: groupToChapterCode[g.code] || ch.code,
+              chapterTitle: ch.title,
+              groupCode: g.code,
+              moduleCode: mod.code,
+              moduleTitle: mod.title,
+              moduleSubtitle: mod.subtitle,
+            };
+          }
+        }
+      }
+    }
+    return null;
+  }, [chapters, completedModuleIds]);
+
   const toggleChapter = (code: string) => {
     setExpandedChapters((prev) => {
       const next = new Set(prev);
@@ -408,6 +428,28 @@ export default function StudentModulePage({
       {allComplete && (
         <div className="rounded-2xl border border-green-200 bg-green-50 p-5 shadow-sm text-sm text-green-800 font-semibold">
           All modules complete for {student.name}!
+        </div>
+      )}
+
+      {nextModule && (
+        <div className="rounded-2xl border border-blue-200 bg-blue-50 p-5 shadow-sm space-y-3">
+          <div className="space-y-1">
+            <p className="text-xs font-semibold uppercase tracking-wide text-blue-700">
+              Next up
+            </p>
+            <p className="text-base font-semibold text-gray-900">
+              {nextModule.chapterTitle} — {nextModule.moduleTitle}
+            </p>
+            {nextModule.moduleSubtitle && (
+              <p className="text-sm text-gray-700">{nextModule.moduleSubtitle}</p>
+            )}
+          </div>
+          <Link
+            href={`/teacher/curriculum/${nextModule.chapterCode}/${nextModule.groupCode}/${nextModule.moduleCode}?student=${studentId}`}
+            className="inline-flex items-center rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700"
+          >
+            Start lesson
+          </Link>
         </div>
       )}
 

@@ -305,3 +305,10 @@ Log of features shipped by BuildLoop.
 - Branch: buildloop/lr-26b-lesson-complete-signal-picker-vocab
 - UAT bugs found and fixed: 0
 - Build retries: 0
+
+## LR-10a
+- Iteration: 5
+- Shipped: 2026-05-17T19:33:01+00:00
+- Branch: buildloop/lr-10a-allow-lesson-reentry
+- UAT bugs found and fixed: 0
+- Build retries: 0

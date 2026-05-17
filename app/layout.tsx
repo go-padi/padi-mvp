@@ -4,6 +4,7 @@ import Footer from "@/components/Footer";
 import { AuthProvider } from "@/lib/auth-store";
 import { TeachingModeProvider } from "@/lib/teachingModeContext";
 import { RoleGuard } from "@/components/auth/RoleGuard";
+import { AnalyticsProvider } from "@/app/providers/analytics-provider";
 
 export const metadata = {
   title: "Padi Teacher App",
@@ -21,12 +22,14 @@ export default function RootLayout({ children }: { children: React.ReactNode }){
     <html lang="en">
       <body className="bg-gradient-to-b from-[#f4f7ff] via-white to-[#f3f6ff] min-h-screen">
         <AuthProvider>
-          <TeachingModeProvider>
-            <RoleGuard />
-            <TopNav />
-            <main className="container py-8">{children}</main>
-            <Footer />
-          </TeachingModeProvider>
+          <AnalyticsProvider>
+            <TeachingModeProvider>
+              <RoleGuard />
+              <TopNav />
+              <main className="container py-8">{children}</main>
+              <Footer />
+            </TeachingModeProvider>
+          </AnalyticsProvider>
         </AuthProvider>
       </body>
     </html>

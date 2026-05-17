@@ -2,7 +2,7 @@
 id: LR-25
 title: "[Marketing] Homepage rewrite #2 — match updated go-padi.com (Accelerate framing)"
 type: task
-status: backlog
+status: done
 priority: highest
 feature: launch-readiness
 launch_blocker: true

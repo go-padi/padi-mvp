@@ -277,3 +277,10 @@ Log of features shipped by BuildLoop.
 - Branch: buildloop/lr-25e-homepage-six-card-feature-grid
 - UAT bugs found and fixed: 0
 - Build retries: 0
+
+## LR-25f
+- Iteration: 1
+- Shipped: 2026-05-17T12:46:22+00:00
+- Branch: buildloop/lr-25f-homepage-why-padi-how-it-works-mona
+- UAT bugs found and fixed: 0
+- Build retries: 0

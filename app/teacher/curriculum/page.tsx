@@ -147,6 +147,17 @@ export default function CurriculumPage() {
         chapterGroupMap.get(chCode)!.push(gwm);
       }
 
+      // Defensive: guarantee groups within each chapter follow the canonical
+      // previewGroups order, regardless of the order the RPC returns rows in.
+      const previewGroupOrder = new Map(previewGroups.map((g, i) => [g.code, i]));
+      for (const groups of chapterGroupMap.values()) {
+        groups.sort((a, b) => {
+          const ai = previewGroupOrder.get(a.code) ?? Number.MAX_SAFE_INTEGER;
+          const bi = previewGroupOrder.get(b.code) ?? Number.MAX_SAFE_INTEGER;
+          return ai - bi;
+        });
+      }
+
       const filteredPreviewChapters = previewChapters.filter(ch =>
         effectiveMode === 'both' ? true : ch.teaching_mode === effectiveMode
       );

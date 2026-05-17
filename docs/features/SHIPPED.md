@@ -298,3 +298,10 @@ Log of features shipped by BuildLoop.
 - Branch: buildloop/kan-137b-wire-non-auth-funnel-events
 - UAT bugs found and fixed: 0
 - Build retries: 0
+
+## LR-26b
+- Iteration: 4
+- Shipped: 2026-05-17T13:24:45+00:00
+- Branch: buildloop/lr-26b-lesson-complete-signal-picker-vocab
+- UAT bugs found and fixed: 0
+- Build retries: 0

@@ -102,6 +102,7 @@ export default function LessonPage({ params }: { params: Promise<{ chapter: stri
   const [showSignalStep, setShowSignalStep] = useState(false);
   const [selectedSignal, setSelectedSignal] = useState<string | null>(null);
   const [completionMessage, setCompletionMessage] = useState<string | null>(null);
+  const [priorCompletions, setPriorCompletions] = useState<{ count: number; lastAt: string | null }>({ count: 0, lastAt: null });
   const { mode } = useTeachingMode();
   const { ensureSubject } = useDefaultSubject();
 
@@ -210,6 +211,40 @@ export default function LessonPage({ params }: { params: Promise<{ chapter: stri
       student_id: studentId,
     });
   }, [studentId, moduleRow?.code, chapter]);
+
+  // Load prior lesson_completions count for this student + module
+  useEffect(() => {
+    if (!isHydrated || !isLoggedIn || !tenantId || !contextStudentId || !moduleRow?.code) return;
+    let cancelled = false;
+    const loadPriorCompletions = async () => {
+      try {
+        const sb = supabaseClient();
+        const subjectId = await ensureSubject(tenantId);
+        if (!subjectId) return;
+        const { data, error } = await sb
+          .from('lesson_completions')
+          .select('completed_at')
+          .eq('tenant_id', tenantId)
+          .eq('student_id', contextStudentId)
+          .eq('subject_id', subjectId)
+          .eq('module_id', moduleRow.code)
+          .order('completed_at', { ascending: false });
+        if (error) throw error;
+        if (cancelled) return;
+        const rows = (data || []) as { completed_at: string }[];
+        setPriorCompletions({
+          count: rows.length,
+          lastAt: rows[0]?.completed_at || null,
+        });
+      } catch (err) {
+        console.error('LR-10a load priorCompletions:', err);
+      }
+    };
+    loadPriorCompletions();
+    return () => {
+      cancelled = true;
+    };
+  }, [isHydrated, isLoggedIn, tenantId, contextStudentId, moduleRow?.code, ensureSubject]);
 
   // Load previously saved notes when student context is set
   useEffect(() => {
@@ -440,6 +475,19 @@ export default function LessonPage({ params }: { params: Promise<{ chapter: stri
         console.error(error);
         setStatus('Failed to mark complete.');
       } else {
+        try {
+          const { error: lcErr } = await sb.from('lesson_completions').insert({
+            tenant_id: tenantId,
+            student_id: studentId,
+            subject_id: subjectId,
+            developmental_area_id: group,
+            module_id: moduleRow.code,
+            lesson_id: moduleRow.code,
+          });
+          if (lcErr) console.error('LR-10a lesson_completions insert:', lcErr);
+        } catch (lcErr) {
+          console.error('LR-10a lesson_completions insert:', lcErr);
+        }
         const option = SIGNAL_OPTIONS.find(o => o.value === signal);
         const studentName = contextStudentName || 'this student';
         const message = option?.confirmation(studentName) || 'Lesson complete!';
@@ -504,6 +552,13 @@ export default function LessonPage({ params }: { params: Promise<{ chapter: stri
             Back to modules &rarr;
           </Link>
         </div>
+      )}
+
+      {priorCompletions.count > 0 && (
+        <p className="text-sm text-gray-700">
+          Completed {priorCompletions.count} {priorCompletions.count === 1 ? 'time' : 'times'}.
+          {priorCompletions.lastAt && ` Last: ${new Date(priorCompletions.lastAt).toLocaleDateString()}.`}
+        </p>
       )}
 
       <div className="space-y-2">

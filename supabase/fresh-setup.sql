@@ -283,8 +283,7 @@ create table if not exists public.lesson_completions (
   developmental_area_id text not null,
   module_id text not null,
   lesson_id text not null,
-  completed_at timestamptz not null default now(),
-  unique (tenant_id, student_id, subject_id, lesson_id)
+  completed_at timestamptz not null default now()
 );
 create index if not exists lc_tenant_id_idx on public.lesson_completions(tenant_id);
 create index if not exists lc_student_module_idx on public.lesson_completions(tenant_id, student_id, subject_id, module_id);

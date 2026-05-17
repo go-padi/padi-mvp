@@ -99,6 +99,58 @@ export default function Page(){
         </div>
       </section>
 
+      <section className="space-y-6 rounded-3xl bg-white/80 p-8 shadow-sm ring-1 ring-blue-100">
+        <div className="space-y-3">
+          <h2 className="text-3xl font-semibold text-gray-900">Why Padi</h2>
+          <h3 className="text-xl font-semibold text-gray-900">Most reading programs teach every child the same way.</h3>
+          <p className="text-base text-gray-700">Kids ready to fly get held back. Kids who need more time get rushed. By kindergarten, the differences add up. Padi gives every child the right pace — and gives teachers a clear view of where each one is, in real time.</p>
+        </div>
+        <div className="grid gap-3 sm:grid-cols-3">
+          <div className="rounded-2xl border border-green-100 bg-green-50 p-4">
+            <p className="text-base font-semibold text-green-800">🟢 Accelerating</p>
+            <p className="mt-1 text-sm text-green-700">On track to read sooner</p>
+          </div>
+          <div className="rounded-2xl border border-amber-100 bg-amber-50 p-4">
+            <p className="text-base font-semibold text-amber-900">🟡 Practicing</p>
+            <p className="mt-1 text-sm text-amber-800">Locking in foundational skills</p>
+          </div>
+          <div className="rounded-2xl border border-red-100 bg-red-50 p-4">
+            <p className="text-base font-semibold text-red-900">🔴 Specialist Track</p>
+            <p className="mt-1 text-sm text-red-800">Recommended for closer review</p>
+          </div>
+        </div>
+        <p className="italic text-sm text-gray-600">A clear signal for every student, every lesson.</p>
+      </section>
+
+      <section className="space-y-6">
+        <div className="space-y-2">
+          <h2 className="text-3xl font-semibold text-gray-900">Simple for you. Powerful for your students.</h2>
+          <p className="text-lg text-gray-700">Get started in minutes, not hours.</p>
+        </div>
+        <ol className="grid gap-4 sm:grid-cols-3">
+          <li className="rounded-2xl border border-gray-100 bg-white p-5 shadow-sm">
+            <div className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-blue-600 text-sm font-semibold text-white">1</div>
+            <h3 className="mt-3 font-semibold text-gray-900">Sign up & add your students</h3>
+            <p className="mt-2 text-sm text-gray-700">Create your free account and add your class roster. It takes less than five minutes.</p>
+          </li>
+          <li className="rounded-2xl border border-gray-100 bg-white p-5 shadow-sm">
+            <div className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-blue-600 text-sm font-semibold text-white">2</div>
+            <h3 className="mt-3 font-semibold text-gray-900">Teach with structured lessons</h3>
+            <p className="mt-2 text-sm text-gray-700">Open a lesson and follow the multisensory prompts. Each session is 10–15 minutes, ready to go.</p>
+          </li>
+          <li className="rounded-2xl border border-gray-100 bg-white p-5 shadow-sm">
+            <div className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-blue-600 text-sm font-semibold text-white">3</div>
+            <h3 className="mt-3 font-semibold text-gray-900">See every student’s path — instantly</h3>
+            <p className="mt-2 text-sm text-gray-700">After each lesson, Padi shows you exactly where each student is — accelerating, practicing, or ready for closer review.</p>
+          </li>
+        </ol>
+      </section>
+
+      <section className="space-y-3 rounded-3xl bg-white/80 p-8 shadow-sm ring-1 ring-blue-100">
+        <h2 className="text-3xl font-semibold text-gray-900">Built by a teacher, for teachers.</h2>
+        <p className="text-base text-gray-700">Padi was created by Mona Iyer, a reading specialist with over 25 years of classroom experience and certifications including AMS, CDT, and CALT. After decades of teaching, Mona built Padi to give every early childhood teacher the tools to accelerate every reader — and recognize early which kids deserve more time, so they get it before kindergarten.</p>
+      </section>
+
       <section className="rounded-3xl bg-gradient-to-r from-blue-600 to-purple-600 px-8 py-10 text-white shadow-lg">
         <div className="grid gap-6 md:grid-cols-[1.2fr_0.8fr] items-center">
           <div>

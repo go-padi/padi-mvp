@@ -154,17 +154,17 @@ export default function Page(){
       <section className="rounded-3xl bg-gradient-to-r from-blue-600 to-purple-600 px-8 py-10 text-white shadow-lg">
         <div className="grid gap-6 md:grid-cols-[1.2fr_0.8fr] items-center">
           <div>
-            <h2 className="text-3xl font-semibold mb-3">Ready to Transform Reading Time?</h2>
+            <h2 className="text-3xl font-semibold mb-3">Start accelerating today.</h2>
             <p className="text-lg text-blue-50">
-              Join teachers and parents helping children build confidence and reading skills.
+              A free account, the next lesson for every child, ready to teach in minutes.
             </p>
           </div>
           <div className="flex flex-wrap gap-3">
             <Link href="/teacher" className="rounded-xl bg-white px-4 py-2 text-blue-700 font-semibold shadow-sm hover:bg-blue-50">
-              Start Teaching Today
+              Get Free Early Access
             </Link>
             <Link href="/teacher/curriculum" className="rounded-xl bg-white/10 px-4 py-2 font-semibold text-white ring-1 ring-white/40 hover:bg-white/15">
-              View Dashboard
+              Browse curriculum
             </Link>
           </div>
         </div>

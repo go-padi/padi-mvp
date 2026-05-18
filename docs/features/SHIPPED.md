@@ -333,3 +333,10 @@ Log of features shipped by BuildLoop.
 - Branch: buildloop/lr-11b-fix-banner-spec-deviations
 - UAT bugs found and fixed: 0
 - Build retries: 0
+
+## LR-11d
+- Iteration: 1
+- Shipped: 2026-05-17T22:25:01+00:00
+- Branch: buildloop/lr-11d-curriculum-browser-group-order
+- UAT bugs found and fixed: 0
+- Build retries: 0

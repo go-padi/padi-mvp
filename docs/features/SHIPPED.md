@@ -438,3 +438,10 @@ Log of features shipped by BuildLoop.
 - Branch: buildloop/lesson-page-label-consistency
 - UAT bugs found and fixed: 0
 - Build retries: 0
+
+## KAN-55
+- Iteration: 6
+- Shipped: 2026-05-22T20:20:46+00:00
+- Branch: buildloop/group-tab-empty-state-with-guidance
+- UAT bugs found and fixed: 0
+- Build retries: 0

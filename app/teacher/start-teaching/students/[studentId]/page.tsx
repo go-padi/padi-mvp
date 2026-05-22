@@ -660,6 +660,17 @@ export default function StudentModulePage({
         </div>
       )}
 
+      {(!latestObservation || !latestObservation.notes?.trim()) && completedCount > 0 && !loading && (
+        <div className="rounded-2xl border border-gray-200 bg-gray-50 p-4 space-y-1">
+          <p className="text-xs font-semibold uppercase tracking-wide text-gray-700">
+            Observations
+          </p>
+          <p className="text-sm text-gray-700">
+            Add a note after your next lesson and it will appear here.
+          </p>
+        </div>
+      )}
+
       {nextModule && (
         <div className="rounded-2xl border border-blue-200 bg-blue-50 p-5 shadow-sm space-y-3">
           <div className="space-y-1">

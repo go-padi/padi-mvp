@@ -110,7 +110,11 @@ export default function LessonPage({ params }: { params: Promise<{ chapter: stri
   const [showSignalStep, setShowSignalStep] = useState(false);
   const [selectedSignal, setSelectedSignal] = useState<string | null>(null);
   const [completionMessage, setCompletionMessage] = useState<string | null>(null);
-  const [priorCompletions, setPriorCompletions] = useState<{ count: number; lastAt: string | null }>({ count: 0, lastAt: null });
+  const [priorCompletions, setPriorCompletions] = useState<{
+    count: number;
+    lastAt: string | null;
+    entries: { completed_at: string; notes: string | null }[];
+  }>({ count: 0, lastAt: null, entries: [] });
   const [curriculumSequence, setCurriculumSequence] = useState<SequencedModule[]>([]);
   const [completedModuleIds, setCompletedModuleIds] = useState<Set<string>>(new Set());
   const [warningDismissed, setWarningDismissed] = useState(false);
@@ -232,21 +236,47 @@ export default function LessonPage({ params }: { params: Promise<{ chapter: stri
         const sb = supabaseClient();
         const subjectId = await ensureSubject(tenantId);
         if (!subjectId) return;
-        const { data, error } = await sb
-          .from('lesson_completions')
-          .select('completed_at')
-          .eq('tenant_id', tenantId)
-          .eq('student_id', contextStudentId)
-          .eq('subject_id', subjectId)
-          .eq('module_id', moduleRow.code)
-          .order('completed_at', { ascending: false });
-        if (error) throw error;
-        if (cancelled) return;
-        const rows = (data || []) as { completed_at: string }[];
-        setPriorCompletions({
-          count: rows.length,
-          lastAt: rows[0]?.completed_at || null,
-        });
+        try {
+          const { data, error } = await sb
+            .from('lesson_completions')
+            .select('completed_at, notes')
+            .eq('tenant_id', tenantId)
+            .eq('student_id', contextStudentId)
+            .eq('subject_id', subjectId)
+            .eq('module_id', moduleRow.code)
+            .order('completed_at', { ascending: false });
+          if (error) throw error;
+          if (cancelled) return;
+          const rows = (data || []) as { completed_at: string; notes: string | null }[];
+          setPriorCompletions({
+            count: rows.length,
+            lastAt: rows[0]?.completed_at || null,
+            entries: rows,
+          });
+        } catch (innerErr) {
+          const pgCode = (innerErr as { code?: string } | null)?.code;
+          if (pgCode === '42703') {
+            // Pre-migration: notes column doesn't exist yet. Fall back to count-only query.
+            const { data, error } = await sb
+              .from('lesson_completions')
+              .select('completed_at')
+              .eq('tenant_id', tenantId)
+              .eq('student_id', contextStudentId)
+              .eq('subject_id', subjectId)
+              .eq('module_id', moduleRow.code)
+              .order('completed_at', { ascending: false });
+            if (error) throw error;
+            if (cancelled) return;
+            const rows = (data || []) as { completed_at: string }[];
+            setPriorCompletions({
+              count: rows.length,
+              lastAt: rows[0]?.completed_at || null,
+              entries: [],
+            });
+          } else {
+            throw innerErr;
+          }
+        }
       } catch (err) {
         console.error('LR-10a load priorCompletions:', err);
       }
@@ -563,6 +593,7 @@ export default function LessonPage({ params }: { params: Promise<{ chapter: stri
             developmental_area_id: group,
             module_id: moduleRow.code,
             lesson_id: moduleRow.code,
+            notes: notes.trim() || null,
           });
           if (lcErr) console.error('LR-10a lesson_completions insert:', lcErr);
         } catch (lcErr) {
@@ -666,6 +697,28 @@ export default function LessonPage({ params }: { params: Promise<{ chapter: stri
           Completed {priorCompletions.count} {priorCompletions.count === 1 ? 'time' : 'times'}.
           {priorCompletions.lastAt && ` Last: ${new Date(priorCompletions.lastAt).toLocaleDateString()}.`}
         </p>
+      )}
+
+      {priorCompletions.entries.length > 0 && (
+        <details className="rounded-2xl border border-gray-100 bg-white p-4 shadow-sm">
+          <summary className="cursor-pointer text-sm font-semibold text-gray-800">
+            Prior observations ({priorCompletions.entries.length})
+          </summary>
+          <ul className="mt-3 space-y-3">
+            {priorCompletions.entries.map((entry, idx) => (
+              <li key={`${entry.completed_at}-${idx}`} className="space-y-1">
+                <p className="text-xs font-semibold text-gray-600">
+                  {new Date(entry.completed_at).toLocaleDateString()}
+                </p>
+                {entry.notes && entry.notes.trim() ? (
+                  <p className="whitespace-pre-wrap break-words text-sm text-gray-800">{entry.notes}</p>
+                ) : (
+                  <p className="text-sm italic text-gray-500">(no notes saved)</p>
+                )}
+              </li>
+            ))}
+          </ul>
+        </details>
       )}
 
       <div className="space-y-2">

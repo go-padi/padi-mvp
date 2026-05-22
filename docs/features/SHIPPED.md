@@ -480,3 +480,10 @@ Log of features shipped by BuildLoop.
 - Branch: buildloop/add-another-child-cta-on-post-add-landing
 - UAT bugs found and fixed: 0
 - Build retries: 0
+
+## LR-11c
+- Iteration: 4
+- Shipped: 2026-05-22T21:58:12+00:00
+- Branch: buildloop/sequence-index-column-on-content-tables
+- UAT bugs found and fixed: 0
+- Build retries: 0

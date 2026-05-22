@@ -82,7 +82,7 @@ function statusBadgeClass(status: AssessmentStatus): string {
   switch (status) {
     case "Accelerating": return "bg-green-50 text-green-700";
     case "Practicing": return "bg-amber-50 text-amber-700";
-    case "Specialist Track": return "bg-red-50 text-red-700";
+    case "Specialist Track": return "bg-violet-50 text-violet-700";
     case "In progress": return "bg-blue-50 text-blue-700";
     case "Not started": return "bg-gray-100 text-gray-600";
   }

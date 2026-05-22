@@ -396,3 +396,10 @@ Log of features shipped by BuildLoop.
 - Branch: buildloop/kan-137c-wire-signup-completed-event
 - UAT bugs found and fixed: 0
 - Build retries: 0
+
+## KAN-LINT-1
+- Iteration: 8
+- Shipped: 2026-05-22T12:38:36+00:00
+- Branch: buildloop/kan-lint-1-remove-unused-eslint-disable
+- UAT bugs found and fixed: 0
+- Build retries: 0

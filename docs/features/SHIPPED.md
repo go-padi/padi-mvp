@@ -340,3 +340,10 @@ Log of features shipped by BuildLoop.
 - Branch: buildloop/lr-11d-curriculum-browser-group-order
 - UAT bugs found and fixed: 0
 - Build retries: 0
+
+## LR-25g
+- Iteration: 1
+- Shipped: 2026-05-18T16:09:16+00:00
+- Branch: buildloop/lr-25g-homepage-final-cta-refresh
+- UAT bugs found and fixed: 0
+- Build retries: 0

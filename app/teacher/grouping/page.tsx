@@ -22,10 +22,10 @@ export default function GroupingPage() {
   const { data, isLoading, error, refetch } = useGroupingProgressData({
     enabled: dataMode === 'live' && isHydrated,
   });
-  const liveGroups = data?.groups || [];
+  const liveGroups = useMemo(() => data?.groups || [], [data?.groups]);
   const liveStudents = useMemo(() => data?.students || [], [data?.students]);
   const liveMemberships = useMemo(() => data?.memberships || [], [data?.memberships]);
-  const studentsByGroupId = data?.studentsByGroupId || {};
+  const studentsByGroupId = useMemo(() => data?.studentsByGroupId || {}, [data?.studentsByGroupId]);
   const groupStudentCounts = data?.groupStudentCounts || {};
   const showStartTeachingCta = dataMode === 'live' && !isLoading && !error && liveStudents.length === 0;
   const assignedStudentIds = useMemo(() => {

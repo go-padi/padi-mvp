@@ -410,3 +410,10 @@ Log of features shipped by BuildLoop.
 - Branch: buildloop/refetch-progress-on-student-profile
 - UAT bugs found and fixed: 1
 - Build retries: 1
+
+## LR-11d
+- Iteration: 2
+- Shipped: 2026-05-22T19:49:06+00:00
+- Branch: buildloop/gate-start-button-on-off-sequence-modules
+- UAT bugs found and fixed: 1
+- Build retries: 0

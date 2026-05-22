@@ -473,3 +473,10 @@ Log of features shipped by BuildLoop.
 - Branch: buildloop/drop-denominator-from-roster-cards
 - UAT bugs found and fixed: 0
 - Build retries: 0
+
+## LR-21d
+- Iteration: 3
+- Shipped: 2026-05-22T21:51:33+00:00
+- Branch: buildloop/add-another-child-cta-on-post-add-landing
+- UAT bugs found and fixed: 0
+- Build retries: 0

@@ -114,6 +114,23 @@ export default function StudentModulePage({
     { group_id: string; group_name: string }[]
   >([]);
   const [loading, setLoading] = useState(true);
+  const [disabledClickHintModule, setDisabledClickHintModule] = useState<string | null>(null);
+  const hintTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const triggerHint = useCallback((moduleCode: string) => {
+    if (hintTimeoutRef.current) clearTimeout(hintTimeoutRef.current);
+    setDisabledClickHintModule(moduleCode);
+    hintTimeoutRef.current = setTimeout(() => {
+      setDisabledClickHintModule(null);
+      hintTimeoutRef.current = null;
+    }, 4000);
+  }, []);
+
+  useEffect(() => {
+    return () => {
+      if (hintTimeoutRef.current) clearTimeout(hintTimeoutRef.current);
+    };
+  }, []);
 
   const fetchCompletions = useCallback(async (sid: string) => {
     const sb = supabaseClient();
@@ -713,73 +730,94 @@ export default function StudentModulePage({
                         <div className="space-y-1.5">
                           {g.modules.map((mod, idx) => {
                             const isCompleted = completedModuleIds.has(mod.code);
-                            // Find the first incomplete module across the entire group
-                            const firstIncompleteIdx = g.modules.findIndex((m) => !completedModuleIds.has(m.code));
-                            const isCurrent = idx === firstIncompleteIdx;
-                            const isUpcoming = !isCompleted && !isCurrent;
+                            const isNextUp = nextModule !== null && mod.code === nextModule.moduleCode;
+                            const isOffSequence = !isCompleted && !isNextUp;
                             const lessonHref = `/teacher/curriculum/${chapterCode}/${g.code}/${mod.code}?student=${studentId}`;
 
                             return (
-                              <div
-                                key={mod.id}
-                                className={`rounded-xl border p-3 ${
-                                  isCurrent
-                                    ? 'border-blue-300 bg-blue-50'
-                                    : isCompleted
-                                      ? 'border-green-200 bg-green-50/50'
-                                      : 'border-gray-100 bg-white opacity-60'
-                                }`}
-                              >
-                                <div className="flex items-center justify-between">
-                                  <div className="flex items-center gap-3">
-                                    <div
-                                      className={`flex h-6 w-6 items-center justify-center rounded-full text-[10px] font-semibold ${
-                                        isCompleted
-                                          ? 'bg-green-100 text-green-700'
-                                          : isCurrent
-                                            ? 'bg-blue-100 text-blue-700'
-                                            : 'bg-gray-100 text-gray-400'
-                                      }`}
-                                    >
-                                      {isCompleted ? '\u2713' : idx + 1}
-                                    </div>
-                                    <div>
-                                      <p
-                                        className={`text-sm font-semibold ${
-                                          isCompleted ? 'text-green-800' : isUpcoming ? 'text-gray-400' : 'text-gray-900'
+                              <div key={mod.id} className="space-y-1">
+                                <div
+                                  className={`rounded-xl border p-3 ${
+                                    isNextUp
+                                      ? 'border-blue-300 bg-blue-50'
+                                      : isCompleted
+                                        ? 'border-green-200 bg-green-50/50'
+                                        : 'border-gray-100 bg-white'
+                                  }`}
+                                >
+                                  <div className="flex items-center justify-between">
+                                    <div className="flex items-center gap-3">
+                                      <div
+                                        className={`flex h-6 w-6 items-center justify-center rounded-full text-[10px] font-semibold ${
+                                          isCompleted
+                                            ? 'bg-green-100 text-green-700'
+                                            : isNextUp
+                                              ? 'bg-blue-100 text-blue-700'
+                                              : 'bg-gray-100 text-gray-400'
                                         }`}
                                       >
-                                        {mod.title}
-                                      </p>
-                                      {mod.summary && (
-                                        <p className={`text-xs ${isUpcoming ? 'text-gray-300' : 'text-gray-600'}`}>
-                                          {mod.summary}
+                                        {isCompleted ? '\u2713' : idx + 1}
+                                      </div>
+                                      <div>
+                                        <p
+                                          className={`text-sm font-semibold ${
+                                            isCompleted ? 'text-green-800' : isOffSequence ? 'text-gray-400' : 'text-gray-900'
+                                          }`}
+                                        >
+                                          {mod.title}
                                         </p>
+                                        {mod.summary && (
+                                          <p className={`text-xs ${isOffSequence ? 'text-gray-300' : 'text-gray-600'}`}>
+                                            {mod.summary}
+                                          </p>
+                                        )}
+                                      </div>
+                                    </div>
+
+                                    <div className="flex items-center gap-2">
+                                      {isCompleted && (
+                                        <Link
+                                          href={lessonHref}
+                                          className="rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-xs font-semibold text-gray-900 hover:bg-gray-50"
+                                        >
+                                          Replay
+                                        </Link>
+                                      )}
+                                      {isNextUp && (
+                                        <Link
+                                          href={lessonHref}
+                                          className="rounded-lg bg-blue-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-blue-700"
+                                        >
+                                          {completedCount === 0 ? 'Start Teaching' : 'Continue Lesson'}
+                                        </Link>
+                                      )}
+                                      {isOffSequence && nextModule && (
+                                        <button
+                                          type="button"
+                                          aria-disabled="true"
+                                          title={`Continue with ${nextModule.chapterTitle} \u2014 ${nextModule.moduleTitle} first`}
+                                          onClick={() => triggerHint(mod.code)}
+                                          className="rounded-lg bg-gray-100 px-3 py-1.5 text-xs font-semibold text-gray-700 cursor-not-allowed"
+                                        >
+                                          Start
+                                        </button>
+                                      )}
+                                      {isOffSequence && !nextModule && !allComplete && (
+                                        <Link
+                                          href={lessonHref}
+                                          className="rounded-lg bg-blue-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-blue-700"
+                                        >
+                                          Start Teaching
+                                        </Link>
                                       )}
                                     </div>
                                   </div>
-
-                                  <div className="flex items-center gap-2">
-                                    {isCompleted && (
-                                      <span className="rounded-full bg-green-100 px-2 py-0.5 text-[11px] font-semibold text-green-700">
-                                        Completed
-                                      </span>
-                                    )}
-                                    {isCurrent && (
-                                      <Link
-                                        href={lessonHref}
-                                        className="rounded-lg bg-blue-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-blue-700"
-                                      >
-                                        {completedCount === 0 ? 'Start Teaching' : 'Continue Lesson'}
-                                      </Link>
-                                    )}
-                                    {isUpcoming && (
-                                      <span className="rounded-full bg-gray-100 px-2 py-0.5 text-[11px] font-semibold text-gray-400">
-                                        Upcoming
-                                      </span>
-                                    )}
-                                  </div>
                                 </div>
+                                {disabledClickHintModule === mod.code && nextModule && (
+                                  <p className="mt-1 text-xs text-gray-600">
+                                    Continue with {nextModule.chapterTitle} — {nextModule.moduleTitle} first
+                                  </p>
+                                )}
                               </div>
                             );
                           })}

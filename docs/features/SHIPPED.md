@@ -403,3 +403,10 @@ Log of features shipped by BuildLoop.
 - Branch: buildloop/kan-lint-1-remove-unused-eslint-disable
 - UAT bugs found and fixed: 0
 - Build retries: 0
+
+## LR-09a
+- Iteration: 1
+- Shipped: 2026-05-22T19:26:34+00:00
+- Branch: buildloop/refetch-progress-on-student-profile
+- UAT bugs found and fixed: 1
+- Build retries: 1

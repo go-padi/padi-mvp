@@ -389,3 +389,10 @@ Log of features shipped by BuildLoop.
 - Branch: buildloop/kan-56-contextual-add-buttons-on-grouping
 - UAT bugs found and fixed: 1
 - Build retries: 0
+
+## KAN-137c
+- Iteration: 7
+- Shipped: 2026-05-22T12:29:53+00:00
+- Branch: buildloop/kan-137c-wire-signup-completed-event
+- UAT bugs found and fixed: 0
+- Build retries: 0

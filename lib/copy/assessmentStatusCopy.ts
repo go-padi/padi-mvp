@@ -27,7 +27,6 @@ export function normalizeAssessmentStatus(input: {
   }
   if (raw in LEGACY_COERCION) {
     if (process.env.NODE_ENV !== "production") {
-      // eslint-disable-next-line no-console
       console.warn(
         `[assessmentStatusCopy] coercing legacy value "${raw}" → "${LEGACY_COERCION[raw]}"`,
       );

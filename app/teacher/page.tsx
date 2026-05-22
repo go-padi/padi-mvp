@@ -24,6 +24,8 @@ type CardData = {
   progressPercent: number;
   progressLabel: string | null;
   completedCount: number;
+  latestObservationNotes: string | null;
+  latestObservationAt: string | null;
 };
 
 
@@ -76,6 +78,8 @@ export default function TeacherIndexPage() {
           progressPercent: s.progressPercent,
           progressLabel: s.progressLabel,
           completedCount: m ? parseInt(m[1], 10) : 0,
+          latestObservationNotes: null,
+          latestObservationAt: null,
         };
       });
       const groupCards: CardData[] = demoTeacherData.groups.map(g => {
@@ -89,6 +93,8 @@ export default function TeacherIndexPage() {
           progressPercent: g.progressPercent,
           progressLabel: g.progressLabel,
           completedCount: m ? parseInt(m[1], 10) : 0,
+          latestObservationNotes: null,
+          latestObservationAt: null,
         };
       });
       if (effectiveMode === 'individual') return studentCards;
@@ -105,6 +111,8 @@ export default function TeacherIndexPage() {
       progressPercent: s.progressPercent ?? 0,
       progressLabel: s.progressLabel ?? null,
       completedCount: s.completedCount ?? 0,
+      latestObservationNotes: s.latestObservationNotes ?? null,
+      latestObservationAt: s.latestObservationAt ?? null,
     }));
     const groupCards: CardData[] = startData.groups.map(g => {
       const members = startData.groupStudentsByGroupId[g.id] || [];
@@ -121,6 +129,8 @@ export default function TeacherIndexPage() {
         progressPercent: avgPercent,
         progressLabel: `${members.length} student${members.length !== 1 ? 's' : ''}`,
         completedCount: completedSum,
+        latestObservationNotes: null,
+        latestObservationAt: null,
       };
     });
     if (effectiveMode === 'individual') return studentCards;
@@ -433,6 +443,12 @@ export default function TeacherIndexPage() {
                   style={{ width: `${card.progressPercent}%` }}
                 />
               </div>
+
+              {card.type === 'student' && card.latestObservationNotes?.trim() && (
+                <p className="text-xs italic text-amber-800 line-clamp-2">
+                  Last note: {card.latestObservationNotes}
+                </p>
+              )}
 
               <span
                 className={clsx(

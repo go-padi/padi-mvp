@@ -354,3 +354,10 @@ Log of features shipped by BuildLoop.
 - Branch: buildloop/lr-13c-prior-observations-panel-on-lesson-page
 - UAT bugs found and fixed: 0
 - Build retries: 0
+
+## LR-13d
+- Iteration: 2
+- Shipped: 2026-05-22T11:35:03+00:00
+- Branch: buildloop/lr-13d-latest-observation-callout-on-student-profile
+- UAT bugs found and fixed: 1
+- Build retries: 0

@@ -17,6 +17,8 @@ export type StartTeachingStudent = {
   progressLabel?: string | null;
   assessmentStatus: AssessmentStatus;
   completedCount: number;
+  latestObservationNotes?: string | null;
+  latestObservationAt?: string | null;
 };
 
 export type StartTeachingGroup = {
@@ -35,7 +37,7 @@ export type StartTeachingData = {
 };
 
 export function useStartTeachingData(): StartTeachingData {
-  const { isLoggedIn, isHydrated } = useAuth();
+  const { isLoggedIn, isHydrated, tenantId } = useAuth();
   const [liveStudents, setLiveStudents] = useState<StartTeachingStudent[]>([]);
   const [liveGroups, setLiveGroups] = useState<StartTeachingGroup[]>([]);
   const [liveGroupStudentsByGroupId, setLiveGroupStudentsByGroupId] = useState<Record<string, StartTeachingStudent[]>>({});
@@ -44,7 +46,7 @@ export function useStartTeachingData(): StartTeachingData {
   const load = useCallback(async () => {
     if (!isHydrated || !isLoggedIn) return;
     const sb = supabaseClient();
-    const [studentsRes, membershipsRes, groupsRes, assessmentsRes, groupsCountRes] = await Promise.all([
+    const [studentsRes, membershipsRes, groupsRes, assessmentsRes, groupsCountRes, lessonCompletionsRows] = await Promise.all([
       sb
         .from('students')
         .select('id,name,first_name,last_name,progress_percent,progress_label,focus_areas,assessment_status')
@@ -53,7 +55,36 @@ export function useStartTeachingData(): StartTeachingData {
       sb.from('groups').select('id,name').order('name'),
       sb.from('module_assessment').select('student_id,module_id'),
       sb.rpc('content_get_groups', { p_teaching_mode: null }),
+      (async (): Promise<{ student_id: string; notes: string | null; completed_at: string }[]> => {
+        if (!tenantId) return [];
+        try {
+          const { data, error } = await sb
+            .from('lesson_completions')
+            .select('student_id,notes,completed_at')
+            .eq('tenant_id', tenantId)
+            .order('completed_at', { ascending: false });
+          if (error) throw error;
+          return (data as { student_id: string; notes: string | null; completed_at: string }[] | null) || [];
+        } catch (err) {
+          const pgCode = (err as { code?: string } | null)?.code;
+          if (pgCode !== '42703') {
+            console.error('LR-13e load lesson_completions:', err);
+          }
+          return [];
+        }
+      })(),
     ]);
+
+    const latestObservationByStudent = new Map<string, { notes: string | null; completed_at: string }>();
+    for (const row of lessonCompletionsRows) {
+      if (!row.student_id) continue;
+      if (!latestObservationByStudent.has(row.student_id)) {
+        latestObservationByStudent.set(row.student_id, {
+          notes: row.notes,
+          completed_at: row.completed_at,
+        });
+      }
+    }
 
     const curriculumGroupRows =
       (groupsCountRes.data as { module_count: number | null }[] | null) || [];
@@ -104,6 +135,7 @@ export function useStartTeachingData(): StartTeachingData {
       const storedPercent = student.progress_percent ?? 0;
       const storedLabel = student.progress_label ?? null;
       const hasProgress = completedModules > 0 || storedPercent > 0;
+      const latestObservation = latestObservationByStudent.get(student.id) || null;
 
       return {
         id: student.id,
@@ -122,6 +154,8 @@ export function useStartTeachingData(): StartTeachingData {
           progressPercent: hasProgress ? Math.max(storedPercent, 1) : storedPercent,
         }),
         completedCount: completedModules,
+        latestObservationNotes: latestObservation?.notes ?? null,
+        latestObservationAt: latestObservation?.completed_at ?? null,
       };
     });
 
@@ -151,7 +185,7 @@ export function useStartTeachingData(): StartTeachingData {
     setLiveStudents(normalizedStudents);
     setLiveGroups(Array.from(groupMap.values()));
     setLiveGroupStudentsByGroupId(groupStudentsByGroupId);
-  }, [isHydrated, isLoggedIn]);
+  }, [isHydrated, isLoggedIn, tenantId]);
 
   useEffect(() => {
     if (!isHydrated || !isLoggedIn) return;

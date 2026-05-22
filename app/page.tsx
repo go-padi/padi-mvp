@@ -114,9 +114,9 @@ export default function Page(){
             <p className="text-base font-semibold text-amber-900">🟡 Practicing</p>
             <p className="mt-1 text-sm text-amber-800">Locking in foundational skills</p>
           </div>
-          <div className="rounded-2xl border border-red-100 bg-red-50 p-4">
-            <p className="text-base font-semibold text-red-900">🔴 Specialist Track</p>
-            <p className="mt-1 text-sm text-red-800">Recommended for closer review</p>
+          <div className="rounded-2xl border border-violet-100 bg-violet-50 p-4">
+            <p className="text-base font-semibold text-violet-900">🔴 Specialist Track</p>
+            <p className="mt-1 text-sm text-violet-800">Recommended for closer review</p>
           </div>
         </div>
         <p className="italic text-sm text-gray-600">A clear signal for every student, every lesson.</p>

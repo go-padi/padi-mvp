@@ -145,7 +145,7 @@ export default function AboutPage(){
             <div className="rounded-xl border p-4 bg-amber-50 text-amber-900 border-amber-100">
               <p className="text-sm">🟡 <span className="font-semibold">Practicing</span> — Locking in foundational skills — building confidence with practice</p>
             </div>
-            <div className="rounded-xl border p-4 bg-red-50 text-red-900 border-red-100">
+            <div className="rounded-xl border p-4 bg-violet-50 text-violet-900 border-violet-100">
               <p className="text-sm">🔴 <span className="font-semibold">Specialist Track</span> — Recommended for closer review with a reading specialist</p>
             </div>
           </div>

@@ -1,6 +1,7 @@
 'use client';
 import { FormEvent, MouseEvent, useEffect, useRef, useState } from 'react';
 import { useAuth } from '@/lib/auth-store';
+import { track, ANALYTICS_EVENTS } from '@/lib/analytics';
 
 type SignInModalProps = { onClose: () => void };
 
@@ -124,7 +125,7 @@ export function SignInModal({ onClose }: SignInModalProps) {
         setInfo('Check your email to confirm your account, then sign in.');
         return;
       }
-      // TODO(activation-telemetry): emit signup_completed event here when telemetry plumbing lands
+      track(ANALYTICS_EVENTS.SIGNUP_COMPLETED);
       onClose();
     } catch (err) {
       const message = err instanceof Error ? err.message : '';

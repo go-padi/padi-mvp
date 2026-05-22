@@ -382,3 +382,10 @@ Log of features shipped by BuildLoop.
 - Branch: buildloop/kan-51-sticky-student-banner-on-lesson-page
 - UAT bugs found and fixed: 1
 - Build retries: 0
+
+## KAN-56
+- Iteration: 6
+- Shipped: 2026-05-22T12:24:06+00:00
+- Branch: buildloop/kan-56-contextual-add-buttons-on-grouping
+- UAT bugs found and fixed: 1
+- Build retries: 0

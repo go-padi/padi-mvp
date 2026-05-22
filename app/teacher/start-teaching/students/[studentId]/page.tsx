@@ -132,6 +132,7 @@ export default function StudentModulePage({
     notes: string | null;
     module_id: string;
   } | null>(null);
+  const [notesCount, setNotesCount] = useState<number>(0);
   const [memberships, setMemberships] = useState<
     { group_id: string; group_name: string }[]
   >([]);
@@ -266,6 +267,7 @@ export default function StudentModulePage({
 
     if (!tenantId) {
       setLatestObservation(null);
+      setNotesCount(0);
     } else {
       try {
         const { data, error } = await sb
@@ -273,19 +275,22 @@ export default function StudentModulePage({
           .select('completed_at, notes, module_id')
           .eq('tenant_id', tenantId)
           .eq('student_id', studentId)
-          .order('completed_at', { ascending: false })
-          .limit(1);
+          .order('completed_at', { ascending: false });
         if (error) throw error;
-        const row = (data || [])[0] as
-          | { completed_at: string; notes: string | null; module_id: string }
-          | undefined;
-        setLatestObservation(row || null);
+        const rows = (data || []) as Array<{
+          completed_at: string;
+          notes: string | null;
+          module_id: string;
+        }>;
+        setLatestObservation(rows[0] || null);
+        setNotesCount(rows.filter((r) => r.notes?.trim()).length);
       } catch (err) {
         const pgCode = (err as { code?: string } | null)?.code;
         if (pgCode !== '42703') {
-          console.error('LR-13d load latestObservation:', err);
+          console.error('LR-13d/g load completions:', err);
         }
         setLatestObservation(null);
+        setNotesCount(0);
       }
     }
 
@@ -653,6 +658,11 @@ export default function StudentModulePage({
         <div className="rounded-2xl border border-amber-200 bg-amber-50 p-5 shadow-sm space-y-2">
           <p className="text-xs font-semibold uppercase tracking-wide text-amber-800">
             Latest observation · {new Date(latestObservation.completed_at).toLocaleDateString()}
+            {notesCount > 1 && (
+              <span className="ml-2 inline-flex items-center rounded-full bg-amber-200 px-2 py-0.5 text-[10px] font-semibold normal-case tracking-normal text-amber-900">
+                {notesCount} notes
+              </span>
+            )}
           </p>
           <p className="text-sm text-amber-900 line-clamp-3 whitespace-pre-wrap">
             {latestObservation.notes}
@@ -663,7 +673,7 @@ export default function StudentModulePage({
       {(!latestObservation || !latestObservation.notes?.trim()) && completedCount > 0 && !loading && (
         <div className="rounded-2xl border border-gray-200 bg-gray-50 p-4 space-y-1">
           <p className="text-xs font-semibold uppercase tracking-wide text-gray-700">
-            Observations
+            Observations · 0 notes
           </p>
           <p className="text-sm text-gray-700">
             Add a note after your next lesson and it will appear here.

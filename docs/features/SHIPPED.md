@@ -445,3 +445,10 @@ Log of features shipped by BuildLoop.
 - Branch: buildloop/group-tab-empty-state-with-guidance
 - UAT bugs found and fixed: 0
 - Build retries: 0
+
+## LR-13f
+- Iteration: 7
+- Shipped: 2026-05-22T20:28:17+00:00
+- Branch: buildloop/observation-history-empty-affordance
+- UAT bugs found and fixed: 0
+- Build retries: 0

@@ -127,7 +127,7 @@ export default function LessonPage({ params }: { params: Promise<{ chapter: stri
     : `/teacher/curriculum/${chapter}/${group}`;
   const backLabel = hasStudentContext
     ? `\u2190 Back to ${contextStudentName || 'Student'}`
-    : '\u2190 Back to Modules';
+    : '\u2190 Back to modules';
 
   const actionOptions = useMemo(() => {
     if (!isLoggedIn || hasStudentContext) return [];
@@ -735,7 +735,7 @@ export default function LessonPage({ params }: { params: Promise<{ chapter: stri
 
       <div className="space-y-2">
         <h2 className="text-3xl font-semibold text-gray-900 flex items-center gap-3">
-          {moduleRow?.subtitle ? `Module ${moduleRow.subtitle}` : moduleRow?.title || 'Module'}
+          {moduleRow?.title || 'Lesson'}
           {moduleRow?.teaching_mode && (
             <span className={clsx(
               'rounded-full px-3 py-1 text-xs font-semibold uppercase tracking-wide',

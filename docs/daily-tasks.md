@@ -15,16 +15,30 @@ Format per day:
 
 ### Top priorities
 
-**Single-ticket BuildLoop run for LR-14 (in-browser audio recording):**
+**Two launch-blocking items for next BuildLoop run:**
 
 ```
-/buildloop:buildloop-start 1
+/buildloop:buildloop-start 2
 ```
 
-PM will pick `LR-14` (the only `priority: highest` + `status: ready` ticket
-in launch-readiness right now). This is the last UX gap before mom can run
-real lessons end-to-end on the platform — record audio in-browser, rate
-with 3-signal picker, save.
+PM should pick these two `priority: highest` + `launch_blocker: true`
+items, in this order:
+
+1. **LR-10-bug-01** — Lesson re-entry hides prior completions.
+   Replay nav shipped, but the lesson page on re-entry shows no
+   "Completed N times" header, no prior observations, the H2 title
+   shows the module code instead of the lesson name ("Module
+   learning-sensorially-1" instead of "The Silence Game"), and the
+   student banner says "Not started" for kids mid-curriculum. Verified
+   live on padi-mvp.vercel.app 2026-05-22 against Olivia Iyer.
+   Spec + recommended fix at
+   `docs/features/launch-readiness/iterations/lr-10-allow-lesson-reentry/bugs/lr-10-bug-01-reentry-hides-prior-completions.md`.
+
+2. **LR-14** — In-browser audio recording. The last UX gap before
+   mom can run real lessons end-to-end on the platform — record
+   audio in-browser (not file-upload), rate with 3-signal picker,
+   save. Spec at
+   `docs/features/launch-readiness/lr-14-in-browser-audio-recording.md`.
 
 Why this is launch-blocking: nothing else gates first real-student
 sessions. Schema is done, 3-signal vocab is done, rating UI is done,

@@ -424,3 +424,10 @@ Log of features shipped by BuildLoop.
 - Branch: buildloop/fix-grouping-exhaustive-deps-warnings
 - UAT bugs found and fixed: 0
 - Build retries: 0
+
+## LR-09b
+- Iteration: 4
+- Shipped: 2026-05-22T20:06:37+00:00
+- Branch: buildloop/dedupe-section-titles-on-student-profile
+- UAT bugs found and fixed: 0
+- Build retries: 0

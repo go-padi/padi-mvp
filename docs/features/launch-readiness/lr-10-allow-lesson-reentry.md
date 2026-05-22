@@ -2,18 +2,34 @@
 id: LR-10
 title: "[UX] Allow re-entry to completed lessons (Montessori repetition principle)"
 type: story
-status: backlog
+status: in-progress
 priority: high
 feature: launch-readiness
 launch_blocker: true
 created: 2026-05-10
-updated: 2026-05-11
+updated: 2026-05-22
 created_by: walkthrough-audit-2026-05-10
 source_walkthroughs:
   - docs/walkthroughs/walkthrough-2026-05-10-teacher.md
   - docs/walkthroughs/walkthrough-2026-05-11-parent.md (confirmed in parent flow — same broken state)
 instructional_review: passed — curriculum requires repetition for automaticity
+open_bugs:
+  - iterations/lr-10-allow-lesson-reentry/bugs/lr-10-bug-01-reentry-hides-prior-completions.md
 ---
+
+### Status (2026-05-22)
+
+**Navigation half: shipped.** Student profile shows a "Replay" button
+on completed module rows; click navigates to the lesson page with
+the right student context. Verified live on padi-mvp.vercel.app
+2026-05-22.
+
+**Re-entry-acknowledgment half: NOT shipped.** The lesson page
+itself does not surface prior completions, wrong H2 title, wrong
+status banner. See
+`iterations/lr-10-allow-lesson-reentry/bugs/lr-10-bug-01-reentry-hides-prior-completions.md`
+for details + recommended fix. This is the active launch-blocking
+piece.
 
 ### Goal
 

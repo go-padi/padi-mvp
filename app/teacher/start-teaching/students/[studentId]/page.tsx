@@ -82,6 +82,28 @@ type ChapterWithGroups = {
   groups: GroupWithModules[];
 };
 
+function dedupByTitle<T extends { title: string; code?: string }>(
+  items: T[],
+  kind: 'chapter' | 'group' | 'module',
+): T[] {
+  const seen = new Set<string>();
+  const out: T[] = [];
+  for (const item of items) {
+    const key = item.title.trim().toLowerCase();
+    if (seen.has(key)) {
+      if (process.env.NODE_ENV !== 'production') {
+        console.warn(
+          `[LR-09b] dropped duplicate ${kind} '${item.title}' (code '${item.code ?? '<no code>'}')`,
+        );
+      }
+      continue;
+    }
+    seen.add(key);
+    out.push(item);
+  }
+  return out;
+}
+
 export default function StudentModulePage({
   params,
 }: {
@@ -311,14 +333,29 @@ export default function StudentModulePage({
       chapterGroupMap.get(chCode)!.push(gwm);
     }
 
-    const builtChapters: ChapterWithGroups[] = previewChapters
-      .filter((ch) => chapterGroupMap.has(ch.code))
-      .map((ch) => ({
-        code: ch.code,
-        title: ch.title,
-        description: ch.description,
-        groups: chapterGroupMap.get(ch.code) || [],
-      }));
+    const builtChapters: ChapterWithGroups[] = dedupByTitle(
+      previewChapters
+        .filter((ch) => chapterGroupMap.has(ch.code))
+        .map((ch) => {
+          const rawGroups = chapterGroupMap.get(ch.code) || [];
+          const dedupedGroups = dedupByTitle(rawGroups, 'group').map((g) => ({
+            ...g,
+            modules: dedupByTitle(g.modules, 'module'),
+          }));
+          const groupsWithRecomputedCounts = dedupedGroups.map((g) => ({
+            ...g,
+            completedCount: g.modules.filter((m) => completionIds.has(m.code)).length,
+            totalCount: g.modules.length,
+          }));
+          return {
+            code: ch.code,
+            title: ch.title,
+            description: ch.description,
+            groups: groupsWithRecomputedCounts,
+          };
+        }),
+      'chapter',
+    );
 
     setChapters(builtChapters);
 

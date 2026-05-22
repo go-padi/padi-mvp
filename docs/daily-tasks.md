@@ -11,6 +11,50 @@ Format per day:
 
 ---
 
+## Fri 2026-05-22
+
+### Top priorities
+
+**Single-ticket BuildLoop run for LR-14 (in-browser audio recording):**
+
+```
+/buildloop:buildloop-start 1
+```
+
+PM will pick `LR-14` (the only `priority: highest` + `status: ready` ticket
+in launch-readiness right now). This is the last UX gap before mom can run
+real lessons end-to-end on the platform — record audio in-browser, rate
+with 3-signal picker, save.
+
+Why this is launch-blocking: nothing else gates first real-student
+sessions. Schema is done, 3-signal vocab is done, rating UI is done,
+`lesson-attachments` bucket exists. Only the MediaRecorder UI is missing.
+
+Spec lives at `docs/features/launch-readiness/lr-14-in-browser-audio-recording.md`.
+Scope is intentionally narrow (UI-only, new
+`components/AudioRecorder.tsx`, no schema/backend changes).
+
+After it ships, run a real mom-test on iPad Safari before declaring v1
+launch-ready.
+
+### Notes
+
+- The "easy way to record from the platform" the user asked for IS
+  MediaRecorder API; LR-14 spec calls out the MIME-type fallback
+  (`audio/webm;codecs=opus` on Chrome, `audio/mp4` on Safari).
+- Nisha is working the model side separately — this ticket is purely
+  the data-collection front-end she needs.
+
+### Outstanding manual work
+
+- LR-23 — Wire `eslint-plugin-react-hooks` (still pending, 10-15 min
+  manual PR).
+- BuildLoop tech-debt cluster (BLDTD-*) — see
+  `docs/features/buildloop-tech-debt/` if a tooling fix is wanted
+  before the next loop.
+
+---
+
 ## Wed 2026-05-13
 
 ### Top priorities

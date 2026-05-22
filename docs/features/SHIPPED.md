@@ -417,3 +417,10 @@ Log of features shipped by BuildLoop.
 - Branch: buildloop/gate-start-button-on-off-sequence-modules
 - UAT bugs found and fixed: 1
 - Build retries: 0
+
+## KAN-153
+- Iteration: 3
+- Shipped: 2026-05-22T19:56:28+00:00
+- Branch: buildloop/fix-grouping-exhaustive-deps-warnings
+- UAT bugs found and fixed: 0
+- Build retries: 0

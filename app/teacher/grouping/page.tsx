@@ -255,8 +255,31 @@ export default function GroupingPage() {
                   })}
                 </div>
               ) : (
-                <div className="rounded-2xl border border-gray-100 bg-white p-5 shadow-sm text-sm text-gray-700">
-                  No groups yet. Add students to create your first group.
+                <div className="rounded-2xl border border-gray-100 bg-white p-6 shadow-sm space-y-4">
+                  <div className="space-y-2">
+                    <h3 className="text-lg font-semibold text-gray-900">
+                      Make a group to teach multiple students together
+                    </h3>
+                    <p className="text-sm text-gray-700">
+                      Create a group to teach the same lesson to multiple students at once. Useful for siblings, cohorts, or any time you want to run group lessons. You can always teach students individually too — groups are optional.
+                    </p>
+                  </div>
+                  <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+                    <button
+                      type="button"
+                      onClick={() => setAddGroupOpen(true)}
+                      disabled={!tenantId}
+                      className="btn"
+                    >
+                      Create a group
+                    </button>
+                    <Link
+                      href="/students"
+                      className="inline-flex items-center text-sm font-semibold text-blue-700 hover:underline sm:ml-2"
+                    >
+                      Or add an individual student
+                    </Link>
+                  </div>
                 </div>
               )}
             </div>

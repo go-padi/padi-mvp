@@ -431,3 +431,10 @@ Log of features shipped by BuildLoop.
 - Branch: buildloop/dedupe-section-titles-on-student-profile
 - UAT bugs found and fixed: 0
 - Build retries: 0
+
+## KAN-54
+- Iteration: 5
+- Shipped: 2026-05-22T20:13:16+00:00
+- Branch: buildloop/lesson-page-label-consistency
+- UAT bugs found and fixed: 0
+- Build retries: 0

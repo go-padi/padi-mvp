@@ -1,5 +1,5 @@
 'use client';
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import Link from 'next/link';
 import clsx from 'clsx';
 import { useAuth } from '@/lib/auth-store';
@@ -9,11 +9,13 @@ import { demoStudents } from '@/lib/demo/demoStudents';
 import { useTeachingMode } from '@/lib/teachingModeContext';
 import { useGroupingProgressData } from '@/lib/hooks/useGroupingProgressData';
 import { EmptyStateStartTeachingCTA } from '@/components/EmptyStateStartTeachingCTA';
+import { AddGroupModal } from '@/components/AddGroupModal';
 import { PREVIEW_BANNER } from '@/lib/copy/previewCopy';
 
 export default function GroupingPage() {
-  const { isLoggedIn, isHydrated } = useAuth();
+  const { isLoggedIn, isHydrated, tenantId } = useAuth();
   const { mode } = useTeachingMode();
+  const [isAddGroupOpen, setAddGroupOpen] = useState(false);
   const dataMode = isLoggedIn ? 'live' : 'demo';
   const showGroupMode = mode === 'both' || mode === 'group';
   const showStudentMode = mode === 'both' || mode === 'individual';
@@ -32,6 +34,10 @@ export default function GroupingPage() {
   const individualStudents = useMemo(() => {
     return liveStudents.filter(student => !assignedStudentIds.has(student.id));
   }, [liveStudents, assignedStudentIds]);
+  const existingGroupsForModal = useMemo(
+    () => liveGroups.map(g => ({ studentIds: (studentsByGroupId[g.id] || []).map(s => s.id) })),
+    [liveGroups, studentsByGroupId],
+  );
 
   if (!isHydrated) {
     return <div className="rounded-2xl border border-gray-100 bg-white p-5 shadow-sm text-sm text-gray-700">Loading...</div>;
@@ -202,11 +208,21 @@ export default function GroupingPage() {
           )}
           {!isLoading && !error && showGroupMode && (
             <div className="space-y-3">
-              <div className="flex items-center justify-between">
+              <div className="flex items-center justify-between gap-3">
                 <div>
                   <h3 className="text-xl font-semibold text-gray-900">Groups</h3>
                   <p className="text-sm text-gray-700">Live group rosters and student counts.</p>
                 </div>
+                {!showStartTeachingCta && (
+                  <button
+                    type="button"
+                    onClick={() => setAddGroupOpen(true)}
+                    disabled={!tenantId}
+                    className="btn"
+                  >
+                    Add group
+                  </button>
+                )}
               </div>
               {liveGroups.length ? (
                 <div className="grid gap-3 md:grid-cols-3">
@@ -249,8 +265,20 @@ export default function GroupingPage() {
           {!isLoading && !error && showStudentMode && (
             <div className="space-y-5">
               <div className="space-y-2">
-                <h3 className="text-xl font-semibold text-gray-900">Individual Students</h3>
-                <p className="text-sm text-gray-700">Students not currently assigned to a group.</p>
+                <div className="flex items-center justify-between gap-3">
+                  <div>
+                    <h3 className="text-xl font-semibold text-gray-900">Individual Students</h3>
+                    <p className="text-sm text-gray-700">Students not currently assigned to a group.</p>
+                  </div>
+                  {!showStartTeachingCta && (
+                    <Link
+                      href="/students"
+                      className="btn"
+                    >
+                      Add student
+                    </Link>
+                  )}
+                </div>
                 {individualStudents.length ? (
                   <div className="grid gap-3 md:grid-cols-3">
                     {individualStudents.map(student => (
@@ -331,6 +359,15 @@ export default function GroupingPage() {
 
         </div>
       )}
+
+      <AddGroupModal
+        open={isAddGroupOpen}
+        onClose={() => setAddGroupOpen(false)}
+        tenantId={tenantId}
+        students={liveStudents}
+        existingGroups={existingGroupsForModal}
+        onCreated={async () => { await refetch(); }}
+      />
     </div>
   );
 }

@@ -375,3 +375,10 @@ Log of features shipped by BuildLoop.
 - Branch: buildloop/kan-64-group-membership-badge-on-student-profile
 - UAT bugs found and fixed: 1
 - Build retries: 0
+
+## KAN-51
+- Iteration: 5
+- Shipped: 2026-05-22T12:11:12+00:00
+- Branch: buildloop/kan-51-sticky-student-banner-on-lesson-page
+- UAT bugs found and fixed: 1
+- Build retries: 0

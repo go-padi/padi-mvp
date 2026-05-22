@@ -1,0 +1,45 @@
+Verdict: FAIL
+
+## KAN-56 — Contextual Add buttons on /teacher/grouping
+
+- Date: 2026-05-22
+- Method: source-inspection canonical (per UAT instructions), plus pnpm lint / pnpm tsc --noEmit / pnpm build
+- File under test: `app/teacher/grouping/page.tsx`
+- Iteration: 006
+
+## Scenario results
+
+| # | Check | Status | Notes |
+|---|-------|--------|-------|
+| 1 | `AddGroupModal` imported + `isAddGroupOpen` state declared | PASS | Line 12 import, line 18 `useState(false)` |
+| 2 | LIVE Groups "Add group" button right-aligned in header, `onClick` sets state, **`className="btn"`** | FAIL | Lines 217-224. Button exists, layout uses `flex items-center justify-between gap-3`, `onClick` correct, but `className` is `"rounded-xl border border-gray-200 bg-white px-3 py-1.5 text-sm font-semibold text-gray-900 shadow-sm hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-60"` — NOT `"btn"`. Refined ticket lines 41-44, 76 explicitly required `className="btn"`. |
+| 3 | LIVE Individual Students "Add student" `<Link href="/students">` right-aligned, **`className="btn"`** | FAIL | Lines 274-279. Link + href correct, but `className` is `"rounded-xl bg-gray-900 px-3 py-1.5 text-sm font-semibold text-white shadow-sm hover:bg-gray-800"` — NOT `"btn"`. Refined ticket lines 48-50, 98 explicitly required `className="btn"`. Also creates visual mismatch with the (also non-`btn`) Add group button on the same page. |
+| 4 | `AddGroupModal` mounted at end with `open`, `onClose`, `onCreated` | PASS | Lines 363-370. `onCreated={async () => { await refetch(); }}` — modal closes itself via its internal `onClose()` after `await onCreated()` (verified in `components/AddGroupModal.tsx:122-123`), so the close-after-create behavior holds end-to-end. |
+| 5 | Demo branch unchanged — no Add CTAs on demo headers | PASS | Lines 73-181: demo branch has no Add CTAs. |
+| 6 | Conditional rendering gates: `!isLoading && !error && showGroupMode` / `showStudentMode`, also hidden in empty state | PASS | Groups CTA gated at line 209 + `!showStartTeachingCta` at 216. Students CTA gated at line 265 + `!showStartTeachingCta` at 273. |
+| 7 | No regression: TeachingModeToggle, EmptyStateStartTeachingCTA, KAN-64 badges, other shipped features | PASS | Toggle line 64. Empty state CTA lines 204-208 still fires when `showStartTeachingCta` (and Add CTAs hidden in that case). KAN-64 student-profile badges live in a different surface — unaffected. |
+| 8 | Auth-store untouched | PASS | `git diff --name-only lib/auth-store.tsx` empty. Full diff scope: `app/teacher/grouping/page.tsx` + `docs/features/SHIPPED.md` only. |
+| 9 | `pnpm lint` exit 0 | PASS | 0 errors, 3 pre-existing warnings (none introduced by this change in the new code paths — warnings on lines 25/28 are in unrelated `useMemo` deps from prior iterations; the `assessmentStatusCopy.ts` warning is unrelated). |
+| 9 | `pnpm tsc --noEmit` exit 0 | PASS | Clean. |
+| 9 | `pnpm build` exit 0 | PASS | Static build of `/teacher/grouping` succeeded (6.8 kB / 156 kB First Load JS). |
+
+## Bug filed
+
+- `docs/features/kan-56-contextual-add-buttons-on-grouping/bugs/kan-152-grouping-add-ctas-not-using-btn-class-bug-.md` (P2)
+
+## Verdict rationale
+
+Functionally the feature works: state wires up, the modal opens via the button, the Link navigates to `/students`, demo branch is untouched, gating is correct, and the build is clean. However, the refined ticket explicitly specified `className="btn"` four times across requirements and acceptance criteria (lines 41-52, 76, 98), and `.btn` is a real shared utility in `app/globals.css:9` used by every other primary CTA in the app (`app/page.tsx`, `app/error.tsx`, `app/not-found.tsx`, `app/teacher/layout.tsx`). The build agent substituted ad-hoc inline Tailwind utilities — and used two different visual treatments for the two CTAs, producing a visibly mismatched header row. This is a documented spec deviation and a design-system regression. Per ruthless judging: explicit AC said `btn` class, implementation did not deliver `btn` class → FAIL.
+
+## Notes for padi-eng
+
+- Fix is one line per CTA: replace the long `className` strings on `app/teacher/grouping/page.tsx:221` and `:276` with `className="btn"`. Keep `disabled={!tenantId}` on the Add group button.
+- Reverify visual consistency against `.btn` usage in `app/page.tsx:73` and `app/teacher/layout.tsx:47`.
+
+## Notes for padi-design
+
+- After fix, the two CTAs will share the `.btn` light-bordered look. If a primary/secondary distinction is desired between "Add group" and "Add student", the right move is to extend the design system (e.g., `.btn-primary` already exists in globals.css:10) rather than fork inline utilities again.
+
+## Missing from ticket
+
+- None. The refined ticket was specific enough that this deviation is unambiguous.

@@ -1,0 +1,97 @@
+Verdict: FAIL
+
+# KAN-51 UAT — Sticky student-context banner on lesson page
+
+- Ticket: docs/features/kan-51-sticky-student-banner-on-lesson-page/
+- Refined: .buildloop/iterations/005/feature-refined.md
+- File under test: app/teacher/curriculum/[chapter]/[group]/[module]/page.tsx
+- Date: 2026-05-22
+- Mode: source-inspection canonical
+
+## Findings
+
+| # | Check | Status | Notes |
+|---|-------|--------|-------|
+| 1 | Sticky wrapper present (`sticky top-0 z-10`) | PASS | Line 634 |
+| 1a | Wrapper has mobile white/blur (`bg-white/95 backdrop-blur` + `border-b`) | FAIL | Wrapper className is only `sticky top-0 z-10 -mx-4 md:mx-0`. No background, no blur, no border-b. |
+| 1b | Wrapper has md+ rounded-2xl/blue tint classes | FAIL (technicality) | Wrapper missing `md:rounded-2xl md:border md:border-blue-100 md:bg-blue-50/80`. Desktop blue card visually achieved via inner div (pre-existing `rounded-2xl border border-blue-200 bg-blue-50`), not via wrapper as spec'd. |
+| 2 | Banner contents preserved (name, status pill, back link) | PASS | Inner JSX (lines 635-666) untouched. contextStudentName, statusBadgeClass+assessmentStatusShortCaption pill, and "Back to modules →" link all intact. |
+| 3 | Wrapper conditional on `hasStudentContext` (and `contextStudentName`) | PASS | Line 633 `{hasStudentContext && contextStudentName && (...)}`. No empty bar render. |
+| 4a | LR-10a "Completed N times" line OUTSIDE wrapper | PASS | Lines 697-702, rendered after wrapper closes at 668. |
+| 4b | LR-11b off-sequence warning OUTSIDE wrapper, not sticky | PASS | Lines 670-695, separate block, no sticky classes. |
+| 4c | LR-13c Prior observations panel intact | PASS | Lines 704-724, separate `<details>` block, untouched. |
+| 4d | LR-26b SIGNAL_OPTIONS / signal picker untouched | PASS | Lines 51-79 SIGNAL_OPTIONS const and 887-904 picker JSX unchanged. |
+| 4e | markComplete + KAN-137b analytics intact | PASS | Lines 522-612 unchanged. `track(ANALYTICS_EVENTS.LESSON_COMPLETED, ...)` at 524-528 present. |
+| 5 | `lib/auth-store.tsx` untouched | PASS | `git diff HEAD -- lib/auth-store.tsx` empty. |
+| 6 | Z-index hierarchy (sticky z-10 < TopNav z-20 < modals z-50) | PASS | components/TopNav.tsx:34 `z-20`; components/auth/SignInModal.tsx:172 `z-50`; AddStudentModal.tsx:105 + AddGroupModal.tsx:134 `z-50`. |
+| 7a | `pnpm lint` exit 0 | PASS | Exit 0. Only pre-existing warning in lib/copy/assessmentStatusCopy.ts:30 (unused eslint-disable directive). |
+| 7b | `pnpm tsc --noEmit` exit 0 | PASS | Exit 0. |
+| 7c | `pnpm build` exit 0 | PASS | Exit 0. Static generation 19/19 successful. |
+
+## Diff summary
+
+```
+git diff --stat HEAD
+ app/teacher/curriculum/[chapter]/[group]/[module]/page.tsx | 2 ++
+ docs/features/SHIPPED.md                                   | 7 +++++++
+```
+
+Only the prescribed file (`page.tsx`) was modified for the feature. Two
+new lines: the wrapper opening `<div>` and its closing `</div>`.
+
+## Why FAIL
+
+The user's verification item 1 explicitly requires the wrapper to
+contain "Mobile classes for edge-to-edge with white/blur
+(`bg-white/95 backdrop-blur` or equivalent, plus `border-b`)" and
+"md+ classes for rounded-2xl card with blue tint (`md:rounded-2xl`,
+`md:border md:border-blue-100`, `md:bg-blue-50/80` or similar)".
+
+The actual wrapper className is:
+```
+sticky top-0 z-10 -mx-4 md:mx-0
+```
+
+It contains NONE of the prescribed visual classes. The desktop
+appearance is approximated by the pre-existing inner div's
+`rounded-2xl border border-blue-200 bg-blue-50` styling, but:
+
+- Mobile: there is no `bg-white/95`, no `backdrop-blur`, no
+  `border-b`. The mobile AC "Banner edge-to-edge with white/blur
+  background" is not met. As the teacher scrolls on a 375 × 667
+  viewport, the inner blue card sticks at top with `-mx-4` breakout
+  but no white/blur scrim covers content scrolling beneath it.
+- Desktop: visually close to spec, but achieved by accident of the
+  inner div, not by the wrapper className as the refined ticket
+  prescribes.
+
+This is a P2 visual bug — sticky positioning DOES fire and the
+functional behavior is intact, but the prescribed mobile treatment
+is missing.
+
+Bug filed: docs/features/kan-51-sticky-student-banner-on-lesson-page/bugs/kan-51-bug-wrapper-classname-incomplete.md
+
+## Notes for padi-eng
+
+- One-line fix: replace the wrapper className at
+  `app/teacher/curriculum/[chapter]/[group]/[module]/page.tsx:634`
+  with the verbatim string from
+  `.buildloop/iterations/005/feature-refined.md:40`.
+- Re-run `pnpm lint && pnpm tsc --noEmit && pnpm build` (all
+  currently pass; no risk of regression from the className-only
+  change).
+
+## Notes for padi-design
+
+- After eng fix, please visually confirm on 375 × 667 mobile and md+
+  desktop that the white/blur scrim renders correctly and the inner
+  blue card / wrapper visual hierarchy is intended (currently inner
+  div already has `rounded-2xl border border-blue-200 bg-blue-50`,
+  and the spec adds `md:rounded-2xl md:bg-blue-50/80` to the
+  wrapper — potential visual doubling on desktop).
+
+## Missing from ticket
+
+- None. The refined ticket spec is precise (verbatim className,
+  explicit AC for mobile/desktop, explicit out-of-scope). The
+  implementation simply omitted the prescribed classes.

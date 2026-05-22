@@ -368,3 +368,10 @@ Log of features shipped by BuildLoop.
 - Branch: buildloop/lr-13e-latest-observation-on-dashboard-cards
 - UAT bugs found and fixed: 0
 - Build retries: 0
+
+## KAN-64
+- Iteration: 4
+- Shipped: 2026-05-22T11:58:05+00:00
+- Branch: buildloop/kan-64-group-membership-badge-on-student-profile
+- UAT bugs found and fixed: 1
+- Build retries: 0

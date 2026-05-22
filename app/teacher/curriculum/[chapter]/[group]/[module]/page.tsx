@@ -631,6 +631,7 @@ export default function LessonPage({ params }: { params: Promise<{ chapter: stri
 
       {/* Student context banner */}
       {hasStudentContext && contextStudentName && (
+        <div className="sticky top-0 z-10 -mx-4 md:-mx-0 px-4 md:px-0 py-2 bg-white/95 backdrop-blur border-b border-gray-100 md:rounded-2xl md:border md:border-blue-100 md:bg-blue-50/80 md:py-3 md:px-4">
         <div className="rounded-2xl border border-blue-200 bg-blue-50 px-5 py-3 flex items-center justify-between">
           <div className="flex items-center gap-2">
             <div className="flex h-8 w-8 items-center justify-center rounded-full bg-gray-900 text-white text-xs font-semibold">
@@ -662,6 +663,7 @@ export default function LessonPage({ params }: { params: Promise<{ chapter: stri
           >
             Back to modules &rarr;
           </Link>
+        </div>
         </div>
       )}
 

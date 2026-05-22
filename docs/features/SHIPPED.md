@@ -452,3 +452,10 @@ Log of features shipped by BuildLoop.
 - Branch: buildloop/observation-history-empty-affordance
 - UAT bugs found and fixed: 0
 - Build retries: 0
+
+## LR-13g
+- Iteration: 8
+- Shipped: 2026-05-22T20:36:39+00:00
+- Branch: buildloop/notes-captured-count-badge-on-profile
+- UAT bugs found and fixed: 0
+- Build retries: 0

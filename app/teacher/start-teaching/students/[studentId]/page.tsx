@@ -87,7 +87,7 @@ export default function StudentModulePage({
   params: Promise<{ studentId: string }>;
 }) {
   const { studentId } = use(params);
-  const { isLoggedIn, isHydrated } = useAuth();
+  const { isLoggedIn, isHydrated, tenantId } = useAuth();
   const [student, setStudent] = useState<{
     id: string;
     name: string;
@@ -99,6 +99,11 @@ export default function StudentModulePage({
   const [chapters, setChapters] = useState<ChapterWithGroups[]>([]);
   const [completedModuleIds, setCompletedModuleIds] = useState<Set<string>>(new Set());
   const [expandedChapters, setExpandedChapters] = useState<Set<string>>(new Set());
+  const [latestObservation, setLatestObservation] = useState<{
+    completed_at: string;
+    notes: string | null;
+    module_id: string;
+  } | null>(null);
   const [loading, setLoading] = useState(true);
 
   const fetchCompletions = useCallback(async (sid: string) => {
@@ -155,6 +160,31 @@ export default function StudentModulePage({
         sb.rpc('content_get_groups', { p_teaching_mode: null }),
         fetchCompletions(studentId),
       ]);
+
+      if (!tenantId) {
+        setLatestObservation(null);
+      } else {
+        try {
+          const { data, error } = await sb
+            .from('lesson_completions')
+            .select('completed_at, notes, module_id')
+            .eq('tenant_id', tenantId)
+            .eq('student_id', studentId)
+            .order('completed_at', { ascending: false })
+            .limit(1);
+          if (error) throw error;
+          const row = (data || [])[0] as
+            | { completed_at: string; notes: string | null; module_id: string }
+            | undefined;
+          setLatestObservation(row || null);
+        } catch (err) {
+          const pgCode = (err as { code?: string } | null)?.code;
+          if (pgCode !== '42703') {
+            console.error('LR-13d load latestObservation:', err);
+          }
+          setLatestObservation(null);
+        }
+      }
 
       const groupRows = (groupsRes.data as GroupRow[] | null) || [];
       const resolvedGroups = groupRows.length
@@ -223,7 +253,7 @@ export default function StudentModulePage({
     };
 
     fetchData();
-  }, [studentId, isHydrated, isLoggedIn, fetchCompletions]);
+  }, [studentId, isHydrated, isLoggedIn, tenantId, fetchCompletions]);
 
   useEffect(() => {
     if (!isHydrated || !isLoggedIn) return;
@@ -428,6 +458,17 @@ export default function StudentModulePage({
       {allComplete && (
         <div className="rounded-2xl border border-green-200 bg-green-50 p-5 shadow-sm text-sm text-green-800 font-semibold">
           All modules complete for {student.name}!
+        </div>
+      )}
+
+      {latestObservation && latestObservation.notes?.trim() && (
+        <div className="rounded-2xl border border-amber-200 bg-amber-50 p-5 shadow-sm space-y-2">
+          <p className="text-xs font-semibold uppercase tracking-wide text-amber-800">
+            Latest observation · {new Date(latestObservation.completed_at).toLocaleDateString()}
+          </p>
+          <p className="text-sm text-amber-900 line-clamp-3 whitespace-pre-wrap">
+            {latestObservation.notes}
+          </p>
         </div>
       )}
 

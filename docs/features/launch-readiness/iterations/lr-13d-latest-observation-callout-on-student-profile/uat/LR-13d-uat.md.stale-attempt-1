@@ -1,0 +1,77 @@
+Verdict: FAIL
+
+# LR-13d UAT — Latest observation callout on student profile
+
+- File under test: `app/teacher/start-teaching/students/[studentId]/page.tsx`
+- Refined ticket: `.buildloop/iterations/002/feature-refined.md`
+- Method: source-inspection canonical + lint/tsc/build
+- Run date: 2026-05-22
+- Tester: padi-uat-agent
+
+## Results summary
+
+| AC | Item | Status | Evidence |
+|---|---|---|---|
+| 1 | `latestObservation` state shape | PASS | page.tsx:102–106 declares `{ completed_at: string; notes: string \| null; module_id: string } \| null` |
+| 2a | Selects `completed_at, notes, module_id` from `lesson_completions` | PASS | page.tsx:165–167 |
+| 2b | Filters by `tenant_id` AND `student_id` | **FAIL** | page.tsx:168 only `.eq('student_id', studentId)` — `tenant_id` filter absent; `tenantId` is never pulled from `useAuth()` (page.tsx:90). Refined ticket Requirements §1 mandates `.eq('tenant_id', tenantId)`. Bug: `bugs/kan-149-lr-13d-missing-tenant-id-filter-bug-latest-observation.md` |
+| 2c | Orders by `completed_at` descending | PASS | page.tsx:169 |
+| 2d | Limit 1 | PASS | page.tsx:170 |
+| 2e | try/catch with PostgrestError 42703 → state null, no callout, no crash | PASS | page.tsx:164–182; catch reads `(err as { code?: string }).code`, suppresses log on 42703, sets `setLatestObservation(null)` |
+| 3a | Conditional `latestObservation && latestObservation.notes?.trim()` | PASS | page.tsx:459 |
+| 3b | Amber tone classes | PASS | page.tsx:460 uses `border-amber-200 bg-amber-50` (within the "or similar amber-* classNames" allowance) |
+| 3c | "Latest observation" label | PASS | page.tsx:461–463 |
+| 3d | Date via `toLocaleDateString()` | PASS | page.tsx:462 `new Date(latestObservation.completed_at).toLocaleDateString()` |
+| 3e | Notes text rendered with `line-clamp-3` | PASS | page.tsx:464–466 — also adds `whitespace-pre-wrap` (harmless extension) |
+| 3f | Callout positioned ABOVE LR-11a `nextModule` Next up card | PASS | callout block at 459–468 precedes Next up at 470–490 |
+| 4a | LR-11a `nextModule` useMemo + Next up card intact | PASS | useMemo at 292–310, Next up JSX at 470–490 |
+| 4b | LR-13c lesson page panel untouched | PASS | `git status --short` lists only `students/[studentId]/page.tsx` and `SHIPPED.md` |
+| 4c | LR-10a markComplete unchanged | PASS | not in diff |
+| 4d | LR-26b signal picker unchanged | PASS | not in diff |
+| 4e | Chapter list / progress label / status pill intact | PASS | page.tsx:399–451 (header, status pill, progress bar) and 493–656 (chapter accordion) unchanged shape |
+| 5 | `lib/auth-store.tsx` untouched | PASS | `git diff --name-only lib/auth-store.tsx` returns empty |
+| 6a | `pnpm lint` exit 0 | PASS | one unrelated pre-existing warning in `lib/copy/assessmentStatusCopy.ts`, 0 errors |
+| 6b | `pnpm tsc --noEmit` exit 0 | PASS | exit 0 |
+| 6c | `pnpm build` exit 0 | PASS | exit 0, route `/teacher/start-teaching/students/[studentId]` compiled at 4.44 kB |
+
+## Failures
+
+### AC2b — missing `tenant_id` filter (FAIL)
+
+- Expected (refined ticket Requirements §1 and user prompt AC2 bullet 2):
+  `.eq('tenant_id', tenantId).eq('student_id', studentId)`
+- Actual (`app/teacher/start-teaching/students/[studentId]/page.tsx:165–170`):
+  ```ts
+  const { data, error } = await sb
+    .from('lesson_completions')
+    .select('completed_at, notes, module_id')
+    .eq('student_id', studentId)
+    .order('completed_at', { ascending: false })
+    .limit(1);
+  ```
+- Why this matters: the LR-13c canonical pattern at
+  `app/teacher/curriculum/[chapter]/[group]/[module]/page.tsx:240–247`
+  filters by both `tenant_id` and `student_id`. RLS on
+  `lesson_completions` (fresh-setup.sql:377–378) protects against
+  cross-tenant reads at runtime, so this is not a security bug,
+  but it is an explicit AC violation: defense-in-depth and pattern
+  consistency are missing.
+- Bug filed:
+  `docs/features/launch-readiness/iterations/lr-13d-latest-observation-callout-on-student-profile/bugs/kan-149-lr-13d-missing-tenant-id-filter-bug-latest-observation.md`
+- Severity: P2 (correctness/consistency, not security at runtime
+  thanks to RLS).
+
+## Notes
+
+- AC2e (try/catch for 42703) — the item the prompt called out as
+  HARD required — is correctly implemented. Code path:
+  - On any thrown error, the catch block reads `pgCode` from
+    `(err as { code?: string }).code`.
+  - If `pgCode === '42703'`, the error is silently swallowed (no
+    console.error).
+  - Otherwise, the error is logged with a `'LR-13d load
+    latestObservation:'` prefix.
+  - Either way, `setLatestObservation(null)` is called → no callout
+    renders (guarded by `latestObservation && latestObservation.notes?.trim()`).
+- The only blocker on a PASS is the missing `tenant_id` filter on
+  the query.

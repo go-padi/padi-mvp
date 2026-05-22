@@ -347,3 +347,10 @@ Log of features shipped by BuildLoop.
 - Branch: buildloop/lr-25g-homepage-final-cta-refresh
 - UAT bugs found and fixed: 0
 - Build retries: 0
+
+## LR-13c
+- Iteration: 1
+- Shipped: 2026-05-22T11:20:42+00:00
+- Branch: buildloop/lr-13c-prior-observations-panel-on-lesson-page
+- UAT bugs found and fixed: 0
+- Build retries: 0

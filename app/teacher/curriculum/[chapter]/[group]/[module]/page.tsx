@@ -604,6 +604,16 @@ export default function LessonPage({ params }: { params: Promise<{ chapter: stri
         const message = option?.confirmation(studentName) || 'Lesson complete!';
         setCompletionMessage(message);
         setShowSignalStep(false);
+        // KAN-154: signal the student profile to fire its emerald pulse on
+        // mount, since router.push to a sibling segment is a fresh mount and
+        // the pulse effect's mountedRef gate would otherwise suppress it.
+        try {
+          if (typeof window !== 'undefined' && studentId) {
+            sessionStorage.setItem(`padi:pulse-pending:${studentId}`, '1');
+          }
+        } catch {
+          // sessionStorage may be unavailable (private mode, SSR edge); ignore.
+        }
         setTimeout(() => router.push(backHref), 2500);
       }
     } finally {

@@ -192,18 +192,6 @@ export function useStartTeachingData(): StartTeachingData {
     load();
   }, [load, isHydrated, isLoggedIn]);
 
-  useEffect(() => {
-    if (!isHydrated || !isLoggedIn) return;
-    const mountedAt = Date.now();
-    const onVisible = () => {
-      if (document.visibilityState !== 'visible') return;
-      if (Date.now() - mountedAt < 500) return;
-      load();
-    };
-    document.addEventListener('visibilitychange', onVisible);
-    return () => document.removeEventListener('visibilitychange', onVisible);
-  }, [isHydrated, isLoggedIn, load]);
-
   return useMemo<StartTeachingData>(() => {
     if (!isLoggedIn) {
       const students = demoTeacherData.students.map(s => ({

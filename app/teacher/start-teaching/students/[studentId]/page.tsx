@@ -1,7 +1,8 @@
 'use client';
 
-import { use, useCallback, useEffect, useMemo, useState } from 'react';
+import { use, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 import clsx from 'clsx';
 import { supabaseClient } from '@/lib/supabase';
 import { useAuth } from '@/lib/auth-store';
@@ -88,6 +89,11 @@ export default function StudentModulePage({
 }) {
   const { studentId } = use(params);
   const { isLoggedIn, isHydrated, tenantId } = useAuth();
+  const pathname = usePathname();
+  const lastFetchAtRef = useRef(0);
+  const mountedRef = useRef(false);
+  const prevCompletedCountRef = useRef(0);
+  const [countJustChanged, setCountJustChanged] = useState(false);
   const [student, setStudent] = useState<{
     id: string;
     name: string;
@@ -120,212 +126,245 @@ export default function StudentModulePage({
     return ids;
   }, []);
 
-  useEffect(() => {
+  const fetchData = useCallback(async () => {
     if (!isHydrated || !isLoggedIn) return;
+    const sb = supabaseClient();
 
-    const fetchData = async () => {
-      const sb = supabaseClient();
+    const { data: row } = await sb
+      .from('students')
+      .select(
+        'id,name,first_name,last_name,focus_areas,progress_percent,progress_label,assessment_status',
+      )
+      .eq('id', studentId)
+      .single();
 
-      const { data: row } = await sb
-        .from('students')
-        .select(
-          'id,name,first_name,last_name,focus_areas,progress_percent,progress_label,assessment_status',
-        )
-        .eq('id', studentId)
-        .single();
-
-      if (!row) {
-        setLoading(false);
-        return;
-      }
-
-      const studentRow = row as StudentRow;
-      const fullName = [studentRow.first_name, studentRow.last_name]
-        .filter(Boolean)
-        .join(' ')
-        .trim();
-      const s = {
-        id: studentRow.id,
-        name: fullName || studentRow.name || 'Student',
-        focusAreas: Array.isArray(studentRow.focus_areas)
-          ? studentRow.focus_areas
-          : ['Learning Sensorially'],
-        progressPercent: studentRow.progress_percent ?? 0,
-        progressLabel: studentRow.progress_label ?? null,
-        assessmentStatus: normalizeAssessmentStatus({
-          assessmentStatus: studentRow.assessment_status,
-          progressPercent: studentRow.progress_percent,
-        }),
-      };
-      setStudent(s);
-
-      const [groupsRes, completionIds] = await Promise.all([
-        sb.rpc('content_get_groups', { p_teaching_mode: null }),
-        fetchCompletions(studentId),
-      ]);
-
-      // KAN-64: fetch active group memberships + group names
-      if (!tenantId) {
-        setMemberships([]);
-      } else {
-        try {
-          const { data: embedded, error: embedErr } = await sb
-            .from('student_group_memberships')
-            .select('group_id, groups(name)')
-            .eq('tenant_id', tenantId)
-            .eq('student_id', studentId)
-            .eq('active', true);
-          if (embedErr) throw embedErr;
-          const rows = (embedded || []) as {
-            group_id: string;
-            groups: { name: string | null } | { name: string | null }[] | null;
-          }[];
-          const hasNames = rows.some((r) => {
-            const g = Array.isArray(r.groups) ? r.groups[0] : r.groups;
-            return !!g?.name;
-          });
-          if (rows.length === 0 || hasNames) {
-            setMemberships(
-              rows.map((r) => {
-                const g = Array.isArray(r.groups) ? r.groups[0] : r.groups;
-                return {
-                  group_id: r.group_id,
-                  group_name: g?.name || 'Unknown group',
-                };
-              }),
-            );
-          } else {
-            // FK not wired — fall back to a 2-query lookup
-            const groupIds = rows.map((r) => r.group_id);
-            const { data: groupsData, error: groupsErr } = await sb
-              .from('groups')
-              .select('id,name')
-              .eq('tenant_id', tenantId)
-              .in('id', groupIds);
-            if (groupsErr) throw groupsErr;
-            const nameById = new Map<string, string | null>(
-              ((groupsData || []) as { id: string; name: string | null }[]).map(
-                (g) => [g.id, g.name],
-              ),
-            );
-            setMemberships(
-              groupIds.map((id) => ({
-                group_id: id,
-                group_name: nameById.get(id) || 'Unknown group',
-              })),
-            );
-          }
-        } catch (err) {
-          console.error('KAN-64 load memberships:', err);
-          setMemberships([]);
-        }
-      }
-
-      if (!tenantId) {
-        setLatestObservation(null);
-      } else {
-        try {
-          const { data, error } = await sb
-            .from('lesson_completions')
-            .select('completed_at, notes, module_id')
-            .eq('tenant_id', tenantId)
-            .eq('student_id', studentId)
-            .order('completed_at', { ascending: false })
-            .limit(1);
-          if (error) throw error;
-          const row = (data || [])[0] as
-            | { completed_at: string; notes: string | null; module_id: string }
-            | undefined;
-          setLatestObservation(row || null);
-        } catch (err) {
-          const pgCode = (err as { code?: string } | null)?.code;
-          if (pgCode !== '42703') {
-            console.error('LR-13d load latestObservation:', err);
-          }
-          setLatestObservation(null);
-        }
-      }
-
-      const groupRows = (groupsRes.data as GroupRow[] | null) || [];
-      const resolvedGroups = groupRows.length
-        ? groupRows
-        : previewGroups.map((g) => ({ ...g, id: g.id } as GroupRow));
-
-      // Fetch modules for all groups in parallel
-      const groupModulesEntries = await Promise.all(
-        resolvedGroups.map(async (g) => {
-          if (groupRows.length) {
-            const { data: mods } = await sb.rpc('content_get_modules', {
-              p_group_code: g.code,
-              p_teaching_mode: g.teaching_mode,
-            });
-            const moduleRows = (mods as ModuleRow[] | null) || [];
-            return [g.code, moduleRows.sort((a, b) => (a.display_order || 0) - (b.display_order || 0))] as const;
-          }
-          const fallback = (previewModulesByGroup[g.code] || []).map((m) => ({
-            ...m,
-            is_locked: m.is_locked ?? null,
-            display_order: m.display_order ?? null,
-          })) as ModuleRow[];
-          return [g.code, fallback] as const;
-        }),
-      );
-      const modulesByGroup = new Map(groupModulesEntries);
-
-      // Build chapter structure
-      const chapterGroupMap = new Map<string, GroupWithModules[]>();
-      for (const g of resolvedGroups) {
-        const chCode = groupToChapterCode[g.code];
-        if (!chCode) continue;
-        const mods = modulesByGroup.get(g.code) || [];
-        const gwm: GroupWithModules = {
-          code: g.code,
-          title: g.title,
-          description: g.description,
-          modules: mods,
-          completedCount: mods.filter((m) => completionIds.has(m.code)).length,
-          totalCount: mods.length,
-        };
-        if (!chapterGroupMap.has(chCode)) chapterGroupMap.set(chCode, []);
-        chapterGroupMap.get(chCode)!.push(gwm);
-      }
-
-      const builtChapters: ChapterWithGroups[] = previewChapters
-        .filter((ch) => chapterGroupMap.has(ch.code))
-        .map((ch) => ({
-          code: ch.code,
-          title: ch.title,
-          description: ch.description,
-          groups: chapterGroupMap.get(ch.code) || [],
-        }));
-
-      setChapters(builtChapters);
-
-      // Default expand: first chapter with incomplete modules
-      const firstIncomplete = builtChapters.find((ch) =>
-        ch.groups.some((g) => g.completedCount < g.totalCount),
-      );
-      if (firstIncomplete) {
-        setExpandedChapters(new Set([firstIncomplete.code]));
-      }
-
+    if (!row) {
       setLoading(false);
-    };
+      return;
+    }
 
-    fetchData();
+    const studentRow = row as StudentRow;
+    const fullName = [studentRow.first_name, studentRow.last_name]
+      .filter(Boolean)
+      .join(' ')
+      .trim();
+    const s = {
+      id: studentRow.id,
+      name: fullName || studentRow.name || 'Student',
+      focusAreas: Array.isArray(studentRow.focus_areas)
+        ? studentRow.focus_areas
+        : ['Learning Sensorially'],
+      progressPercent: studentRow.progress_percent ?? 0,
+      progressLabel: studentRow.progress_label ?? null,
+      assessmentStatus: normalizeAssessmentStatus({
+        assessmentStatus: studentRow.assessment_status,
+        progressPercent: studentRow.progress_percent,
+      }),
+    };
+    setStudent(s);
+
+    const [groupsRes, completionIds] = await Promise.all([
+      sb.rpc('content_get_groups', { p_teaching_mode: null }),
+      fetchCompletions(studentId),
+    ]);
+
+    // KAN-64: fetch active group memberships + group names
+    if (!tenantId) {
+      setMemberships([]);
+    } else {
+      try {
+        const { data: embedded, error: embedErr } = await sb
+          .from('student_group_memberships')
+          .select('group_id, groups(name)')
+          .eq('tenant_id', tenantId)
+          .eq('student_id', studentId)
+          .eq('active', true);
+        if (embedErr) throw embedErr;
+        const rows = (embedded || []) as {
+          group_id: string;
+          groups: { name: string | null } | { name: string | null }[] | null;
+        }[];
+        const hasNames = rows.some((r) => {
+          const g = Array.isArray(r.groups) ? r.groups[0] : r.groups;
+          return !!g?.name;
+        });
+        if (rows.length === 0 || hasNames) {
+          setMemberships(
+            rows.map((r) => {
+              const g = Array.isArray(r.groups) ? r.groups[0] : r.groups;
+              return {
+                group_id: r.group_id,
+                group_name: g?.name || 'Unknown group',
+              };
+            }),
+          );
+        } else {
+          // FK not wired — fall back to a 2-query lookup
+          const groupIds = rows.map((r) => r.group_id);
+          const { data: groupsData, error: groupsErr } = await sb
+            .from('groups')
+            .select('id,name')
+            .eq('tenant_id', tenantId)
+            .in('id', groupIds);
+          if (groupsErr) throw groupsErr;
+          const nameById = new Map<string, string | null>(
+            ((groupsData || []) as { id: string; name: string | null }[]).map(
+              (g) => [g.id, g.name],
+            ),
+          );
+          setMemberships(
+            groupIds.map((id) => ({
+              group_id: id,
+              group_name: nameById.get(id) || 'Unknown group',
+            })),
+          );
+        }
+      } catch (err) {
+        console.error('KAN-64 load memberships:', err);
+        setMemberships([]);
+      }
+    }
+
+    if (!tenantId) {
+      setLatestObservation(null);
+    } else {
+      try {
+        const { data, error } = await sb
+          .from('lesson_completions')
+          .select('completed_at, notes, module_id')
+          .eq('tenant_id', tenantId)
+          .eq('student_id', studentId)
+          .order('completed_at', { ascending: false })
+          .limit(1);
+        if (error) throw error;
+        const row = (data || [])[0] as
+          | { completed_at: string; notes: string | null; module_id: string }
+          | undefined;
+        setLatestObservation(row || null);
+      } catch (err) {
+        const pgCode = (err as { code?: string } | null)?.code;
+        if (pgCode !== '42703') {
+          console.error('LR-13d load latestObservation:', err);
+        }
+        setLatestObservation(null);
+      }
+    }
+
+    const groupRows = (groupsRes.data as GroupRow[] | null) || [];
+    const resolvedGroups = groupRows.length
+      ? groupRows
+      : previewGroups.map((g) => ({ ...g, id: g.id } as GroupRow));
+
+    // Fetch modules for all groups in parallel
+    const groupModulesEntries = await Promise.all(
+      resolvedGroups.map(async (g) => {
+        if (groupRows.length) {
+          const { data: mods } = await sb.rpc('content_get_modules', {
+            p_group_code: g.code,
+            p_teaching_mode: g.teaching_mode,
+          });
+          const moduleRows = (mods as ModuleRow[] | null) || [];
+          return [g.code, moduleRows.sort((a, b) => (a.display_order || 0) - (b.display_order || 0))] as const;
+        }
+        const fallback = (previewModulesByGroup[g.code] || []).map((m) => ({
+          ...m,
+          is_locked: m.is_locked ?? null,
+          display_order: m.display_order ?? null,
+        })) as ModuleRow[];
+        return [g.code, fallback] as const;
+      }),
+    );
+    const modulesByGroup = new Map(groupModulesEntries);
+
+    // Build chapter structure
+    const chapterGroupMap = new Map<string, GroupWithModules[]>();
+    for (const g of resolvedGroups) {
+      const chCode = groupToChapterCode[g.code];
+      if (!chCode) continue;
+      const mods = modulesByGroup.get(g.code) || [];
+      const gwm: GroupWithModules = {
+        code: g.code,
+        title: g.title,
+        description: g.description,
+        modules: mods,
+        completedCount: mods.filter((m) => completionIds.has(m.code)).length,
+        totalCount: mods.length,
+      };
+      if (!chapterGroupMap.has(chCode)) chapterGroupMap.set(chCode, []);
+      chapterGroupMap.get(chCode)!.push(gwm);
+    }
+
+    const builtChapters: ChapterWithGroups[] = previewChapters
+      .filter((ch) => chapterGroupMap.has(ch.code))
+      .map((ch) => ({
+        code: ch.code,
+        title: ch.title,
+        description: ch.description,
+        groups: chapterGroupMap.get(ch.code) || [],
+      }));
+
+    setChapters(builtChapters);
+
+    // Default expand: first chapter with incomplete modules
+    const firstIncomplete = builtChapters.find((ch) =>
+      ch.groups.some((g) => g.completedCount < g.totalCount),
+    );
+    if (firstIncomplete) {
+      setExpandedChapters(new Set([firstIncomplete.code]));
+    }
+
+    setLoading(false);
   }, [studentId, isHydrated, isLoggedIn, tenantId, fetchCompletions]);
 
   useEffect(() => {
     if (!isHydrated || !isLoggedIn) return;
-    const mountedAt = Date.now();
-    const onVisible = () => {
+    lastFetchAtRef.current = Date.now();
+    fetchData().finally(() => {
+      mountedRef.current = true;
+      // KAN-154: the lesson page sets this flag in markComplete right before
+      // router.push back here. Because that nav is a fresh mount, the pulse
+      // effect's mountedRef gate would suppress the emerald flash without an
+      // explicit signal. Consume the flag, fire the pulse once, and clear it.
+      try {
+        if (typeof window !== 'undefined') {
+          const key = `padi:pulse-pending:${studentId}`;
+          if (sessionStorage.getItem(key)) {
+            sessionStorage.removeItem(key);
+            setCountJustChanged(true);
+            setTimeout(() => setCountJustChanged(false), 220);
+          }
+        }
+      } catch {
+        // sessionStorage may be unavailable (private mode, SSR edge); ignore.
+      }
+    });
+  }, [fetchData, isHydrated, isLoggedIn, pathname, studentId]);
+
+  useEffect(() => {
+    if (!isHydrated || !isLoggedIn) return;
+
+    const maybeRefetch = () => {
+      if (!mountedRef.current) return;
       if (document.visibilityState !== 'visible') return;
-      if (Date.now() - mountedAt < 500) return;
-      fetchCompletions(studentId);
+      if (Date.now() - lastFetchAtRef.current < 1000) return;
+      lastFetchAtRef.current = Date.now();
+      fetchData();
     };
-    document.addEventListener('visibilitychange', onVisible);
-    return () => document.removeEventListener('visibilitychange', onVisible);
-  }, [isHydrated, isLoggedIn, studentId, fetchCompletions]);
+
+    const onFocus = () => {
+      if (!mountedRef.current) return;
+      if (Date.now() - lastFetchAtRef.current < 1000) return;
+      lastFetchAtRef.current = Date.now();
+      fetchData();
+    };
+
+    document.addEventListener('visibilitychange', maybeRefetch);
+    window.addEventListener('focus', onFocus);
+    return () => {
+      document.removeEventListener('visibilitychange', maybeRefetch);
+      window.removeEventListener('focus', onFocus);
+    };
+  }, [isHydrated, isLoggedIn, fetchData]);
 
   const avatarInitials = useMemo(() => {
     if (!student) return 'S';
@@ -345,6 +384,21 @@ export default function StudentModulePage({
     () => allModules.filter((m) => completedModuleIds.has(m.code)).length,
     [allModules, completedModuleIds],
   );
+
+  useEffect(() => {
+    if (!mountedRef.current) {
+      prevCompletedCountRef.current = completedCount;
+      return;
+    }
+    if (completedCount > prevCompletedCountRef.current) {
+      setCountJustChanged(true);
+      const t = setTimeout(() => setCountJustChanged(false), 220);
+      prevCompletedCountRef.current = completedCount;
+      return () => clearTimeout(t);
+    }
+    prevCompletedCountRef.current = completedCount;
+  }, [completedCount]);
+
   const totalCount = allModules.length;
   const progressPercent = totalCount > 0 ? Math.round((completedCount / totalCount) * 100) : 0;
   const allComplete = completedCount === totalCount && totalCount > 0;
@@ -495,7 +549,14 @@ export default function StudentModulePage({
         <div className="space-y-1">
           <div className="flex items-center justify-between text-sm">
             <span className="text-gray-700">
-              {formatProgressLabel({ completedCount, totalCount }).label}
+              <span
+                className={clsx(
+                  'inline-block rounded px-1 transition-colors duration-200',
+                  countJustChanged && 'bg-emerald-100',
+                )}
+              >
+                {formatProgressLabel({ completedCount, totalCount }).label}
+              </span>
             </span>
             <span className="font-semibold text-gray-900">
               {progressPercent}%

@@ -1,6 +1,7 @@
 'use client';
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 import clsx from 'clsx';
 import { TeachingModeToggle } from '@/components/TeachingModeToggle';
 import { useTeachingMode } from '@/lib/teachingModeContext';
@@ -47,11 +48,48 @@ const previewHighlights = [
 export default function TeacherIndexPage() {
   const { mode } = useTeachingMode();
   const { isLoggedIn, isHydrated, tenantId, role } = useAuth();
+  const pathname = usePathname();
+  const lastFetchAtRef = useRef(0);
+  const mountedRef = useRef(false);
   const [isAddStudentOpen, setAddStudentOpen] = useState(false);
   const [isAddGroupOpen, setAddGroupOpen] = useState(false);
   const [wizardSkipped, setWizardSkipped] = useState(false);
   const dataMode = isLoggedIn ? 'live' : 'demo';
   const startData = useStartTeachingData();
+  const refetch = startData.refetch;
+
+  const fetchData = useCallback(async () => {
+    await refetch();
+  }, [refetch]);
+
+  useEffect(() => {
+    lastFetchAtRef.current = Date.now();
+    fetchData().finally(() => {
+      mountedRef.current = true;
+    });
+  }, [fetchData, pathname]);
+
+  useEffect(() => {
+    const maybeRefetch = () => {
+      if (!mountedRef.current) return;
+      if (document.visibilityState !== 'visible') return;
+      if (Date.now() - lastFetchAtRef.current < 1000) return;
+      lastFetchAtRef.current = Date.now();
+      fetchData();
+    };
+    const onFocus = () => {
+      if (!mountedRef.current) return;
+      if (Date.now() - lastFetchAtRef.current < 1000) return;
+      lastFetchAtRef.current = Date.now();
+      fetchData();
+    };
+    document.addEventListener('visibilitychange', maybeRefetch);
+    window.addEventListener('focus', onFocus);
+    return () => {
+      document.removeEventListener('visibilitychange', maybeRefetch);
+      window.removeEventListener('focus', onFocus);
+    };
+  }, [fetchData]);
 
   // Parent gating (mirrors KAN-131): derive effectiveMode locally, do not
   // mutate teaching-mode context. Unknown role falls through to teacher view.

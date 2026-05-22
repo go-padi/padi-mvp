@@ -466,3 +466,10 @@ Log of features shipped by BuildLoop.
 - Branch: buildloop/drop-curriculum-wide-denominator-from-headline
 - UAT bugs found and fixed: 0
 - Build retries: 0
+
+## LR-09e
+- Iteration: 2
+- Shipped: 2026-05-22T21:45:54+00:00
+- Branch: buildloop/drop-denominator-from-roster-cards
+- UAT bugs found and fixed: 0
+- Build retries: 0

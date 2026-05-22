@@ -122,6 +122,12 @@ export default function StartLandingPage({
           Explore the curriculum
         </Link>
       </div>
+      <p className="text-xs text-gray-500">
+        Adding more children?{' '}
+        <Link href="/students" className="font-semibold text-blue-700 hover:underline">
+          Add another child
+        </Link>
+      </p>
     </div>
   );
 }

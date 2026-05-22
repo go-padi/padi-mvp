@@ -104,6 +104,9 @@ export default function StudentModulePage({
     notes: string | null;
     module_id: string;
   } | null>(null);
+  const [memberships, setMemberships] = useState<
+    { group_id: string; group_name: string }[]
+  >([]);
   const [loading, setLoading] = useState(true);
 
   const fetchCompletions = useCallback(async (sid: string) => {
@@ -160,6 +163,63 @@ export default function StudentModulePage({
         sb.rpc('content_get_groups', { p_teaching_mode: null }),
         fetchCompletions(studentId),
       ]);
+
+      // KAN-64: fetch active group memberships + group names
+      if (!tenantId) {
+        setMemberships([]);
+      } else {
+        try {
+          const { data: embedded, error: embedErr } = await sb
+            .from('student_group_memberships')
+            .select('group_id, groups(name)')
+            .eq('tenant_id', tenantId)
+            .eq('student_id', studentId)
+            .eq('active', true);
+          if (embedErr) throw embedErr;
+          const rows = (embedded || []) as {
+            group_id: string;
+            groups: { name: string | null } | { name: string | null }[] | null;
+          }[];
+          const hasNames = rows.some((r) => {
+            const g = Array.isArray(r.groups) ? r.groups[0] : r.groups;
+            return !!g?.name;
+          });
+          if (rows.length === 0 || hasNames) {
+            setMemberships(
+              rows.map((r) => {
+                const g = Array.isArray(r.groups) ? r.groups[0] : r.groups;
+                return {
+                  group_id: r.group_id,
+                  group_name: g?.name || 'Unknown group',
+                };
+              }),
+            );
+          } else {
+            // FK not wired — fall back to a 2-query lookup
+            const groupIds = rows.map((r) => r.group_id);
+            const { data: groupsData, error: groupsErr } = await sb
+              .from('groups')
+              .select('id,name')
+              .eq('tenant_id', tenantId)
+              .in('id', groupIds);
+            if (groupsErr) throw groupsErr;
+            const nameById = new Map<string, string | null>(
+              ((groupsData || []) as { id: string; name: string | null }[]).map(
+                (g) => [g.id, g.name],
+              ),
+            );
+            setMemberships(
+              groupIds.map((id) => ({
+                group_id: id,
+                group_name: nameById.get(id) || 'Unknown group',
+              })),
+            );
+          }
+        } catch (err) {
+          console.error('KAN-64 load memberships:', err);
+          setMemberships([]);
+        }
+      }
 
       if (!tenantId) {
         setLatestObservation(null);
@@ -458,6 +518,19 @@ export default function StudentModulePage({
       {allComplete && (
         <div className="rounded-2xl border border-green-200 bg-green-50 p-5 shadow-sm text-sm text-green-800 font-semibold">
           All modules complete for {student.name}!
+        </div>
+      )}
+
+      {memberships.length > 0 && (
+        <div className="flex flex-wrap gap-2">
+          {memberships.map((m) => (
+            <span
+              key={m.group_id}
+              className="inline-flex items-center rounded-full bg-blue-50 px-3 py-1 text-xs font-semibold text-blue-700"
+            >
+              Group: {m.group_name}
+            </span>
+          ))}
         </div>
       )}
 

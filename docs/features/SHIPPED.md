@@ -361,3 +361,10 @@ Log of features shipped by BuildLoop.
 - Branch: buildloop/lr-13d-latest-observation-callout-on-student-profile
 - UAT bugs found and fixed: 1
 - Build retries: 0
+
+## LR-13e
+- Iteration: 3
+- Shipped: 2026-05-22T11:44:09+00:00
+- Branch: buildloop/lr-13e-latest-observation-on-dashboard-cards
+- UAT bugs found and fixed: 0
+- Build retries: 0

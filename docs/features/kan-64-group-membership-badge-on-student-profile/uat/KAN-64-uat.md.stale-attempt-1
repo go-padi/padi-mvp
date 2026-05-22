@@ -1,0 +1,140 @@
+Verdict: FAIL
+
+## Summary
+
+Source-inspection UAT for KAN-64 — group membership badge on student
+profile. Single-file change to
+`app/teacher/start-teaching/students/[studentId]/page.tsx`.
+
+Build/lint/tsc all green. JSX section order, state shape, error
+handling, group-name fallback, and no-regression checks all pass.
+
+Two bugs filed against the implementation:
+
+- **KAN-150 (P1)** — Membership queries are missing the required
+  `.eq('tenant_id', tenantId)` filter on both the embedded-select
+  and the 2-query fallback, and the fetch block is not gated on
+  `tenantId` (unlike the LR-13d block immediately below it). The
+  refined ticket explicitly lists tenant_id filtering as a hard
+  requirement (refined-ticket lines 46–54; UAT prompt point 2).
+  Bug file:
+  `docs/features/kan-64-group-membership-badge-on-student-profile/bugs/kan-150-bug-missing-tenant-id-filter-on-membership-queries.md`
+
+- **KAN-151 (P3)** — Badge `<span>` uses `px-2.5 py-1` instead of
+  the spec'd `px-3 py-1` on line 523. Cosmetic but a verbatim
+  deviation from the className spec.
+  Bug file:
+  `docs/features/kan-64-group-membership-badge-on-student-profile/bugs/kan-151-bug-badge-padding-deviation-px-2-5-vs-spec-px-3.md`
+
+## Verification details
+
+### State (✅)
+
+Lines 107–109 — declared exactly as
+`const [memberships, setMemberships] = useState<{ group_id: string;
+group_name: string }[]>([]);`. Matches spec.
+
+### Query (❌ — see KAN-150)
+
+Lines 167–216. Embedded-select on lines 169–173 filters by
+`student_id` and `active=true` but NOT `tenant_id`. Two-query
+fallback `groups` lookup on lines 196–199 also missing `tenant_id`.
+The block is not gated on `tenantId`. Effect dependencies (line 310)
+do include `tenantId` so the effect re-runs when tenant resolves,
+but the query inside still fires unfiltered. Error handling via
+`console.error` and `setMemberships([])` on lines 213–216 is
+correct. Group-name fallback to `'Unknown group'` is implemented in
+both paths (lines 189, 209) and the embedded-select handles both
+array and object shapes for `groups` (lines 175–186).
+
+### Badge JSX (❌ for padding — see KAN-151; ✅ otherwise)
+
+Lines 518–529. Conditional `memberships.length > 0`, container
+`flex flex-wrap gap-2`, one `<span>` per membership keyed on
+`group_id`, text `Group: {m.group_name}`. All correct. Padding is
+`px-2.5` instead of `px-3`.
+
+### Section order (✅)
+
+Lines 460–564:
+1. Header card (avatar, name, status pill, progress bar) — 459–510
+2. `allComplete` banner (existing) — 512–516
+3. **Group membership badges (NEW)** — 518–529
+4. LR-13d Latest observation callout — 531–540
+5. LR-11a Next up CTA — 542–562
+6. Chapter accordion — 564–728
+
+Badges render above LR-13d and above LR-11a, as specified.
+
+### No-regression (✅)
+
+- LR-13d Latest observation callout still renders (lines 531–540),
+  still gated on `tenantId`, still filters by `tenant_id` on line
+  225. Unchanged.
+- LR-11a Next up CTA still renders (lines 542–562). Unchanged.
+- LR-13c lesson page panel — different file, not modified.
+- LR-26b SIGNAL_OPTIONS / LR-10a markComplete / LR-21c Teach
+  buttons / KAN-137b track calls — none touched (those live in the
+  lesson page, not this file).
+- Chapter accordion, completion-by-visibilitychange refetch,
+  avatar/initials, progress bar, status pill, focus areas — all
+  intact.
+
+### Auth-store (✅)
+
+`git diff --name-only lib/auth-store.tsx` returns empty. Untouched.
+
+### Diff scope (✅)
+
+`git diff --stat HEAD` shows only:
+- `app/teacher/start-teaching/students/[studentId]/page.tsx` (+67)
+- `docs/features/SHIPPED.md` (+7)
+
+Single source file modified, as required.
+
+### Build / lint / tsc (✅)
+
+- `pnpm lint` — exit 0 (1 unrelated warning in
+  `lib/copy/assessmentStatusCopy.ts` about an unused
+  eslint-disable, pre-existing).
+- `pnpm tsc --noEmit` — exit 0, no output.
+- `pnpm build` — exit 0, 19/19 static pages generated, route
+  `/teacher/start-teaching/students/[studentId]` builds at 4.73 kB
+  / 158 kB First Load JS.
+
+## Run history
+
+### 2026-05-22 — padi-uat-agent (source-inspection)
+- Verdict: **FAIL**
+- Scenarios: ✅ 9 / ❌ 2 / 🐛 0 / ⏸️ 0
+- Results:
+  | # | Scenario | Status | Bug file | Severity |
+  |---|----------|--------|----------|----------|
+  | 1 | `memberships` state shape | ✅ | — | — |
+  | 2 | Query gated on `tenantId && studentId` | ❌ | bugs/kan-150-bug-missing-tenant-id-filter-on-membership-queries.md | P1 |
+  | 3 | `.eq('tenant_id', tenantId)` on both queries | ❌ | bugs/kan-150-bug-missing-tenant-id-filter-on-membership-queries.md | P1 |
+  | 4 | `.eq('student_id', studentId)` + `.eq('active', true)` | ✅ | — | — |
+  | 5 | Error handling + empty state on failure | ✅ | — | — |
+  | 6 | Group-name fallback ("Unknown group") | ✅ | — | — |
+  | 7 | Badge JSX conditional + container | ✅ | — | — |
+  | 8 | Badge pill className matches spec | ❌ | bugs/kan-151-bug-badge-padding-deviation-px-2-5-vs-spec-px-3.md | P3 |
+  | 9 | Section order: badges → LR-13d → LR-11a → chapters | ✅ | — | — |
+  | 10 | No regression to LR-13d, LR-11a, chapter list, etc | ✅ | — | — |
+  | 11 | `lib/auth-store.tsx` untouched | ✅ | — | — |
+  | 12 | `pnpm lint` / `tsc` / `build` all exit 0 | ✅ | — | — |
+- Notes for padi-eng:
+  - Wrap the KAN-64 block on lines 167–216 of
+    `app/teacher/start-teaching/students/[studentId]/page.tsx` in
+    `if (tenantId) { ... } else { setMemberships([]); }`, mirroring
+    the LR-13d pattern that begins on line 218.
+  - Add `.eq('tenant_id', tenantId)` to both the embedded-select
+    on lines 169–173 AND the fallback `groups` lookup on lines
+    196–199.
+  - Change `px-2.5` to `px-3` on line 523.
+  - Re-run `pnpm lint && pnpm tsc --noEmit && pnpm build` and
+    rerun this UAT.
+- Notes for padi-design: none — section order, color, shape, type
+  scale all match. Only the horizontal padding is 2px off per pill.
+- Missing from ticket: none — the refined ticket clearly specified
+  the tenant_id filter; the gap is in the implementation, not the
+  spec.

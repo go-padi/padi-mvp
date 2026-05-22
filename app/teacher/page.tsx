@@ -470,7 +470,13 @@ export default function TeacherIndexPage() {
                 <span className="text-gray-700">
                   {startData.mode === 'preview'
                     ? (card.progressLabel || `${card.progressPercent}% complete`)
-                    : helperResult.label}
+                    : helperResult.intent === 'empty'
+                      ? 'Not started yet'
+                      : helperResult.intent === 'all-complete'
+                        ? 'All modules complete'
+                        : helperResult.intent === 'error'
+                          ? 'Progress unavailable'
+                          : `${card.completedCount} ${card.completedCount === 1 ? 'module' : 'modules'} completed`}
                 </span>
                 <span className={statusBadgeClass}>{card.status}</span>
               </div>

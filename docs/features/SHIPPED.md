@@ -459,3 +459,10 @@ Log of features shipped by BuildLoop.
 - Branch: buildloop/notes-captured-count-badge-on-profile
 - UAT bugs found and fixed: 0
 - Build retries: 0
+
+## LR-09d
+- Iteration: 1
+- Shipped: 2026-05-22T21:40:03+00:00
+- Branch: buildloop/drop-curriculum-wide-denominator-from-headline
+- UAT bugs found and fixed: 0
+- Build retries: 0

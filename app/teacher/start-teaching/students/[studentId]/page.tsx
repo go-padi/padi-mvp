@@ -462,6 +462,12 @@ export default function StudentModulePage({
   const progressPercent = totalCount > 0 ? Math.round((completedCount / totalCount) * 100) : 0;
   const allComplete = completedCount === totalCount && totalCount > 0;
 
+  const headlineIntent: 'normal' | 'empty' | 'all-complete' | 'error' =
+    !Number.isFinite(totalCount) || totalCount <= 0 ? 'error' :
+    completedCount <= 0 ? 'empty' :
+    completedCount >= totalCount ? 'all-complete' :
+    'normal';
+
   const chaptersStarted = useMemo(
     () => chapters.filter((ch) => ch.groups.some((g) => g.modules.some((m) => completedModuleIds.has(m.code)))).length,
     [chapters, completedModuleIds],
@@ -614,7 +620,19 @@ export default function StudentModulePage({
                   countJustChanged && 'bg-emerald-100',
                 )}
               >
-                {formatProgressLabel({ completedCount, totalCount }).label}
+                {headlineIntent === 'empty' ? (
+                  'Not started yet'
+                ) : headlineIntent === 'all-complete' ? (
+                  `All ${totalCount} modules complete. Curriculum finished.`
+                ) : headlineIntent === 'error' ? (
+                  'Progress unavailable'
+                ) : (
+                  <>
+                    {completedCount} {completedCount === 1 ? 'module' : 'modules'} completed
+                    <span className="mx-2">·</span>
+                    {chaptersStarted} of {chapters.length} {chapters.length === 1 ? 'chapter' : 'chapters'} started
+                  </>
+                )}
               </span>
             </span>
             <span className="font-semibold text-gray-900">
@@ -627,7 +645,7 @@ export default function StudentModulePage({
               style={{ width: `${progressPercent}%` }}
             />
           </div>
-          {formatProgressLabel({ completedCount, totalCount }).intent === 'error' && (
+          {headlineIntent === 'error' && (
             <p className="text-sm text-gray-500">
               Curriculum hasn&apos;t loaded yet &mdash; try refreshing the page.
             </p>

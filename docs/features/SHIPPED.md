@@ -501,3 +501,10 @@ Log of features shipped by BuildLoop.
 - Branch: buildloop/align-legend-tiles-to-violet
 - UAT bugs found and fixed: 0
 - Build retries: 0
+
+## LR-26f
+- Iteration: 7
+- Shipped: 2026-05-23T16:23:19+00:00
+- Branch: buildloop/align-picker-chip-to-violet
+- UAT bugs found and fixed: 0
+- Build retries: 0

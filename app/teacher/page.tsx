@@ -16,6 +16,20 @@ import { PREVIEW_BANNER } from '@/lib/copy/previewCopy';
 import { formatProgressLabel } from '@/lib/copy/progressCopy';
 import { rolePhrase } from '@/lib/copy/roleCopy';
 
+function relativeDays(iso: string | null | undefined): string | null {
+  if (!iso) return null;
+  const then = new Date(iso).getTime();
+  if (!Number.isFinite(then)) return null;
+  const days = Math.floor((Date.now() - then) / (1000 * 60 * 60 * 24));
+  if (days < 0) return null;
+  if (days === 0) return 'today';
+  if (days === 1) return 'yesterday';
+  if (days < 30) return `${days} days ago`;
+  if (days < 60) return '1 month ago';
+  const months = Math.floor(days / 30);
+  return `${months} months ago`;
+}
+
 type CardData = {
   id: string;
   name: string;
@@ -490,7 +504,7 @@ export default function TeacherIndexPage() {
 
               {card.type === 'student' && card.latestObservationNotes?.trim() && (
                 <p className="text-xs italic text-amber-800 line-clamp-2">
-                  Last note: {card.latestObservationNotes}
+                  Last note{relativeDays(card.latestObservationAt) ? ` (${relativeDays(card.latestObservationAt)})` : ''}: {card.latestObservationNotes}
                 </p>
               )}
 

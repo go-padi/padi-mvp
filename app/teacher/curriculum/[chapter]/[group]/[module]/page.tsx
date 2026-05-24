@@ -136,6 +136,7 @@ export default function LessonPage({ params }: { params: Promise<{ chapter: stri
   const [completedModuleIds, setCompletedModuleIds] = useState<Set<string>>(new Set());
   const [warningDismissed, setWarningDismissed] = useState(false);
   const [recordings, setRecordings] = useState<LessonRecordingRow[]>([]);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
   const { mode } = useTeachingMode();
   const { ensureSubject } = useDefaultSubject();
   const recorder = useLessonRecorder({
@@ -177,6 +178,29 @@ export default function LessonPage({ params }: { params: Promise<{ chapter: stri
     setShowPrivacyModal(false);
     recorder.start();
   }, [setAcknowledged, recorder]);
+
+  const deleteRecording = useCallback(async (rec: LessonRecordingRow) => {
+    if (!window.confirm('Delete this recording? This cannot be undone.')) return;
+    setDeletingId(rec.id);
+    const sb = supabaseClient();
+    try {
+      const { error: rmErr } = await sb.storage.from('lesson-recordings').remove([rec.storage_path]);
+      if (rmErr) {
+        console.error('LR-14e storage delete failed:', rmErr);
+        setDeletingId(null);
+        return;
+      }
+      const { error: dbErr } = await sb.from('lesson_recordings').delete().eq('id', rec.id);
+      if (dbErr) {
+        console.error('LR-14e db delete failed:', dbErr);
+        setDeletingId(null);
+        return;
+      }
+      setRecordings(prev => prev.filter(r => r.id !== rec.id));
+    } finally {
+      setDeletingId(null);
+    }
+  }, []);
 
   const hasStudentContext = Boolean(contextStudentId);
   const backHref = hasStudentContext
@@ -918,6 +942,15 @@ export default function LessonPage({ params }: { params: Promise<{ chapter: stri
                 <div key={rec.id} className="space-y-1">
                   <p className="text-xs text-gray-600">
                     {new Date(rec.created_at).toLocaleString()} · {formatDuration(rec.duration_sec)}
+                    {' · '}
+                    <button
+                      type="button"
+                      onClick={() => deleteRecording(rec)}
+                      disabled={deletingId === rec.id}
+                      className="text-xs text-red-600 hover:underline disabled:text-gray-400"
+                    >
+                      {deletingId === rec.id ? 'Deleting...' : 'Delete'}
+                    </button>
                   </p>
                   <audio controls src={rec.signedUrl} className="w-full" />
                 </div>

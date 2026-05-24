@@ -550,3 +550,10 @@ Log of features shipped by BuildLoop.
 - Branch: buildloop/last-lesson-recency-on-dashboard-cards
 - UAT bugs found and fixed: 0
 - Build retries: 0
+
+## KAN-167
+- Iteration: 6
+- Shipped: 2026-05-24T21:30:57+00:00
+- Branch: buildloop/silence-nextjs-eslint-advisory
+- UAT bugs found and fixed: 0
+- Build retries: 0

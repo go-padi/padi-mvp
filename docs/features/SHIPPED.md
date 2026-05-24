@@ -536,3 +536,10 @@ Log of features shipped by BuildLoop.
 - Branch: buildloop/playback-of-prior-recordings
 - UAT bugs found and fixed: 0
 - Build retries: 0
+
+## LR-14d
+- Iteration: 4
+- Shipped: 2026-05-24T21:16:39+00:00
+- Branch: buildloop/privacy-disclosure-modal-before-first-recording
+- UAT bugs found and fixed: 0
+- Build retries: 0

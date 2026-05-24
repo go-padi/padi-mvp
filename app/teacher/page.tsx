@@ -508,6 +508,12 @@ export default function TeacherIndexPage() {
                 </p>
               )}
 
+              {card.type === 'student' && !card.latestObservationNotes?.trim() && card.latestObservationAt && relativeDays(card.latestObservationAt) && (
+                <p className="text-xs italic text-amber-800 line-clamp-2">
+                  Last lesson: {relativeDays(card.latestObservationAt)}
+                </p>
+              )}
+
               <span
                 className={clsx(
                   'inline-flex items-center justify-center rounded-xl px-4 py-2 text-sm font-semibold',

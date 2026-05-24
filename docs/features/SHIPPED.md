@@ -543,3 +543,10 @@ Log of features shipped by BuildLoop.
 - Branch: buildloop/privacy-disclosure-modal-before-first-recording
 - UAT bugs found and fixed: 0
 - Build retries: 0
+
+## LR-09g
+- Iteration: 5
+- Shipped: 2026-05-24T21:22:30+00:00
+- Branch: buildloop/last-lesson-recency-on-dashboard-cards
+- UAT bugs found and fixed: 0
+- Build retries: 0

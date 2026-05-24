@@ -1,6 +1,14 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
     reactStrictMode: true,
+    // KAN-167: disable Next.js's build-time ESLint pass. We run ESLint
+    // separately via `pnpm lint` (gated in validate.sh). The flat-config
+    // setup in eslint.config.mjs uses @next/eslint-plugin-next directly
+    // with core-web-vitals rules, but Next.js's build-time lint pass
+    // doesn't recognize flat-config and emits a noisy advisory.
+    eslint: {
+      ignoreDuringBuilds: true,
+    },
     experimental: {
       serverActions: {
         allowedOrigins: ['*'],

@@ -515,3 +515,10 @@ Log of features shipped by BuildLoop.
 - Branch: buildloop/relative-date-next-to-last-note-on-dashboard
 - UAT bugs found and fixed: 0
 - Build retries: 0
+
+## LR-14a
+- Iteration: 1
+- Shipped: 2026-05-24T20:49:22+00:00
+- Branch: buildloop/lesson-recordings-schema-and-bucket
+- UAT bugs found and fixed: 0
+- Build retries: 0

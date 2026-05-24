@@ -18,6 +18,7 @@ import {
   type AssessmentStatus,
 } from '@/lib/copy/assessmentStatusCopy';
 import { track, ANALYTICS_EVENTS } from '@/lib/analytics';
+import { useLessonRecorder } from '@/lib/hooks/useLessonRecorder';
 
 type Lesson = {
   materials?: string[];
@@ -120,6 +121,11 @@ export default function LessonPage({ params }: { params: Promise<{ chapter: stri
   const [warningDismissed, setWarningDismissed] = useState(false);
   const { mode } = useTeachingMode();
   const { ensureSubject } = useDefaultSubject();
+  const recorder = useLessonRecorder({
+    tenantId,
+    studentId: contextStudentId,
+    moduleId: moduleRow?.code ?? null,
+  });
 
   const hasStudentContext = Boolean(contextStudentId);
   const backHref = hasStudentContext
@@ -747,6 +753,69 @@ export default function LessonPage({ params }: { params: Promise<{ chapter: stri
         </h2>
         <p className="text-sm text-gray-700">{moduleRow?.summary}</p>
       </div>
+
+      {isLoggedIn && tenantId && contextStudentId && moduleRow?.code && (
+        <div className="space-y-2">
+          {recorder.state === 'idle' && (
+            <button
+              type="button"
+              onClick={() => recorder.start()}
+              aria-label="Record audio for this lesson"
+              className="inline-flex items-center gap-2 rounded-lg bg-gray-100 px-3 py-2 text-sm font-semibold text-gray-900 hover:bg-gray-200"
+            >
+              🎙️ Record audio
+            </button>
+          )}
+          {recorder.state === 'recording' && (
+            <button
+              type="button"
+              onClick={() => recorder.stop()}
+              aria-label="Stop recording"
+              className="inline-flex items-center gap-2 rounded-lg bg-red-600 px-3 py-2 text-sm font-semibold text-white hover:bg-red-700"
+            >
+              ⏹ Stop ({Math.floor(recorder.elapsedSec / 60)}:{String(recorder.elapsedSec % 60).padStart(2, '0')})
+            </button>
+          )}
+          {recorder.state === 'uploading' && (
+            <button
+              type="button"
+              disabled
+              className="inline-flex items-center gap-2 rounded-lg bg-gray-200 px-3 py-2 text-sm font-semibold text-gray-600"
+            >
+              Saving recording…
+            </button>
+          )}
+          {recorder.state === 'success' && (
+            <div className="flex items-center gap-2">
+              <span className="inline-flex items-center gap-1 rounded-lg bg-emerald-100 px-3 py-2 text-sm font-semibold text-emerald-900">
+                ✓ Recording saved
+              </span>
+              <button
+                type="button"
+                onClick={() => recorder.start()}
+                className="text-sm font-semibold text-blue-700 hover:underline"
+              >
+                Record another
+              </button>
+            </div>
+          )}
+          {recorder.state === 'error' && (
+            <div className="flex flex-wrap items-center gap-2" role="alert">
+              <span className="text-sm text-red-700">{recorder.error}</span>
+              <button
+                type="button"
+                onClick={() => recorder.start()}
+                className="text-sm font-semibold text-blue-700 hover:underline"
+              >
+                Try again
+              </button>
+            </div>
+          )}
+          <p className="text-xs text-gray-500">
+            Audio stores privately to your Padi workspace.
+          </p>
+        </div>
+      )}
 
       {lesson.materials && lesson.materials.length > 0 && (
         <div className="rounded-2xl border border-gray-100 bg-white p-5 shadow-sm">

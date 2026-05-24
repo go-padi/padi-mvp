@@ -49,6 +49,21 @@ type SequencedModule = {
   moduleTitle: string;
 };
 
+type LessonRecordingRow = {
+  id: string;
+  storage_path: string;
+  duration_sec: number | null;
+  created_at: string;
+  signedUrl: string;
+};
+
+function formatDuration(sec: number | null): string {
+  if (!sec || sec < 0) return '—';
+  const m = Math.floor(sec / 60);
+  const s = sec % 60;
+  return `${m}:${String(s).padStart(2, '0')}`;
+}
+
 const SIGNAL_OPTIONS = [
   {
     value: 'Accelerating',
@@ -119,6 +134,7 @@ export default function LessonPage({ params }: { params: Promise<{ chapter: stri
   const [curriculumSequence, setCurriculumSequence] = useState<SequencedModule[]>([]);
   const [completedModuleIds, setCompletedModuleIds] = useState<Set<string>>(new Set());
   const [warningDismissed, setWarningDismissed] = useState(false);
+  const [recordings, setRecordings] = useState<LessonRecordingRow[]>([]);
   const { mode } = useTeachingMode();
   const { ensureSubject } = useDefaultSubject();
   const recorder = useLessonRecorder({
@@ -361,6 +377,53 @@ export default function LessonPage({ params }: { params: Promise<{ chapter: stri
       prereqHref: `/teacher/curriculum/${prereq.chapterCode}/${prereq.groupCode}/${prereq.moduleCode}?student=${contextStudentId}`,
     };
   }, [curriculumSequence, completedModuleIds, contextStudentId, moduleRow?.code]);
+
+  // LR-14c: Load prior lesson recordings for playback
+  useEffect(() => {
+    if (!isHydrated || !isLoggedIn || !tenantId || !contextStudentId || !moduleRow?.code) {
+      setRecordings([]);
+      return;
+    }
+    let cancelled = false;
+    (async () => {
+      const sb = supabaseClient();
+      try {
+        const { data, error } = await sb
+          .from('lesson_recordings')
+          .select('id, storage_path, duration_sec, created_at')
+          .eq('tenant_id', tenantId)
+          .eq('student_id', contextStudentId)
+          .eq('module_id', moduleRow.code)
+          .order('created_at', { ascending: false })
+          .limit(10);
+        if (error) throw error;
+        const rows = (data || []) as Array<{
+          id: string;
+          storage_path: string;
+          duration_sec: number | null;
+          created_at: string;
+        }>;
+        const signed = await Promise.all(
+          rows.map(async (r) => {
+            const { data: urlData, error: urlErr } = await sb.storage
+              .from('lesson-recordings')
+              .createSignedUrl(r.storage_path, 3600);
+            return { ...r, signedUrl: urlErr ? '' : (urlData?.signedUrl || '') };
+          }),
+        );
+        if (!cancelled) setRecordings(signed.filter((r) => r.signedUrl));
+      } catch (err) {
+        const pgCode = (err as { code?: string } | null)?.code;
+        if (pgCode !== '42703' && !cancelled) {
+          console.error('LR-14c load recordings:', err);
+        }
+        if (!cancelled) setRecordings([]);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [isHydrated, isLoggedIn, tenantId, contextStudentId, moduleRow?.code, recorder.state]);
 
   // Load previously saved notes when student context is set
   useEffect(() => {
@@ -814,6 +877,21 @@ export default function LessonPage({ params }: { params: Promise<{ chapter: stri
           <p className="text-xs text-gray-500">
             Audio stores privately to your Padi workspace.
           </p>
+          {recordings.length > 0 && (
+            <div className="mt-4 space-y-3">
+              <p className="text-xs font-semibold uppercase tracking-wide text-gray-700">
+                Prior recordings
+              </p>
+              {recordings.map((rec) => (
+                <div key={rec.id} className="space-y-1">
+                  <p className="text-xs text-gray-600">
+                    {new Date(rec.created_at).toLocaleString()} · {formatDuration(rec.duration_sec)}
+                  </p>
+                  <audio controls src={rec.signedUrl} className="w-full" />
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       )}
 

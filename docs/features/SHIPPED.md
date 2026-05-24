@@ -508,3 +508,10 @@ Log of features shipped by BuildLoop.
 - Branch: buildloop/align-picker-chip-to-violet
 - UAT bugs found and fixed: 0
 - Build retries: 0
+
+## LR-13h
+- Iteration: 8
+- Shipped: 2026-05-23T19:27:25+00:00
+- Branch: buildloop/relative-date-next-to-last-note-on-dashboard
+- UAT bugs found and fixed: 0
+- Build retries: 0

@@ -955,6 +955,11 @@ export default function LessonPage({ params }: { params: Promise<{ chapter: stri
                   <audio controls src={rec.signedUrl} className="w-full" />
                 </div>
               ))}
+              {recordings.length === 10 && (
+                <p className="text-xs italic text-gray-500">
+                  Showing 10 most recent recordings. Older recordings remain saved in your workspace.
+                </p>
+              )}
             </div>
           )}
         </div>

@@ -1,6 +1,6 @@
 'use client';
 import Link from 'next/link';
-import { use, useEffect, useMemo, useState } from 'react';
+import { use, useCallback, useEffect, useMemo, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { supabaseClient } from '@/lib/supabase';
 import clsx from 'clsx';
@@ -19,6 +19,7 @@ import {
 } from '@/lib/copy/assessmentStatusCopy';
 import { track, ANALYTICS_EVENTS } from '@/lib/analytics';
 import { useLessonRecorder } from '@/lib/hooks/useLessonRecorder';
+import { PrivacyDisclosureModal } from '@/components/PrivacyDisclosureModal';
 
 type Lesson = {
   materials?: string[];
@@ -142,6 +143,40 @@ export default function LessonPage({ params }: { params: Promise<{ chapter: stri
     studentId: contextStudentId,
     moduleId: moduleRow?.code ?? null,
   });
+
+  const [showPrivacyModal, setShowPrivacyModal] = useState(false);
+
+  const LR14D_LS_KEY = 'padi:lr14d:acknowledged';
+
+  const hasAcknowledged = useCallback((): boolean => {
+    try {
+      return typeof window !== 'undefined' && window.localStorage.getItem(LR14D_LS_KEY) === '1';
+    } catch {
+      return false;
+    }
+  }, []);
+
+  const setAcknowledged = useCallback(() => {
+    try {
+      window.localStorage.setItem(LR14D_LS_KEY, '1');
+    } catch {
+      /* localStorage may be unavailable in private mode */
+    }
+  }, []);
+
+  const handleRecordTap = useCallback(() => {
+    if (hasAcknowledged()) {
+      recorder.start();
+    } else {
+      setShowPrivacyModal(true);
+    }
+  }, [hasAcknowledged, recorder]);
+
+  const handleAcknowledge = useCallback(() => {
+    setAcknowledged();
+    setShowPrivacyModal(false);
+    recorder.start();
+  }, [setAcknowledged, recorder]);
 
   const hasStudentContext = Boolean(contextStudentId);
   const backHref = hasStudentContext
@@ -822,7 +857,7 @@ export default function LessonPage({ params }: { params: Promise<{ chapter: stri
           {recorder.state === 'idle' && (
             <button
               type="button"
-              onClick={() => recorder.start()}
+              onClick={handleRecordTap}
               aria-label="Record audio for this lesson"
               className="inline-flex items-center gap-2 rounded-lg bg-gray-100 px-3 py-2 text-sm font-semibold text-gray-900 hover:bg-gray-200"
             >
@@ -855,7 +890,7 @@ export default function LessonPage({ params }: { params: Promise<{ chapter: stri
               </span>
               <button
                 type="button"
-                onClick={() => recorder.start()}
+                onClick={handleRecordTap}
                 className="text-sm font-semibold text-blue-700 hover:underline"
               >
                 Record another
@@ -874,9 +909,6 @@ export default function LessonPage({ params }: { params: Promise<{ chapter: stri
               </button>
             </div>
           )}
-          <p className="text-xs text-gray-500">
-            Audio stores privately to your Padi workspace.
-          </p>
           {recordings.length > 0 && (
             <div className="mt-4 space-y-3">
               <p className="text-xs font-semibold uppercase tracking-wide text-gray-700">
@@ -1136,6 +1168,11 @@ export default function LessonPage({ params }: { params: Promise<{ chapter: stri
         onCreated={async () => {
           setShowAddGroupModal(false);
         }}
+      />
+      <PrivacyDisclosureModal
+        open={showPrivacyModal}
+        onAcknowledge={handleAcknowledge}
+        onCancel={() => setShowPrivacyModal(false)}
       />
     </div>
   );

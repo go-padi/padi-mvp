@@ -529,3 +529,10 @@ Log of features shipped by BuildLoop.
 - Branch: buildloop/lesson-recorder-button-and-upload
 - UAT bugs found and fixed: 0
 - Build retries: 0
+
+## LR-14c
+- Iteration: 3
+- Shipped: 2026-05-24T21:08:48+00:00
+- Branch: buildloop/playback-of-prior-recordings
+- UAT bugs found and fixed: 0
+- Build retries: 0

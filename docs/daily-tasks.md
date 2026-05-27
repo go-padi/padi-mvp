@@ -11,6 +11,102 @@ Format per day:
 
 ---
 
+## Tue 2026-05-26
+
+### Top priorities — in this order
+
+**Run BuildLoop with SIGNIN-3 first.**
+
+```
+/buildloop:buildloop-start 1
+```
+
+1. **SIGNIN-3 — Forgot password + magic link.** Self-serve recovery
+   path in the existing `SignInModal`. Closes SIGNIN-2's deferred AC-15
+   and removes the manual `DELETE FROM auth.users` rescue that was
+   needed today for `mona.iyer@verizon.net`. Adds new `app/auth/callback`
+   route, new `app/auth/reset-password` page, and three additive
+   methods on `lib/auth-store.tsx`. No DB / RLS / schema changes.
+
+   - Ticket: `docs/features/sign-in-flow/signin-3-forgot-password.md`
+   - CC prompt: `docs/features/sign-in-flow/cc-prompt-signin-3-forgot-password.md`
+   - UAT: `docs/features/sign-in-flow/uat/SIGNIN-3-uat.md`
+   - Frontmatter: `priority: highest`, `buildloop_priority: next`,
+     `launch_blocker: true`
+
+### Manual step (do before merging SIGNIN-3)
+
+- **Supabase dashboard:** add to Auth → URL Configuration → Redirect
+  URLs:
+  - `http://localhost:3010/auth/callback`
+  - `https://padi-mvp.vercel.app/auth/callback`
+  - The Vercel preview wildcard (e.g.
+    `https://padi-mvp-*-go-padi.vercel.app/auth/callback`)
+  Without this, the reset / magic email links 404 on Supabase's side
+  and UAT-03 / UAT-05 will fail. Call out in the PR description so
+  reviewer doesn't forget.
+
+### Notes / blockers
+
+- Today's trigger: real user `mona.iyer@verizon.net` (OAuth signup,
+  never set a password) was unable to recover her account; row deleted
+  manually via Supabase MCP. That's the canonical end-to-end smoke
+  test once SIGNIN-3 ships (UAT-04).
+- SIGNIN-2 already left a "deferred to SIGNIN-3" note; this ticket
+  satisfies that handoff.
+- `/auth/reset-password` does NOT exist on `main` today — verified
+  `app/auth/` only contains `health/page.tsx`. SIGNIN-3 creates the
+  route fresh; do NOT try to revive the old `followup-parent-redirect-resolution`
+  branch (commit `94b1035`).
+
+---
+
+## Sun 2026-05-24
+
+### Top priorities — in this order
+
+**Run BuildLoop with LR-28 first, LR-10-bug-01 second.**
+
+```
+/buildloop:buildloop-start 2
+```
+
+1. **LR-28 — Wire Supabase migrations into the deploy pipeline.** First
+   priority. Today every migration in `supabase/migrations/` is at risk
+   of silently missing prod (LR-14a did, which is why record/stop was
+   broken this morning). Spec at
+   `docs/features/launch-readiness/lr-28-wire-migrations-into-deploy.md`.
+   Needs: auto-apply migrations on deploy + backfill the prod migration
+   log + BuildLoop schema-parity check.
+
+2. **LR-10-bug-01 — Lesson re-entry hides prior completions.** Replay
+   nav shipped, but the lesson page on re-entry shows no "Completed N
+   times" header, no prior observations, wrong H2 title, "Not started"
+   banner for kids mid-curriculum. Spec at
+   `docs/features/launch-readiness/iterations/lr-10-allow-lesson-reentry/bugs/lr-10-bug-01-reentry-hides-prior-completions.md`.
+
+### Also today
+
+- **Re-verify LR-14 recording as mom.** Sign in on her device, hit
+  Record on a real lesson, talk ~5s, hit Stop, confirm "✓ Recording
+  saved" + recording shows in PRIOR RECORDINGS and plays back. Verified
+  once today as Nisha against Olivia Iyer / learning-sensorially-3.
+
+### Notes / blockers
+
+- LR-14 record-then-stop was failing live this morning with "Upload
+  failed". Root cause was two layers: (1) LR-14a migration never
+  applied to prod (bucket + table missing); (2) original RLS used
+  `tenant_id = auth.uid()` but the canonical pattern in this app is
+  `tenant_id in (select tenant_id from profiles where id = auth.uid())`.
+  Both fixed live via Supabase MCP `apply_migration`. Source-of-truth
+  migration file in the repo has been edited to match what's live.
+- Bug doc: `docs/features/launch-readiness/iterations/lr-14-in-browser-audio-recording/bugs/lr-14-bug-01-prod-migration-not-applied.md`
+- LR-14 status can move to `done` once today's live verification is
+  reproduced by mom on her own device.
+
+---
+
 ## Fri 2026-05-22
 
 ### Top priorities

@@ -564,3 +564,10 @@ Log of features shipped by BuildLoop.
 - Branch: buildloop/delete-recording-from-playback-list
 - UAT bugs found and fixed: 0
 - Build retries: 0
+
+## LR-14f
+- Iteration: 8
+- Shipped: 2026-05-24T21:45:36+00:00
+- Branch: buildloop/cap-notice-on-playback-list
+- UAT bugs found and fixed: 0
+- Build retries: 0

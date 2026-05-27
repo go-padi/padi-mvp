@@ -44,7 +44,15 @@ export type AuthState = {
   signup: (email: string, password: string) => Promise<{ session: Session | null; user: AuthUser | null }>;
   logout: () => Promise<void>;
   refreshRole: () => Promise<void>;
+  requestPasswordReset: (email: string) => Promise<void>;
+  sendMagicLink: (email: string) => Promise<void>;
+  updatePassword: (newPassword: string) => Promise<void>;
 };
+
+function getSiteOrigin(): string {
+  if (typeof window !== 'undefined') return window.location.origin;
+  return process.env.NEXT_PUBLIC_SITE_URL ?? 'https://padi-mvp.vercel.app';
+}
 
 const AuthContext = createContext<AuthState | undefined>(undefined);
 
@@ -212,6 +220,32 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setProfileFetchError(false);
   }, []);
 
+  const requestPasswordReset = useCallback(async (email: string) => {
+    const sb = supabaseClient();
+    const { error } = await sb.auth.resetPasswordForEmail(email.trim(), {
+      redirectTo: `${getSiteOrigin()}/auth/callback?type=recovery`,
+    });
+    if (error) throw error;
+  }, []);
+
+  const sendMagicLink = useCallback(async (email: string) => {
+    const sb = supabaseClient();
+    const { error } = await sb.auth.signInWithOtp({
+      email: email.trim(),
+      options: {
+        emailRedirectTo: `${getSiteOrigin()}/auth/callback`,
+        shouldCreateUser: false,
+      },
+    });
+    if (error) throw error;
+  }, []);
+
+  const updatePassword = useCallback(async (newPassword: string) => {
+    const sb = supabaseClient();
+    const { error } = await sb.auth.updateUser({ password: newPassword });
+    if (error) throw error;
+  }, []);
+
   const value = useMemo(
     () => ({
       isLoggedIn,
@@ -225,8 +259,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       signup,
       logout,
       refreshRole,
+      requestPasswordReset,
+      sendMagicLink,
+      updatePassword,
     }),
-    [isLoggedIn, user, tenantId, role, roleSetAt, profileFetchError, isHydrated, login, signup, logout, refreshRole]
+    [isLoggedIn, user, tenantId, role, roleSetAt, profileFetchError, isHydrated, login, signup, logout, refreshRole, requestPasswordReset, sendMagicLink, updatePassword]
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

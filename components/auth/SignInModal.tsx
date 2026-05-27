@@ -2,10 +2,11 @@
 import { FormEvent, MouseEvent, useEffect, useRef, useState } from 'react';
 import { useAuth } from '@/lib/auth-store';
 import { track, ANALYTICS_EVENTS } from '@/lib/analytics';
+import { EyeIcon } from '@/components/auth/EyeIcon';
 
 type SignInModalProps = { onClose: () => void };
 
-type Mode = 'signin' | 'signup';
+type Mode = 'signin' | 'signup' | 'forgot';
 
 // Supabase auth returns one of these phrasings when an email is
 // already registered:
@@ -14,29 +15,18 @@ type Mode = 'signin' | 'signup';
 //   - "User with this email already exists"
 const EMAIL_EXISTS_REGEX = /already\s+(registered|exist|in use)/i;
 
-function EyeIcon({ open }: { open: boolean }) {
-  if (open) {
-    // eye-off
-    return (
-      <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
-        <path d="M17.94 17.94A10.94 10.94 0 0 1 12 20c-7 0-11-8-11-8a19.79 19.79 0 0 1 5.06-5.94" />
-        <path d="M9.9 4.24A10.94 10.94 0 0 1 12 4c7 0 11 8 11 8a19.79 19.79 0 0 1-3.17 4.19" />
-        <path d="M9.88 9.88a3 3 0 1 0 4.24 4.24" />
-        <line x1="1" y1="1" x2="23" y2="23" />
-      </svg>
-    );
-  }
-  // eye
-  return (
-    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
-      <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
-      <circle cx="12" cy="12" r="3" />
-    </svg>
-  );
-}
+const RATE_LIMIT_REGEX = /over_email_send_rate_limit|rate limit|too many/i;
 
 export function SignInModal({ onClose }: SignInModalProps) {
-  const { login, signup, isLoggedIn, user, logout } = useAuth();
+  const {
+    login,
+    signup,
+    isLoggedIn,
+    user,
+    logout,
+    requestPasswordReset,
+    sendMagicLink,
+  } = useAuth();
   const [mode, setMode] = useState<Mode>('signin');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -48,6 +38,8 @@ export function SignInModal({ onClose }: SignInModalProps) {
   const [loading, setLoading] = useState(false);
   const [loggingOut, setLoggingOut] = useState(false);
   const [emailExists, setEmailExists] = useState(false);
+  const [forgotSentEmail, setForgotSentEmail] = useState<string | null>(null);
+  const [forgotSentKind, setForgotSentKind] = useState<'reset' | 'magic' | null>(null);
   const passwordRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -67,6 +59,8 @@ export function SignInModal({ onClose }: SignInModalProps) {
     setShowPassword(false);
     setShowConfirm(false);
     setEmailExists(false);
+    setForgotSentEmail(null);
+    setForgotSentKind(null);
   };
 
   const handleSignInInstead = () => {
@@ -92,7 +86,7 @@ export function SignInModal({ onClose }: SignInModalProps) {
         /invalid|credentials|password|email|not found/i.test(err.message);
       setError(
         isCredentialError
-          ? 'The email or password you entered doesn\u2019t match our records. Please check and try again.'
+          ? 'The email or password you entered doesn’t match our records. Please check and try again.'
           : 'Something went wrong. Please try again in a moment.'
       );
     } finally {
@@ -108,7 +102,7 @@ export function SignInModal({ onClose }: SignInModalProps) {
       return;
     }
     if (password !== confirmPassword) {
-      setError('Passwords don\u2019t match. Please re-enter.');
+      setError('Passwords don’t match. Please re-enter.');
       return;
     }
     setLoading(true);
@@ -146,10 +140,55 @@ export function SignInModal({ onClose }: SignInModalProps) {
     }
   };
 
+  const mapForgotError = (err: unknown): string => {
+    const message = err instanceof Error ? err.message : '';
+    // Supabase rate-limit messages and 429s.
+    if (RATE_LIMIT_REGEX.test(message)) {
+      return 'Too many requests — please wait a minute and try again.';
+    }
+    if (err && typeof err === 'object' && 'status' in err && (err as { status?: number }).status === 429) {
+      return 'Too many requests — please wait a minute and try again.';
+    }
+    return 'Something went wrong. Please try again in a moment.';
+  };
+
+  const attemptResetLink = async () => {
+    setError(null);
+    setInfo(null);
+    setLoading(true);
+    try {
+      await requestPasswordReset(email);
+      track(ANALYTICS_EVENTS.PASSWORD_RESET_REQUESTED);
+      setForgotSentEmail(email.trim());
+      setForgotSentKind('reset');
+    } catch (err) {
+      setError(mapForgotError(err));
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const attemptMagicLink = async () => {
+    setError(null);
+    setInfo(null);
+    setLoading(true);
+    try {
+      await sendMagicLink(email);
+      track(ANALYTICS_EVENTS.MAGIC_LINK_REQUESTED);
+      setForgotSentEmail(email.trim());
+      setForgotSentKind('magic');
+    } catch (err) {
+      setError(mapForgotError(err));
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     if (mode === 'signin') await attemptLogin();
-    else await attemptSignup();
+    else if (mode === 'signup') await attemptSignup();
+    else if (mode === 'forgot') await attemptResetLink();
   };
 
   const handleOverlayClick = (event: MouseEvent<HTMLDivElement>) => {
@@ -159,14 +198,23 @@ export function SignInModal({ onClose }: SignInModalProps) {
   };
 
   const isSignup = mode === 'signup';
-  const title = isSignup ? 'Create Account' : 'Sign In';
-  const subtitle = isSignup
-    ? 'Create an account to save your students and lessons'
-    : 'Sign in to access your teaching dashboard';
+  const isForgot = mode === 'forgot';
+  const title = isForgot
+    ? 'Reset your password'
+    : isSignup
+      ? 'Create Account'
+      : 'Sign In';
+  const subtitle = isForgot
+    ? 'Enter your email — we’ll send you a link to reset your password or sign in without one.'
+    : isSignup
+      ? 'Create an account to save your students and lessons'
+      : 'Sign in to access your teaching dashboard';
   const primaryLabel = isSignup
     ? (loading ? 'Creating account...' : 'Create Account')
     : (loading ? 'Signing in...' : 'Sign In');
   const primaryDisabled = loading || (isSignup && (!password || !confirmPassword));
+  const forgotDisabled = loading || !email;
+  const showConfirmation = isForgot && forgotSentEmail && forgotSentKind;
 
   return (
     <div
@@ -213,6 +261,27 @@ export function SignInModal({ onClose }: SignInModalProps) {
               </div>
             </div>
           </div>
+        ) : isForgot && showConfirmation ? (
+          <div className="space-y-4 p-6">
+            <div className="space-y-1">
+              <h2 className="text-xl font-semibold text-gray-900">{title}</h2>
+            </div>
+            <div
+              className="rounded-lg bg-blue-50 px-3 py-3 text-sm text-blue-800"
+              role="status"
+            >
+              {forgotSentKind === 'reset'
+                ? `If an account exists for ${forgotSentEmail}, we just sent a reset link. Check your inbox.`
+                : `If an account exists for ${forgotSentEmail}, we just sent a magic sign-in link. Check your inbox.`}
+            </div>
+            <button
+              type="button"
+              onClick={() => switchMode('signin')}
+              className="inline-flex w-full items-center justify-center rounded-xl bg-gray-900 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-gray-800"
+            >
+              Back to sign in
+            </button>
+          </div>
         ) : (
         <form className="space-y-4 p-6" onSubmit={handleSubmit}>
           <div className="space-y-1">
@@ -236,34 +305,36 @@ export function SignInModal({ onClose }: SignInModalProps) {
               inputMode="email"
             />
           </div>
-          <div className="space-y-2">
-            <label className="text-sm font-medium text-gray-800" htmlFor="password">
-              Password
-            </label>
-            <div className="relative">
-              <input
-                ref={passwordRef}
-                id="password"
-                type={showPassword ? 'text' : 'password'}
-                value={password}
-                onChange={e => setPassword(e.target.value)}
-                className="w-full rounded-xl border border-gray-300 px-3 py-2 pr-14 text-sm shadow-sm focus:border-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-100"
-                placeholder="Your password"
-                required
-                minLength={isSignup ? 8 : undefined}
-                autoComplete={isSignup ? 'new-password' : 'current-password'}
-              />
-              <button
-                type="button"
-                onClick={() => setShowPassword(prev => !prev)}
-                className="absolute right-2 top-1/2 -translate-y-1/2 rounded-md p-3 text-gray-600 hover:text-gray-700"
-                aria-label={showPassword ? 'Hide password' : 'Show password'}
-                aria-pressed={showPassword}
-              >
-                <EyeIcon open={showPassword} />
-              </button>
+          {!isForgot && (
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-gray-800" htmlFor="password">
+                Password
+              </label>
+              <div className="relative">
+                <input
+                  ref={passwordRef}
+                  id="password"
+                  type={showPassword ? 'text' : 'password'}
+                  value={password}
+                  onChange={e => setPassword(e.target.value)}
+                  className="w-full rounded-xl border border-gray-300 px-3 py-2 pr-14 text-sm shadow-sm focus:border-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-100"
+                  placeholder="Your password"
+                  required
+                  minLength={isSignup ? 8 : undefined}
+                  autoComplete={isSignup ? 'new-password' : 'current-password'}
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(prev => !prev)}
+                  className="absolute right-2 top-1/2 -translate-y-1/2 rounded-md p-3 text-gray-600 hover:text-gray-700"
+                  aria-label={showPassword ? 'Hide password' : 'Show password'}
+                  aria-pressed={showPassword}
+                >
+                  <EyeIcon open={showPassword} />
+                </button>
+              </div>
             </div>
-          </div>
+          )}
           {isSignup && (
             <div className="space-y-2">
               <label className="text-sm font-medium text-gray-800" htmlFor="confirm-password">
@@ -307,20 +378,58 @@ export function SignInModal({ onClose }: SignInModalProps) {
           )}
           {error && <div className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700">{error}</div>}
           {info && <div className="rounded-lg bg-blue-50 px-3 py-2 text-sm text-blue-700">{info}</div>}
-          <button
-            type="submit"
-            disabled={primaryDisabled}
-            className="inline-flex w-full items-center justify-center rounded-xl bg-gray-900 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-gray-800 disabled:opacity-70"
-          >
-            {primaryLabel}
-          </button>
-          <button
-            type="button"
-            onClick={() => switchMode(isSignup ? 'signin' : 'signup')}
-            className="w-full text-center text-sm font-semibold text-gray-700 underline underline-offset-2"
-          >
-            {isSignup ? 'Already have an account? Sign in' : 'Don\u2019t have an account? Create one'}
-          </button>
+          {isForgot ? (
+            <>
+              <button
+                type="submit"
+                disabled={forgotDisabled}
+                className="inline-flex w-full items-center justify-center rounded-xl bg-gray-900 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-gray-800 disabled:opacity-70"
+              >
+                {loading ? 'Sending…' : 'Send reset link'}
+              </button>
+              <button
+                type="button"
+                onClick={attemptMagicLink}
+                disabled={forgotDisabled}
+                className="inline-flex w-full items-center justify-center rounded-xl border border-gray-300 bg-white px-4 py-2 text-sm font-semibold text-gray-900 shadow-sm hover:bg-gray-50 disabled:opacity-70"
+              >
+                {loading ? 'Sending…' : 'Email me a magic sign-in link'}
+              </button>
+              <button
+                type="button"
+                onClick={() => switchMode('signin')}
+                className="w-full text-center text-sm font-semibold text-gray-700 underline underline-offset-2"
+              >
+                Back to sign in
+              </button>
+            </>
+          ) : (
+            <>
+              <button
+                type="submit"
+                disabled={primaryDisabled}
+                className="inline-flex w-full items-center justify-center rounded-xl bg-gray-900 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-gray-800 disabled:opacity-70"
+              >
+                {primaryLabel}
+              </button>
+              {!isSignup && (
+                <button
+                  type="button"
+                  onClick={() => switchMode('forgot')}
+                  className="w-full text-center text-sm font-semibold text-gray-700 underline underline-offset-2"
+                >
+                  Forgot your password?
+                </button>
+              )}
+              <button
+                type="button"
+                onClick={() => switchMode(isSignup ? 'signin' : 'signup')}
+                className="w-full text-center text-sm font-semibold text-gray-700 underline underline-offset-2"
+              >
+                {isSignup ? 'Already have an account? Sign in' : 'Don’t have an account? Create one'}
+              </button>
+            </>
+          )}
         </form>
         )}
       </div>

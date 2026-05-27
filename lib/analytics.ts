@@ -59,6 +59,9 @@ export const ANALYTICS_EVENTS = {
   STUDENT_CREATED: 'student_created',
   LESSON_STARTED: 'lesson_started',
   LESSON_COMPLETED: 'lesson_completed',
+  PASSWORD_RESET_REQUESTED: 'password_reset_requested',
+  MAGIC_LINK_REQUESTED: 'magic_link_requested',
+  PASSWORD_RESET_COMPLETED: 'password_reset_completed',
 } as const;
 
 export type AnalyticsEvent = typeof ANALYTICS_EVENTS[keyof typeof ANALYTICS_EVENTS];

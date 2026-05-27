@@ -81,6 +81,9 @@ const baseAuth: AuthState = {
   signup: vi.fn(),
   logout: vi.fn(),
   refreshRole: vi.fn(),
+  requestPasswordReset: vi.fn(),
+  sendMagicLink: vi.fn(),
+  updatePassword: vi.fn(),
 };
 
 const setAuth = (overrides: Partial<AuthState>) => {

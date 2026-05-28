@@ -585,3 +585,10 @@ Log of features shipped by BuildLoop.
 - Branch: buildloop/per-card-chapter-context-on-dashboard
 - UAT bugs found and fixed: 0
 - Build retries: 0
+
+## KAN-133
+- Iteration: 3
+- Shipped: 2026-05-28T15:41:09+00:00
+- Branch: buildloop/role-tagged-analytics-events
+- UAT bugs found and fixed: 0
+- Build retries: 0

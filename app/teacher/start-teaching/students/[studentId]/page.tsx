@@ -82,6 +82,22 @@ type ChapterWithGroups = {
   groups: GroupWithModules[];
 };
 
+type ProfileRecordingRow = {
+  id: string;
+  module_id: string;
+  storage_path: string;
+  duration_sec: number | null;
+  created_at: string;
+  signedUrl: string;
+};
+
+function formatDuration(sec: number | null): string {
+  if (!sec || sec < 0) return '—';
+  const m = Math.floor(sec / 60);
+  const s = sec % 60;
+  return `${m}:${String(s).padStart(2, '0')}`;
+}
+
 function dedupByTitle<T extends { title: string; code?: string }>(
   items: T[],
   kind: 'chapter' | 'group' | 'module',
@@ -133,6 +149,7 @@ export default function StudentModulePage({
     module_id: string;
   } | null>(null);
   const [notesCount, setNotesCount] = useState<number>(0);
+  const [recentRecordings, setRecentRecordings] = useState<ProfileRecordingRow[]>([]);
   const [memberships, setMemberships] = useState<
     { group_id: string; group_name: string }[]
   >([]);
@@ -425,6 +442,45 @@ export default function StudentModulePage({
     };
   }, [isHydrated, isLoggedIn, fetchData]);
 
+  useEffect(() => {
+    if (!isHydrated || !isLoggedIn || !tenantId || !studentId) {
+      setRecentRecordings([]);
+      return;
+    }
+    let cancelled = false;
+    (async () => {
+      const sb = supabaseClient();
+      try {
+        const { data, error } = await sb
+          .from('lesson_recordings')
+          .select('id, module_id, storage_path, duration_sec, created_at')
+          .eq('tenant_id', tenantId)
+          .eq('student_id', studentId)
+          .order('created_at', { ascending: false })
+          .limit(5);
+        if (error) throw error;
+        const rows = (data || []) as Array<{
+          id: string; module_id: string; storage_path: string;
+          duration_sec: number | null; created_at: string;
+        }>;
+        const signed = await Promise.all(
+          rows.map(async (r) => {
+            const { data: u, error: ue } = await sb.storage
+              .from('lesson-recordings')
+              .createSignedUrl(r.storage_path, 3600);
+            return { ...r, signedUrl: ue ? '' : (u?.signedUrl || '') };
+          }),
+        );
+        if (!cancelled) setRecentRecordings(signed.filter((r) => r.signedUrl));
+      } catch (err) {
+        const pgCode = (err as { code?: string } | null)?.code;
+        if (pgCode !== '42703' && !cancelled) console.error('LR-13j load recordings:', err);
+        if (!cancelled) setRecentRecordings([]);
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [isHydrated, isLoggedIn, tenantId, studentId]);
+
   const avatarInitials = useMemo(() => {
     if (!student) return 'S';
     return (student.name || 'S')
@@ -439,6 +495,11 @@ export default function StudentModulePage({
     () => chapters.flatMap((ch) => ch.groups.flatMap((g) => g.modules)),
     [chapters],
   );
+  const moduleCodeToTitle = useMemo(() => {
+    const m = new Map<string, string>();
+    for (const mod of allModules) m.set(mod.code, mod.title);
+    return m;
+  }, [allModules]);
   const completedCount = useMemo(
     () => allModules.filter((m) => completedModuleIds.has(m.code)).length,
     [allModules, completedModuleIds],
@@ -718,6 +779,25 @@ export default function StudentModulePage({
           >
             Start lesson
           </Link>
+        </div>
+      )}
+
+      {recentRecordings.length > 0 && (
+        <div className="rounded-2xl border border-gray-100 bg-white p-5 shadow-sm space-y-3">
+          <p className="text-xs font-semibold uppercase tracking-wide text-gray-700">
+            Recent recordings
+          </p>
+          {recentRecordings.map((rec) => (
+            <div key={rec.id} className="space-y-1">
+              <p className="text-xs text-gray-600">
+                {moduleCodeToTitle?.get(rec.module_id) ?? rec.module_id} · {new Date(rec.created_at).toLocaleDateString()} · {formatDuration(rec.duration_sec)}
+              </p>
+              <audio controls src={rec.signedUrl} className="w-full" />
+            </div>
+          ))}
+          {recentRecordings.length === 5 && (
+            <p className="text-xs italic text-gray-500">Showing 5 most recent.</p>
+          )}
         </div>
       )}
 

@@ -606,3 +606,10 @@ Log of features shipped by BuildLoop.
 - Branch: buildloop/resend-confirmation-on-unconfirmed-signin
 - UAT bugs found and fixed: 0
 - Build retries: 0
+
+## LR-30
+- Iteration: 6
+- Shipped: 2026-05-28T16:00:18+00:00
+- Branch: buildloop/branded-global-error-boundary
+- UAT bugs found and fixed: 0
+- Build retries: 0

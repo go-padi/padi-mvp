@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useEffect } from "react";
+import { track, ANALYTICS_EVENTS } from '@/lib/analytics';
 
 export default function RouteError({
   error,
@@ -12,7 +13,7 @@ export default function RouteError({
 }) {
   useEffect(() => {
     console.error('[route-error]', error);
-    // TODO(analytics): track('app_error', { digest: error.digest, scope: 'route' })
+    track(ANALYTICS_EVENTS.APP_ERROR, { digest: error.digest, scope: 'route' });
   }, [error]);
 
   return (

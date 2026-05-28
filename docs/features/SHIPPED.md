@@ -613,3 +613,10 @@ Log of features shipped by BuildLoop.
 - Branch: buildloop/branded-global-error-boundary
 - UAT bugs found and fixed: 0
 - Build retries: 0
+
+## LR-31
+- Iteration: 7
+- Shipped: 2026-05-28T16:04:16+00:00
+- Branch: buildloop/branded-root-loading-state
+- UAT bugs found and fixed: 0
+- Build retries: 0

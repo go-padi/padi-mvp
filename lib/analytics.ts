@@ -63,6 +63,7 @@ export const ANALYTICS_EVENTS = {
   MAGIC_LINK_REQUESTED: 'magic_link_requested',
   PASSWORD_RESET_COMPLETED: 'password_reset_completed',
   CONFIRMATION_RESENT: 'confirmation_resent',
+  APP_ERROR: 'app_error',
 } as const;
 
 export type AnalyticsEvent = typeof ANALYTICS_EVENTS[keyof typeof ANALYTICS_EVENTS];

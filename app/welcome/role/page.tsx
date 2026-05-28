@@ -4,6 +4,7 @@ import { useRouter } from 'next/navigation';
 import clsx from 'clsx';
 import { useAuth, type UserRole } from '@/lib/auth-store';
 import { supabaseClient } from '@/lib/supabase';
+import { track, ANALYTICS_EVENTS } from '@/lib/analytics';
 
 const OPTIONS: {
   value: UserRole;
@@ -62,6 +63,7 @@ export default function RolePickerPage() {
       setSaving(false);
       return;
     }
+    track(ANALYTICS_EVENTS.ROLE_SELECTED, { role: selected });
     await refreshRole();
     router.push('/teacher');
   };

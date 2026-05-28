@@ -578,3 +578,10 @@ Log of features shipped by BuildLoop.
 - Branch: buildloop/signin-3-forgot-password-and-magic-link
 - UAT bugs found and fixed: 0
 - Build retries: 1
+
+## LR-09f
+- Iteration: 2
+- Shipped: 2026-05-28T13:06:54+00:00
+- Branch: buildloop/per-card-chapter-context-on-dashboard
+- UAT bugs found and fixed: 0
+- Build retries: 0

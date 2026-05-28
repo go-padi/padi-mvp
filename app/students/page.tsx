@@ -45,7 +45,7 @@ export default function StudentsPage(){
       .insert({ tenant_id: tenantId, name: trimmed, first_name: first || null, last_name: last })
       .select('id, first_name, name')
       .single();
-    track(ANALYTICS_EVENTS.STUDENT_CREATED, { is_first: isFirstChild });
+    track(ANALYTICS_EVENTS.STUDENT_CREATED, { is_first: isFirstChild, role });
     if (isFirstChild && row?.id) {
       router.push(`/students/${row.id}/start`);
       return;

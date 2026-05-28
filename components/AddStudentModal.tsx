@@ -3,6 +3,7 @@ import { useEffect, useState, type FormEvent, type MouseEvent } from 'react';
 import { supabaseClient } from '@/lib/supabase';
 import { useAuth } from '@/lib/auth-store';
 import { rolePhrase } from '@/lib/copy/roleCopy';
+import { track, ANALYTICS_EVENTS } from '@/lib/analytics';
 
 export function AddStudentModal({
   open,
@@ -90,6 +91,7 @@ export function AddStudentModal({
       .limit(1)
       .single();
 
+    track(ANALYTICS_EVENTS.STUDENT_CREATED, { is_first: false, role });
     await onCreated(newStudent?.id || '');
     onClose();
   };

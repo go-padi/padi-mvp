@@ -305,8 +305,9 @@ export default function LessonPage({ params }: { params: Promise<{ chapter: stri
       module_code: moduleRow.code,
       chapter_code: chapter,
       student_id: studentId,
+      role,
     });
-  }, [studentId, moduleRow?.code, chapter]);
+  }, [studentId, moduleRow?.code, chapter, role]);
 
   // Load prior lesson_completions count for this student + module
   useEffect(() => {

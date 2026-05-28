@@ -62,6 +62,7 @@ export const ANALYTICS_EVENTS = {
   PASSWORD_RESET_REQUESTED: 'password_reset_requested',
   MAGIC_LINK_REQUESTED: 'magic_link_requested',
   PASSWORD_RESET_COMPLETED: 'password_reset_completed',
+  CONFIRMATION_RESENT: 'confirmation_resent',
 } as const;
 
 export type AnalyticsEvent = typeof ANALYTICS_EVENTS[keyof typeof ANALYTICS_EVENTS];

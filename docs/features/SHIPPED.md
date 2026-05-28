@@ -592,3 +592,10 @@ Log of features shipped by BuildLoop.
 - Branch: buildloop/role-tagged-analytics-events
 - UAT bugs found and fixed: 0
 - Build retries: 0
+
+## LR-13j
+- Iteration: 4
+- Shipped: 2026-05-28T15:46:27+00:00
+- Branch: buildloop/recent-recordings-on-student-profile
+- UAT bugs found and fixed: 0
+- Build retries: 0

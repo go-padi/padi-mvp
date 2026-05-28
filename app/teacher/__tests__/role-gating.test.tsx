@@ -84,6 +84,7 @@ const baseAuth: AuthState = {
   requestPasswordReset: vi.fn(),
   sendMagicLink: vi.fn(),
   updatePassword: vi.fn(),
+  resendConfirmation: vi.fn(),
 };
 
 const setAuth = (overrides: Partial<AuthState>) => {

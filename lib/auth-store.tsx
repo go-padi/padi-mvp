@@ -47,6 +47,7 @@ export type AuthState = {
   requestPasswordReset: (email: string) => Promise<void>;
   sendMagicLink: (email: string) => Promise<void>;
   updatePassword: (newPassword: string) => Promise<void>;
+  resendConfirmation: (email: string) => Promise<void>;
 };
 
 function getSiteOrigin(): string {
@@ -246,6 +247,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (error) throw error;
   }, []);
 
+  const resendConfirmation = useCallback(async (email: string) => {
+    const sb = supabaseClient();
+    const { error } = await sb.auth.resend({
+      type: 'signup',
+      email: email.trim(),
+      options: { emailRedirectTo: `${getSiteOrigin()}/auth/callback` },
+    });
+    if (error) throw error;
+  }, []);
+
   const value = useMemo(
     () => ({
       isLoggedIn,
@@ -262,8 +273,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       requestPasswordReset,
       sendMagicLink,
       updatePassword,
+      resendConfirmation,
     }),
-    [isLoggedIn, user, tenantId, role, roleSetAt, profileFetchError, isHydrated, login, signup, logout, refreshRole, requestPasswordReset, sendMagicLink, updatePassword]
+    [isLoggedIn, user, tenantId, role, roleSetAt, profileFetchError, isHydrated, login, signup, logout, refreshRole, requestPasswordReset, sendMagicLink, updatePassword, resendConfirmation]
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

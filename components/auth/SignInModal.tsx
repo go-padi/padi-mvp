@@ -17,6 +17,8 @@ const EMAIL_EXISTS_REGEX = /already\s+(registered|exist|in use)/i;
 
 const RATE_LIMIT_REGEX = /over_email_send_rate_limit|rate limit|too many/i;
 
+const EMAIL_UNCONFIRMED_REGEX = /email not confirmed|confirm your email/i;
+
 export function SignInModal({ onClose }: SignInModalProps) {
   const {
     login,
@@ -26,6 +28,7 @@ export function SignInModal({ onClose }: SignInModalProps) {
     logout,
     requestPasswordReset,
     sendMagicLink,
+    resendConfirmation,
   } = useAuth();
   const [mode, setMode] = useState<Mode>('signin');
   const [email, setEmail] = useState('');
@@ -38,6 +41,10 @@ export function SignInModal({ onClose }: SignInModalProps) {
   const [loading, setLoading] = useState(false);
   const [loggingOut, setLoggingOut] = useState(false);
   const [emailExists, setEmailExists] = useState(false);
+  const [emailUnconfirmed, setEmailUnconfirmed] = useState(false);
+  const [resendLoading, setResendLoading] = useState(false);
+  const [resendInfo, setResendInfo] = useState<string | null>(null);
+  const [resendError, setResendError] = useState<string | null>(null);
   const [forgotSentEmail, setForgotSentEmail] = useState<string | null>(null);
   const [forgotSentKind, setForgotSentKind] = useState<'reset' | 'magic' | null>(null);
   const passwordRef = useRef<HTMLInputElement>(null);
@@ -59,6 +66,9 @@ export function SignInModal({ onClose }: SignInModalProps) {
     setShowPassword(false);
     setShowConfirm(false);
     setEmailExists(false);
+    setEmailUnconfirmed(false);
+    setResendInfo(null);
+    setResendError(null);
     setForgotSentEmail(null);
     setForgotSentKind(null);
   };
@@ -81,6 +91,13 @@ export function SignInModal({ onClose }: SignInModalProps) {
       await login(email, password);
       onClose();
     } catch (err) {
+      const message = err instanceof Error ? err.message : '';
+      if (EMAIL_UNCONFIRMED_REGEX.test(message)) {
+        setEmailUnconfirmed(true);
+        setResendInfo(null);
+        setResendError(null);
+        return; // do NOT fall through to the generic credential error
+      }
       const isCredentialError =
         err instanceof Error &&
         /invalid|credentials|password|email|not found/i.test(err.message);
@@ -91,6 +108,26 @@ export function SignInModal({ onClose }: SignInModalProps) {
       );
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleResendConfirmation = async () => {
+    setResendLoading(true);
+    setResendError(null);
+    setResendInfo(null);
+    try {
+      await resendConfirmation(email);
+      setResendInfo('Confirmation email sent. Check your inbox.');
+      track(ANALYTICS_EVENTS.CONFIRMATION_RESENT);
+    } catch (err) {
+      const m = err instanceof Error ? err.message : '';
+      setResendError(
+        RATE_LIMIT_REGEX.test(m)
+          ? 'Too many requests — please wait a minute and try again.'
+          : "Couldn't resend — please try again."
+      );
+    } finally {
+      setResendLoading(false);
     }
   };
 
@@ -296,7 +333,7 @@ export function SignInModal({ onClose }: SignInModalProps) {
               id="email"
               type="email"
               value={email}
-              onChange={e => { setEmail(e.target.value); setEmailExists(false); }}
+              onChange={e => { setEmail(e.target.value); setEmailExists(false); setEmailUnconfirmed(false); }}
               className="w-full rounded-xl border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-100"
               placeholder="teacher@school.edu"
               required
@@ -374,6 +411,21 @@ export function SignInModal({ onClose }: SignInModalProps) {
               >
                 Sign in instead.
               </button>
+            </div>
+          )}
+          {emailUnconfirmed && (
+            <div className="rounded-lg bg-amber-50 px-3 py-2 text-sm text-amber-800 space-y-2">
+              <p>Your email isn’t confirmed yet. Check your inbox for the confirmation link, or resend it.</p>
+              <button
+                type="button"
+                onClick={handleResendConfirmation}
+                disabled={resendLoading}
+                className="text-amber-900 underline font-semibold cursor-pointer disabled:opacity-70"
+              >
+                {resendLoading ? 'Sending…' : 'Resend confirmation email'}
+              </button>
+              {resendInfo && <p className="text-emerald-700">{resendInfo}</p>}
+              {resendError && <p className="text-red-700">{resendError}</p>}
             </div>
           )}
           {error && <div className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700">{error}</div>}

@@ -599,3 +599,10 @@ Log of features shipped by BuildLoop.
 - Branch: buildloop/recent-recordings-on-student-profile
 - UAT bugs found and fixed: 0
 - Build retries: 0
+
+## SIGNIN-4
+- Iteration: 5
+- Shipped: 2026-05-28T15:52:43+00:00
+- Branch: buildloop/resend-confirmation-on-unconfirmed-signin
+- UAT bugs found and fixed: 0
+- Build retries: 0

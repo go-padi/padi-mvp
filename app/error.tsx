@@ -1,14 +1,20 @@
 "use client";
 
 import Link from "next/link";
+import { useEffect } from "react";
 
-export default function GlobalError({
-  error: _error,
+export default function RouteError({
+  error,
   reset,
 }: {
   error: Error & { digest?: string };
   reset: () => void;
 }) {
+  useEffect(() => {
+    console.error('[route-error]', error);
+    // TODO(analytics): track('app_error', { digest: error.digest, scope: 'route' })
+  }, [error]);
+
   return (
     <div className="mx-auto max-w-md text-center py-16">
       <h1 className="text-3xl font-bold">Something went wrong</h1>

@@ -6,6 +6,7 @@ import {
   AssessmentStatus,
   normalizeAssessmentStatus,
 } from '@/lib/copy/assessmentStatusCopy';
+import { previewModulesByGroup, groupToChapterCode, previewChapters } from '@/lib/demo/demoCurriculum';
 
 export type StartTeachingStudent = {
   id: string;
@@ -19,7 +20,19 @@ export type StartTeachingStudent = {
   completedCount: number;
   latestObservationNotes?: string | null;
   latestObservationAt?: string | null;
+  chaptersStarted: number;
+  totalChapters: number;
 };
+
+const MODULE_CODE_TO_CHAPTER_CODE = new Map<string, string>();
+for (const [groupCode, modules] of Object.entries(previewModulesByGroup)) {
+  const chapterCode = groupToChapterCode[groupCode];
+  if (!chapterCode) continue;
+  for (const m of modules) {
+    MODULE_CODE_TO_CHAPTER_CODE.set(m.code, chapterCode);
+  }
+}
+const TOTAL_CHAPTERS = previewChapters.length;
 
 export type StartTeachingGroup = {
   id: string;
@@ -116,6 +129,28 @@ export function useStartTeachingData(): StartTeachingData {
       completedByStudent.set(row.student_id, (completedByStudent.get(row.student_id) || 0) + 1);
     });
 
+    // Build per-student count of distinct chapters started from module_assessment.
+    // v0 limitation: module_ids not present in previewModulesByGroup are ignored.
+    const chaptersStartedByStudent = new Map<string, number>();
+    const studentModulesMap = new Map<string, Set<string>>();
+    assessmentRows.forEach(row => {
+      if (!row.student_id) return;
+      let s = studentModulesMap.get(row.student_id);
+      if (!s) {
+        s = new Set();
+        studentModulesMap.set(row.student_id, s);
+      }
+      s.add(row.module_id);
+    });
+    for (const [studentId, moduleIds] of studentModulesMap) {
+      const chapterSet = new Set<string>();
+      for (const m of moduleIds) {
+        const ch = MODULE_CODE_TO_CHAPTER_CODE.get(m);
+        if (ch) chapterSet.add(ch);
+      }
+      chaptersStartedByStudent.set(studentId, chapterSet.size);
+    }
+
     const groupNameById = new Map(groupRows.map(group => [group.id, group.name || 'Group']));
     const groupIdsByStudent = new Map<string, string>();
     membershipRows.forEach(membership => {
@@ -156,6 +191,8 @@ export function useStartTeachingData(): StartTeachingData {
         completedCount: completedModules,
         latestObservationNotes: latestObservation?.notes ?? null,
         latestObservationAt: latestObservation?.completed_at ?? null,
+        chaptersStarted: chaptersStartedByStudent.get(student.id) ?? 0,
+        totalChapters: TOTAL_CHAPTERS,
       };
     });
 
@@ -206,6 +243,8 @@ export function useStartTeachingData(): StartTeachingData {
           progressPercent: s.progressPercent,
         }),
         completedCount: 0,
+        chaptersStarted: 0,
+        totalChapters: TOTAL_CHAPTERS,
       }));
       const groups = demoTeacherData.groups.map(g => ({
         id: g.id,

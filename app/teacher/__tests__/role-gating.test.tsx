@@ -104,6 +104,8 @@ const populatedStudents: StartTeachingStudent[] = [
     progressLabel: '1/4',
     assessmentStatus: 'In progress',
     completedCount: 1,
+    chaptersStarted: 1,
+    totalChapters: 4,
   },
 ];
 

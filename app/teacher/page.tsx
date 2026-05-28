@@ -41,6 +41,8 @@ type CardData = {
   completedCount: number;
   latestObservationNotes: string | null;
   latestObservationAt: string | null;
+  chaptersStarted: number;
+  totalChapters: number;
 };
 
 
@@ -132,6 +134,8 @@ export default function TeacherIndexPage() {
           completedCount: m ? parseInt(m[1], 10) : 0,
           latestObservationNotes: null,
           latestObservationAt: null,
+          chaptersStarted: 0,
+          totalChapters: 0,
         };
       });
       const groupCards: CardData[] = demoTeacherData.groups.map(g => {
@@ -147,6 +151,8 @@ export default function TeacherIndexPage() {
           completedCount: m ? parseInt(m[1], 10) : 0,
           latestObservationNotes: null,
           latestObservationAt: null,
+          chaptersStarted: 0,
+          totalChapters: 0,
         };
       });
       if (effectiveMode === 'individual') return studentCards;
@@ -165,6 +171,8 @@ export default function TeacherIndexPage() {
       completedCount: s.completedCount ?? 0,
       latestObservationNotes: s.latestObservationNotes ?? null,
       latestObservationAt: s.latestObservationAt ?? null,
+      chaptersStarted: s.chaptersStarted ?? 0,
+      totalChapters: s.totalChapters ?? 0,
     }));
     const groupCards: CardData[] = startData.groups.map(g => {
       const members = startData.groupStudentsByGroupId[g.id] || [];
@@ -183,6 +191,8 @@ export default function TeacherIndexPage() {
         completedCount: completedSum,
         latestObservationNotes: null,
         latestObservationAt: null,
+        chaptersStarted: 0,
+        totalChapters: 0,
       };
     });
     if (effectiveMode === 'individual') return studentCards;
@@ -479,6 +489,12 @@ export default function TeacherIndexPage() {
                   </span>
                 )}
               </div>
+
+              {startData.mode !== 'preview' && card.type === 'student' && card.totalChapters > 0 && (
+                <p className="text-xs text-gray-500">
+                  {card.chaptersStarted} of {card.totalChapters} {card.totalChapters === 1 ? 'chapter' : 'chapters'} started
+                </p>
+              )}
 
               <div className="flex items-center justify-between text-sm">
                 <span className="text-gray-700">

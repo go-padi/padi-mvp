@@ -571,3 +571,10 @@ Log of features shipped by BuildLoop.
 - Branch: buildloop/cap-notice-on-playback-list
 - UAT bugs found and fixed: 0
 - Build retries: 0
+
+## SIGNIN-3
+- Iteration: 1
+- Shipped: 2026-05-27T12:06:52+00:00
+- Branch: buildloop/signin-3-forgot-password-and-magic-link
+- UAT bugs found and fixed: 0
+- Build retries: 1

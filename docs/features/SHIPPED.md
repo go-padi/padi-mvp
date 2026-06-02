@@ -620,3 +620,10 @@ Log of features shipped by BuildLoop.
 - Branch: buildloop/branded-root-loading-state
 - UAT bugs found and fixed: 0
 - Build retries: 0
+
+## LR-30b
+- Iteration: 8
+- Shipped: 2026-05-28T16:07:46+00:00
+- Branch: buildloop/wire-app-error-analytics-route-boundary
+- UAT bugs found and fixed: 0
+- Build retries: 0

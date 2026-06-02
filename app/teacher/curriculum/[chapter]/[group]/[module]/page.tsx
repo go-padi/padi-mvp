@@ -650,11 +650,6 @@ export default function LessonPage({ params }: { params: Promise<{ chapter: stri
 
   const markComplete = async (signal: string) => {
     if (!tenantId || !studentId || !moduleRow) return;
-    track(ANALYTICS_EVENTS.LESSON_COMPLETED, {
-      module_code: moduleRow.code,
-      signal,
-      student_id: studentId,
-    });
     setSaving(true);
     setStatus(null);
     try {
@@ -728,6 +723,12 @@ export default function LessonPage({ params }: { params: Promise<{ chapter: stri
         } catch (lcErr) {
           console.error('LR-10a lesson_completions insert:', lcErr);
         }
+        track(ANALYTICS_EVENTS.LESSON_COMPLETED, {
+          module_code: moduleRow.code,
+          signal,
+          student_id: studentId,
+          role,
+        });
         const option = SIGNAL_OPTIONS.find(o => o.value === signal);
         const studentName = contextStudentName || 'this student';
         const message = option?.confirmation(studentName) || 'Lesson complete!';

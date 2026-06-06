@@ -19,6 +19,7 @@ import {
 } from '@/lib/copy/assessmentStatusCopy';
 import { track, ANALYTICS_EVENTS } from '@/lib/analytics';
 import { useLessonRecorder } from '@/lib/hooks/useLessonRecorder';
+import { useOnlineStatus } from '@/lib/hooks/useOnlineStatus';
 import { PrivacyDisclosureModal } from '@/components/PrivacyDisclosureModal';
 
 type Lesson = {
@@ -144,6 +145,7 @@ export default function LessonPage({ params }: { params: Promise<{ chapter: stri
     studentId: contextStudentId,
     moduleId: moduleRow?.code ?? null,
   });
+  const online = useOnlineStatus();
 
   const [showPrivacyModal, setShowPrivacyModal] = useState(false);
 
@@ -934,6 +936,15 @@ export default function LessonPage({ params }: { params: Promise<{ chapter: stri
                 Try again
               </button>
             </div>
+          )}
+          {!online && (
+            <p
+              role="status"
+              aria-live="polite"
+              className="text-xs text-amber-800"
+            >
+              ⚠️ Offline — recording will fail to save until you reconnect.
+            </p>
           )}
           {recordings.length > 0 && (
             <div className="mt-4 space-y-3">

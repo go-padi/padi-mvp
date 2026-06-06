@@ -662,3 +662,10 @@ Log of features shipped by BuildLoop.
 - Branch: buildloop/online-offline-indicator-in-topnav
 - UAT bugs found and fixed: 0
 - Build retries: 0
+
+## LR-37
+- Iteration: 6
+- Shipped: 2026-06-06T16:30:21+00:00
+- Branch: buildloop/extract-useonlinestatus-hook-and-signin-banner
+- UAT bugs found and fixed: 0
+- Build retries: 0

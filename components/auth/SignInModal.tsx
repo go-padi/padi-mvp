@@ -1,6 +1,7 @@
 'use client';
 import { FormEvent, MouseEvent, useEffect, useRef, useState } from 'react';
 import { useAuth } from '@/lib/auth-store';
+import { useOnlineStatus } from '@/lib/hooks/useOnlineStatus';
 import { track, ANALYTICS_EVENTS } from '@/lib/analytics';
 import { EyeIcon } from '@/components/auth/EyeIcon';
 
@@ -30,6 +31,7 @@ export function SignInModal({ onClose }: SignInModalProps) {
     sendMagicLink,
     resendConfirmation,
   } = useAuth();
+  const online = useOnlineStatus();
   const [mode, setMode] = useState<Mode>('signin');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -442,6 +444,15 @@ export function SignInModal({ onClose }: SignInModalProps) {
               </button>
               {resendInfo && <p className="text-emerald-700">{resendInfo}</p>}
               {resendError && <p className="text-red-700">{resendError}</p>}
+            </div>
+          )}
+          {!online && (
+            <div
+              role="status"
+              aria-live="polite"
+              className="rounded-lg bg-amber-50 px-3 py-2 text-sm text-amber-800"
+            >
+              ⚠️ You appear to be offline. Reconnect to sign in.
             </div>
           )}
           {error && <div className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700">{error}</div>}

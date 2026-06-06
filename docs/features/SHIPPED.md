@@ -655,3 +655,10 @@ Log of features shipped by BuildLoop.
 - Branch: buildloop/recording-count-badge-on-dashboard-cards
 - UAT bugs found and fixed: 0
 - Build retries: 0
+
+## LR-36
+- Iteration: 5
+- Shipped: 2026-06-06T16:22:53+00:00
+- Branch: buildloop/online-offline-indicator-in-topnav
+- UAT bugs found and fixed: 0
+- Build retries: 0

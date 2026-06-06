@@ -5,25 +5,14 @@ import clsx from 'clsx';
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/lib/auth-store';
 import { rolePhrase } from '@/lib/copy/roleCopy';
+import { useOnlineStatus } from '@/lib/hooks/useOnlineStatus';
 import { SignInModal } from './auth/SignInModal';
 
 export default function TopNav(){
   const pathname = usePathname();
   const { isLoggedIn, user, logout, role } = useAuth();
   const [isSignInOpen, setSignInOpen] = useState(false);
-  const [online, setOnline] = useState(true);
-
-  useEffect(() => {
-    if (typeof navigator !== 'undefined') setOnline(navigator.onLine);
-    const onOnline = () => setOnline(true);
-    const onOffline = () => setOnline(false);
-    window.addEventListener('online', onOnline);
-    window.addEventListener('offline', onOffline);
-    return () => {
-      window.removeEventListener('online', onOnline);
-      window.removeEventListener('offline', onOffline);
-    };
-  }, []);
+  const online = useOnlineStatus();
 
   const isMatch = (base: string) => pathname === base || pathname.startsWith(`${base}/`);
   const isDashboardActive =

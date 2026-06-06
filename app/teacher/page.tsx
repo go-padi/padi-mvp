@@ -43,6 +43,7 @@ type CardData = {
   latestObservationAt: string | null;
   chaptersStarted: number;
   totalChapters: number;
+  recordingsCount: number;
 };
 
 
@@ -136,6 +137,7 @@ export default function TeacherIndexPage() {
           latestObservationAt: null,
           chaptersStarted: 0,
           totalChapters: 0,
+          recordingsCount: 0,
         };
       });
       const groupCards: CardData[] = demoTeacherData.groups.map(g => {
@@ -153,6 +155,7 @@ export default function TeacherIndexPage() {
           latestObservationAt: null,
           chaptersStarted: 0,
           totalChapters: 0,
+          recordingsCount: 0,
         };
       });
       if (effectiveMode === 'individual') return studentCards;
@@ -173,6 +176,7 @@ export default function TeacherIndexPage() {
       latestObservationAt: s.latestObservationAt ?? null,
       chaptersStarted: s.chaptersStarted ?? 0,
       totalChapters: s.totalChapters ?? 0,
+      recordingsCount: s.recordingsCount ?? 0,
     }));
     const groupCards: CardData[] = startData.groups.map(g => {
       const members = startData.groupStudentsByGroupId[g.id] || [];
@@ -193,6 +197,7 @@ export default function TeacherIndexPage() {
         latestObservationAt: null,
         chaptersStarted: 0,
         totalChapters: 0,
+        recordingsCount: 0,
       };
     });
     if (effectiveMode === 'individual') return studentCards;
@@ -527,6 +532,12 @@ export default function TeacherIndexPage() {
               {card.type === 'student' && !card.latestObservationNotes?.trim() && card.latestObservationAt && relativeDays(card.latestObservationAt) && (
                 <p className="text-xs italic text-amber-800 line-clamp-2">
                   Last lesson: {relativeDays(card.latestObservationAt)}
+                </p>
+              )}
+
+              {card.type === 'student' && (card.recordingsCount ?? 0) > 0 && (
+                <p className="text-xs text-gray-500">
+                  🎙️ {card.recordingsCount} {card.recordingsCount === 1 ? 'recording' : 'recordings'}
                 </p>
               )}
 

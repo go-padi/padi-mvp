@@ -22,6 +22,7 @@ export type StartTeachingStudent = {
   latestObservationAt?: string | null;
   chaptersStarted: number;
   totalChapters: number;
+  recordingsCount: number;
 };
 
 const MODULE_CODE_TO_CHAPTER_CODE = new Map<string, string>();
@@ -59,7 +60,7 @@ export function useStartTeachingData(): StartTeachingData {
   const load = useCallback(async () => {
     if (!isHydrated || !isLoggedIn) return;
     const sb = supabaseClient();
-    const [studentsRes, membershipsRes, groupsRes, assessmentsRes, groupsCountRes, lessonCompletionsRows] = await Promise.all([
+    const [studentsRes, membershipsRes, groupsRes, assessmentsRes, groupsCountRes, lessonCompletionsRows, lessonRecordingsRows] = await Promise.all([
       sb
         .from('students')
         .select('id,name,first_name,last_name,progress_percent,progress_label,focus_areas,assessment_status')
@@ -82,6 +83,23 @@ export function useStartTeachingData(): StartTeachingData {
           const pgCode = (err as { code?: string } | null)?.code;
           if (pgCode !== '42703') {
             console.error('LR-13e load lesson_completions:', err);
+          }
+          return [];
+        }
+      })(),
+      (async (): Promise<{ student_id: string }[]> => {
+        if (!tenantId) return [];
+        try {
+          const { data, error } = await sb
+            .from('lesson_recordings')
+            .select('student_id')
+            .eq('tenant_id', tenantId);
+          if (error) throw error;
+          return (data as { student_id: string }[] | null) || [];
+        } catch (err) {
+          const pgCode = (err as { code?: string } | null)?.code;
+          if (pgCode !== '42703') {
+            console.error('LR-13k load lesson_recordings counts:', err);
           }
           return [];
         }
@@ -128,6 +146,12 @@ export function useStartTeachingData(): StartTeachingData {
     assessmentRows.forEach(row => {
       completedByStudent.set(row.student_id, (completedByStudent.get(row.student_id) || 0) + 1);
     });
+
+    const recordingsCountByStudent = new Map<string, number>();
+    for (const row of lessonRecordingsRows) {
+      if (!row.student_id) continue;
+      recordingsCountByStudent.set(row.student_id, (recordingsCountByStudent.get(row.student_id) || 0) + 1);
+    }
 
     // Build per-student count of distinct chapters started from module_assessment.
     // v0 limitation: module_ids not present in previewModulesByGroup are ignored.
@@ -193,6 +217,7 @@ export function useStartTeachingData(): StartTeachingData {
         latestObservationAt: latestObservation?.completed_at ?? null,
         chaptersStarted: chaptersStartedByStudent.get(student.id) ?? 0,
         totalChapters: TOTAL_CHAPTERS,
+        recordingsCount: recordingsCountByStudent.get(student.id) ?? 0,
       };
     });
 
@@ -245,6 +270,7 @@ export function useStartTeachingData(): StartTeachingData {
         completedCount: 0,
         chaptersStarted: 0,
         totalChapters: TOTAL_CHAPTERS,
+        recordingsCount: 0,
       }));
       const groups = demoTeacherData.groups.map(g => ({
         id: g.id,

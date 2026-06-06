@@ -641,3 +641,10 @@ Log of features shipped by BuildLoop.
 - Branch: buildloop/signin-mode-switch-focus-management
 - UAT bugs found and fixed: 0
 - Build retries: 0
+
+## SIGNIN-6
+- Iteration: 3
+- Shipped: 2026-06-06T16:02:40+00:00
+- Branch: buildloop/signin-focus-email-on-modal-open
+- UAT bugs found and fixed: 0
+- Build retries: 0

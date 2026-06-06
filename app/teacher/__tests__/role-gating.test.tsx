@@ -107,6 +107,7 @@ const populatedStudents: StartTeachingStudent[] = [
     completedCount: 1,
     chaptersStarted: 1,
     totalChapters: 4,
+    recordingsCount: 0,
   },
 ];
 

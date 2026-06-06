@@ -58,6 +58,11 @@ export function SignInModal({ onClose }: SignInModalProps) {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [onClose]);
 
+  useEffect(() => {
+    const t = setTimeout(() => emailRef.current?.focus(), 0);
+    return () => clearTimeout(t);
+  }, []);
+
   const switchMode = (next: Mode) => {
     setMode(next);
     setError(null);

@@ -634,3 +634,10 @@ Log of features shipped by BuildLoop.
 - Branch: buildloop/move-lesson-completed-emit-to-success-branch
 - UAT bugs found and fixed: 0
 - Build retries: 0
+
+## SIGNIN-5
+- Iteration: 2
+- Shipped: 2026-06-06T15:56:06+00:00
+- Branch: buildloop/signin-mode-switch-focus-management
+- UAT bugs found and fixed: 0
+- Build retries: 0

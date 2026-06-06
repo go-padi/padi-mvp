@@ -648,3 +648,10 @@ Log of features shipped by BuildLoop.
 - Branch: buildloop/signin-focus-email-on-modal-open
 - UAT bugs found and fixed: 0
 - Build retries: 0
+
+## LR-13k
+- Iteration: 4
+- Shipped: 2026-06-06T16:14:35+00:00
+- Branch: buildloop/recording-count-badge-on-dashboard-cards
+- UAT bugs found and fixed: 0
+- Build retries: 0

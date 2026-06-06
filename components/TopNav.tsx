@@ -11,6 +11,19 @@ export default function TopNav(){
   const pathname = usePathname();
   const { isLoggedIn, user, logout, role } = useAuth();
   const [isSignInOpen, setSignInOpen] = useState(false);
+  const [online, setOnline] = useState(true);
+
+  useEffect(() => {
+    if (typeof navigator !== 'undefined') setOnline(navigator.onLine);
+    const onOnline = () => setOnline(true);
+    const onOffline = () => setOnline(false);
+    window.addEventListener('online', onOnline);
+    window.addEventListener('offline', onOffline);
+    return () => {
+      window.removeEventListener('online', onOnline);
+      window.removeEventListener('offline', onOffline);
+    };
+  }, []);
 
   const isMatch = (base: string) => pathname === base || pathname.startsWith(`${base}/`);
   const isDashboardActive =
@@ -60,6 +73,15 @@ export default function TopNav(){
             >
               {rolePhrase(role, 'Start Teaching', 'Start Lesson')}
             </Link>
+            {!online && (
+              <span
+                role="status"
+                aria-live="polite"
+                className="rounded-full bg-amber-50 px-2 py-0.5 text-xs font-semibold text-amber-800"
+              >
+                ⚠️ Offline
+              </span>
+            )}
             {!isLoggedIn && (
             <button
               type="button"

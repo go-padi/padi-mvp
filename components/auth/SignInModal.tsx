@@ -48,6 +48,7 @@ export function SignInModal({ onClose }: SignInModalProps) {
   const [forgotSentEmail, setForgotSentEmail] = useState<string | null>(null);
   const [forgotSentKind, setForgotSentKind] = useState<'reset' | 'magic' | null>(null);
   const passwordRef = useRef<HTMLInputElement>(null);
+  const emailRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
@@ -71,6 +72,15 @@ export function SignInModal({ onClose }: SignInModalProps) {
     setResendError(null);
     setForgotSentEmail(null);
     setForgotSentKind(null);
+    setTimeout(() => {
+      if (next === 'forgot') {
+        emailRef.current?.focus();
+      } else if (!email) {
+        emailRef.current?.focus();
+      } else {
+        passwordRef.current?.focus();
+      }
+    }, 0);
   };
 
   const handleSignInInstead = () => {
@@ -331,6 +341,7 @@ export function SignInModal({ onClose }: SignInModalProps) {
             </label>
             <input
               id="email"
+              ref={emailRef}
               type="email"
               value={email}
               onChange={e => { setEmail(e.target.value); setEmailExists(false); setEmailUnconfirmed(false); }}

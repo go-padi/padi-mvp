@@ -627,3 +627,10 @@ Log of features shipped by BuildLoop.
 - Branch: buildloop/wire-app-error-analytics-route-boundary
 - UAT bugs found and fixed: 0
 - Build retries: 0
+
+## KAN-133b
+- Iteration: 1
+- Shipped: 2026-06-06T15:47:51+00:00
+- Branch: buildloop/move-lesson-completed-emit-to-success-branch
+- UAT bugs found and fixed: 0
+- Build retries: 0

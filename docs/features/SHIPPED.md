@@ -669,3 +669,10 @@ Log of features shipped by BuildLoop.
 - Branch: buildloop/extract-useonlinestatus-hook-and-signin-banner
 - UAT bugs found and fixed: 0
 - Build retries: 0
+
+## LR-38
+- Iteration: 7
+- Shipped: 2026-06-06T16:35:59+00:00
+- Branch: buildloop/offline-warning-on-record-button
+- UAT bugs found and fixed: 0
+- Build retries: 0

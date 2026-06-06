@@ -1147,6 +1147,15 @@ export default function LessonPage({ params }: { params: Promise<{ chapter: stri
                   It&apos;s okay to select this — it helps you plan the right next steps for {contextStudentName || 'this student'}.
                 </p>
               )}
+              {!online && (
+                <p
+                  role="status"
+                  aria-live="polite"
+                  className="text-xs text-amber-800"
+                >
+                  ⚠️ Offline — completion will fail to save until you reconnect.
+                </p>
+              )}
               <div className="flex items-center gap-3">
                 <button
                   onClick={() => selectedSignal && markComplete(selectedSignal)}

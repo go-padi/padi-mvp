@@ -54,5 +54,15 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: updateError.message }, { status: 500 });
   }
 
+  const trialEndsAt = new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString();
+  const { error: subError } = await admin.from('subscriptions').insert({
+    tenant_id: tenant.id,
+    status: 'trialing',
+    trial_ends_at: trialEndsAt,
+  });
+  if (subError) {
+    return NextResponse.json({ error: subError.message }, { status: 500 });
+  }
+
   return NextResponse.json({ tenant_id: tenant.id });
 }

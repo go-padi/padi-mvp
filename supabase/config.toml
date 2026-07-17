@@ -1,0 +1,4 @@
+# Minimal linked-project config so `supabase db push` / `supabase migration
+# list --linked` can run non-interactively in CI and locally.
+# No secrets here — the access token comes from SUPABASE_ACCESS_TOKEN.
+project_id = "rcrjfweguedbtfngeovp"

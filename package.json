@@ -10,7 +10,8 @@
     "lint": "eslint .",
     "seed:curriculum": "tsx scripts/seed-curriculum.ts",
     "seed:modules": "tsx scripts/seed-modules.ts",
-    "gen:types": "supabase gen types typescript --linked > lib/database.types.ts"
+    "gen:types": "supabase gen types typescript --linked > lib/database.types.ts",
+    "migrate:check": "npx supabase migration list --linked"
   },
   "dependencies": {
     "@dnd-kit/core": "^6.1.0",

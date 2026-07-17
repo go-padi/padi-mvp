@@ -43,10 +43,17 @@ free with free.
 hard to annual because K-reading is a 12–18 month journey and annual
 kills churn. Premium-end pricing justified by:
 
-1. Specialist-backed curriculum (Mom is a real reading specialist).
-2. Mom video walkthroughs on every module — competitors don't have
-   this. See `docs/features/teach-video/` for the build.
-3. Readiness rubric / classifier — no other K-reading app has it.
+1. **Specialist-designed curriculum.** The ASDEC modules were
+   authored by a real reading specialist. This is the substantive
+   differentiator vs Reading Eggs / ABCmouse whose curricula are
+   general-market.
+2. **Every module has a teach-me walkthrough video.** Competitors
+   ship curriculum + student activities but leave the parent
+   guessing how to teach it. Padi ships a warm, consistent teacher
+   persona explaining each lesson. See `docs/features/teach-video/`.
+   Stock avatar + stock voice for v1 (consistency > custom person);
+   the moat is the per-module coverage, not the persona identity.
+3. **Readiness rubric / classifier.** No other K-reading app has it.
 
 Family add-on: **$4.99/mo per sibling**, same household. Lowers
 per-child cost for the multi-kid parents who'd otherwise churn at

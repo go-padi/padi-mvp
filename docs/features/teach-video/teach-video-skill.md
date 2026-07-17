@@ -12,29 +12,31 @@ owner: nisha
 ### Goal
 
 Give every Padi module a 60–90 sec "how to teach this lesson" video
-narrated by Mom (a real reading specialist). Videos render via
-HeyGen avatar + ElevenLabs voice clone of Mom, embedded on the
-lesson page so parents and tutors see Mom walking them through the
-lesson before they teach it.
+narrated by the Padi teacher persona (a stock HeyGen avatar +
+stock ElevenLabs voice, chosen once). Videos embed on the lesson
+page so parents and tutors see a warm, calm teacher walking them
+through the lesson before they teach it.
 
 ### Background
 
 Parents and tutors using Padi don't have a reading specialist on
 call. The curriculum is rich but text-heavy — the
 `presentation_steps` in each module's lesson JSON tell you WHAT to
-do but a first-time teacher needs to see HOW. Filming Mom on every
-module isn't scalable (200+ modules).
+do but a first-time teacher needs to hear HOW.
 
 Stack:
-- HeyGen Instant Avatar of Mom (one-time, ~2 min of footage)
-- ElevenLabs Professional Voice Clone of Mom (one-time, ~30 min
-  of audio)
+- HeyGen stock avatar ("Padi teacher persona"), chosen once
+- ElevenLabs stock voice (recommended: Rachel or Sarah), chosen once
 - HeyGen ↔ ElevenLabs connection (one-time UI step)
 - This skill drafts scripts grounded in the module's lesson JSON
   and the ASDEC corpus, then renders via HeyGen API.
 
-This is the premium signal that justifies parent pricing above the
-$9–15/mo K-reading band (see `docs/features/pricing/`).
+No custom voice/face cloning. The premium signal comes from:
+1. Specialist-DESIGNED curriculum (ASDEC / real reading specialist
+   authored the modules)
+2. Every module has a walkthrough (competitors don't)
+3. Consistent, warm teacher voice on every lesson
+See `docs/features/pricing/` for how this fits pricing.
 
 ### Build pieces
 
@@ -67,15 +69,16 @@ Three deliverables in this feature folder:
 
 ### Acceptance Criteria
 
-**Skill (PRECONDITION: HeyGen and ElevenLabs accounts set up,
-config.yaml populated)**
+**Skill (PRECONDITION: HeyGen + ElevenLabs accounts set up, stock
+avatar and stock voice chosen, config.yaml populated)**
 
 Given nisha runs `/teach-video S-3`
 When the skill executes
 Then a prompt is drafted from S-3's lesson JSON
 And nisha (or Claude in the slash command) writes a 60–90 sec
 script that passes the rubric
-And HeyGen renders the video
+And HeyGen renders the video using the configured stock avatar +
+stock voice
 And `content.module_detail.metadata.teach_video_url` is populated
 for S-3 with `teach_video_status: pending_review`
 
@@ -116,9 +119,9 @@ container, no placeholder)
 
 ### Out of scope
 
-- Filming Mom for real (separate workflow; we'll do this for the
-  ~10 highest-traffic anchor modules and let AI handle the long
-  tail).
+- Custom voice or face cloning (out for v1 and probably v2 — stock
+  is doing the job and consistency matters more than "our own
+  person").
 - Captions / transcripts (revisit in v1.1 for accessibility).
 - Per-student personalized videos (Tavus-style).
 - Localization (English only for v1).

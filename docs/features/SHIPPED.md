@@ -676,3 +676,10 @@ Log of features shipped by BuildLoop.
 - Branch: buildloop/offline-warning-on-record-button
 - UAT bugs found and fixed: 0
 - Build retries: 0
+
+## LR-39
+- Iteration: 8
+- Shipped: 2026-06-06T16:41:59+00:00
+- Branch: buildloop/offline-warning-on-complete-lesson-button
+- UAT bugs found and fixed: 0
+- Build retries: 0

@@ -63,27 +63,36 @@ Format per day:
 
 ## Sun 2026-05-24
 
-### Top priorities — in this order
+### Launch queue — hard-ordered dependency chain
 
-**Run BuildLoop with LR-28 first, LR-10-bug-01 second.**
+The next four tickets ship in this order. Each one unblocks the
+next. Do not batch them out of order.
 
 ```
-/buildloop:buildloop-start 2
+/buildloop:buildloop-start 1     # LR-28 first, alone
+/buildloop:buildloop-start 1     # then LR-10-bug-01
+/buildloop:buildloop-start 2     # then LR-29 + LR-30 together
 ```
 
-1. **LR-28 — Wire Supabase migrations into the deploy pipeline.** First
-   priority. Today every migration in `supabase/migrations/` is at risk
-   of silently missing prod (LR-14a did, which is why record/stop was
-   broken this morning). Spec at
-   `docs/features/launch-readiness/lr-28-wire-migrations-into-deploy.md`.
-   Needs: auto-apply migrations on deploy + backfill the prod migration
-   log + BuildLoop schema-parity check.
+1. **LR-28 — Wire Supabase migrations into the deploy pipeline.**
+   Blocker for everything below. Every future migration silently
+   misses prod until this ships.
+   `docs/features/launch-readiness/lr-28-wire-migrations-into-deploy.md`
 
-2. **LR-10-bug-01 — Lesson re-entry hides prior completions.** Replay
-   nav shipped, but the lesson page on re-entry shows no "Completed N
-   times" header, no prior observations, wrong H2 title, "Not started"
-   banner for kids mid-curriculum. Spec at
-   `docs/features/launch-readiness/iterations/lr-10-allow-lesson-reentry/bugs/lr-10-bug-01-reentry-hides-prior-completions.md`.
+2. **LR-10-bug-01 — Lesson re-entry hides prior completions.** Also a
+   blocker for LR-30 — freemium's 3-lessons-per-week metering reads
+   from `lesson_completions`, which is only correctly append-only
+   after this lands.
+   `docs/features/launch-readiness/iterations/lr-10-allow-lesson-reentry/bugs/lr-10-bug-01-reentry-hides-prior-completions.md`
+
+3. **LR-29 — Progress score per lesson / module / group.** Derived
+   from existing 3-signal data. No schema changes. Free-tier feature.
+   `docs/features/launch-readiness/lr-29-progress-score-per-lesson-module-group.md`
+
+4. **LR-30 — Freemium billing via Stripe.** Free forever (1 student,
+   3 lessons/week, notes + audio) + Padi Pro at $9.99/mo or $79/yr
+   (unlimited). No card at signup. Existing accounts grandfathered.
+   `docs/features/launch-readiness/lr-30-stripe-freemium-billing.md`
 
 ### Also today
 
@@ -91,6 +100,19 @@ Format per day:
   Record on a real lesson, talk ~5s, hit Stop, confirm "✓ Recording
   saved" + recording shows in PRIOR RECORDINGS and plays back. Verified
   once today as Nisha against Olivia Iyer / learning-sensorially-3.
+
+- **LR-29 aggregation rule confirmed:** worst-signal-wins
+  (Specialist Track beats Practicing beats Accelerating) —
+  locked 2026-05-24.
+
+- **Open blocker for LR-30 live-mode flip:** Nisha waiting on one
+  document from Stripe to activate live mode. Test mode is fine to
+  build against — CC ships LR-30 with test keys in Vercel preview
+  and the code gracefully degrades to "Billing coming soon" when
+  live-mode env vars are unset in prod. When the document clears:
+  create Stripe Prices ($9.99/mo + $79/yr), grab the four env
+  values (`sk_live_*`, `whsec_*`, `price_MONTHLY`, `price_ANNUAL`),
+  add to Vercel prod, redeploy. No code change needed at flip time.
 
 ### Notes / blockers
 

@@ -63,36 +63,63 @@ Format per day:
 
 ## Sun 2026-05-24
 
-### Launch queue — hard-ordered dependency chain
+### Full launch queue — hard-ordered
 
-The next four tickets ship in this order. Each one unblocks the
-next. Do not batch them out of order.
+Ship in this order. Each unblocks the next; do not batch out of
+order.
 
 ```
-/buildloop:buildloop-start 1     # LR-28 first, alone
-/buildloop:buildloop-start 1     # then LR-10-bug-01
-/buildloop:buildloop-start 2     # then LR-29 + LR-30 together
+/buildloop:buildloop-start 1     # 1. LR-28 alone (migrations pipeline)
+/buildloop:buildloop-start 1     # 2. LR-10-bug-01 alone (re-entry)
+/buildloop:buildloop-start 2     # 3. LR-29 + LR-30 (score + billing)
+/buildloop:buildloop-start 2     # 4. LR-31 + LR-32 (legal + consent)
+/buildloop:buildloop-start 2     # 5. LR-33 + LR-35 (password reset + help)
+/buildloop:buildloop-start 1     # 6. LR-36 alone (Sentry)
+/buildloop:buildloop-start 1     # 7. LR-34 last (iPad Safari UAT + fixes)
 ```
 
-1. **LR-28 — Wire Supabase migrations into the deploy pipeline.**
-   Blocker for everything below. Every future migration silently
-   misses prod until this ships.
-   `docs/features/launch-readiness/lr-28-wire-migrations-into-deploy.md`
+**Core functional (unblocks paid signups):**
+1. **LR-28** — Migrations pipeline (blocks every schema change below).
+2. **LR-10-bug-01** — Re-entry writes clean to `lesson_completions`.
+3. **LR-29** — Progress score (free-tier feature).
+4. **LR-30** — Freemium billing (test-mode ready, live-mode later).
 
-2. **LR-10-bug-01 — Lesson re-entry hides prior completions.** Also a
-   blocker for LR-30 — freemium's 3-lessons-per-week metering reads
-   from `lesson_completions`, which is only correctly append-only
-   after this lands.
-   `docs/features/launch-readiness/iterations/lr-10-allow-lesson-reentry/bugs/lr-10-bug-01-reentry-hides-prior-completions.md`
+**Launch-required legal + trust:**
+5. **LR-31** — Terms / Privacy / Refund pages.
+   Stripe live-mode blocks on the Privacy Policy.
+6. **LR-32** — COPPA parental-consent step at signup.
 
-3. **LR-29 — Progress score per lesson / module / group.** Derived
-   from existing 3-signal data. No schema changes. Free-tier feature.
-   `docs/features/launch-readiness/lr-29-progress-score-per-lesson-module-group.md`
+**Launch-required UX + reliability:**
+7. **LR-33** — Password reset verified + affordance.
+8. **LR-35** — /help page + support email + footer link.
+9. **LR-36** — Sentry error monitoring.
+10. **LR-34** — iPad Safari QA pass on mom's device (last, because
+    it re-verifies everything above on the target hardware).
 
-4. **LR-30 — Freemium billing via Stripe.** Free forever (1 student,
-   3 lessons/week, notes + audio) + Padi Pro at $9.99/mo or $79/yr
-   (unlimited). No card at signup. Existing accounts grandfathered.
-   `docs/features/launch-readiness/lr-30-stripe-freemium-billing.md`
+Ticket files under `docs/features/launch-readiness/lr-28-*.md`
+through `lr-36-*.md`.
+
+### Manual steps Nisha owns (not CC's)
+
+These block their respective tickets from actually shipping to
+prod; CC can't touch these dashboards.
+
+- **Stripe (LR-30):** finish the pending verification document → get
+  live-mode approved → create Prices ($9.99/mo, $79/yr) → add
+  `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`, `STRIPE_PRICE_MONTHLY`,
+  `STRIPE_PRICE_ANNUAL` to Vercel prod env.
+- **Sentry (LR-36):** create the `padi-mvp` project → grab DSN →
+  add `NEXT_PUBLIC_SENTRY_DSN`, `SENTRY_ORG`, `SENTRY_PROJECT`,
+  `SENTRY_AUTH_TOKEN` to Vercel env → configure alert rule.
+- **Supabase (LR-33):** confirm the Password Recovery email template
+  points at the prod domain; add `padi-mvp.vercel.app/auth/reset`
+  to the redirect-URL allowlist.
+- **Legal choices (LR-31):** confirm governing-law state and the
+  annual refund rule before merging the drafted policies.
+- **Support email (LR-35):** confirm `hello@go-padi.com` is the right
+  address; if not, tell CC before merge.
+- **iPad hardware (LR-34):** run scenario #3 (mic permission) on a
+  real iPad; UAT agent can drive the rest.
 
 ### Also today
 

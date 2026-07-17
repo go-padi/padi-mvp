@@ -82,7 +82,7 @@ stock voice
 And `content.module_detail.metadata.teach_video_url` is populated
 for S-3 with `teach_video_status: pending_review`
 
-**Bulk authoring**
+**Bulk authoring (interactive)**
 
 Given nisha runs `/teach-video --all-missing`
 When the skill executes
@@ -91,6 +91,19 @@ And the skill stops short of rendering (human reviews scripts
 first)
 And no HeyGen credits are burned without explicit per-module
 render confirmation
+
+**Autonomous batch (BuildLoop-friendly)**
+
+Given nisha runs `/teach-video-batch --all-missing --limit 10`
+When the skill executes
+Then a batch plan is shown up front with cost estimate
+And after y/n confirmation, the skill drafts + renders + persists
+all 10 modules with no further interaction
+And each video lands as `teach_video_status: pending_review`
+And at the end a review report prints with per-video HeyGen URLs
+and a copy-pasteable SQL block to promote approved videos to
+`published`
+And the skill halts — no auto-publish, no further action
 
 **Lesson page render** (covered by `cc-prompt-teach-video-render.md`)
 
